@@ -13,6 +13,12 @@ type DiscussionWithProfile = SermonDiscussion & {
   profiles: { full_name: string; display_name: string | null } | null
 }
 
+function ensureAbsoluteUrl(url: string): string {
+  if (!url) return url
+  if (url.startsWith('http://') || url.startsWith('https://')) return url
+  return `https://${url}`
+}
+
 type SpotifyResult = {
   id: string
   name: string
@@ -71,7 +77,7 @@ function SermonCard({
         <div className="flex flex-wrap gap-2 mt-1">
           {sermon.episode_url && (
             <a
-              href={sermon.episode_url}
+              href={ensureAbsoluteUrl(sermon.episode_url)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-green-600 transition-colors"
@@ -81,7 +87,7 @@ function SermonCard({
           )}
           {sermon.youtube_url && (
             <a
-              href={sermon.youtube_url}
+              href={ensureAbsoluteUrl(sermon.youtube_url)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-red-600 transition-colors"
@@ -452,6 +458,7 @@ function AdminSchedulePanel({
         placeholder="YouTube URL (optional)"
         className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
+      <p className="text-xs text-gray-400 -mt-1">Paste the full URL including https://</p>
       <input
         type="text"
         value={theme}
