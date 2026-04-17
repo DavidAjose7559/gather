@@ -25,7 +25,7 @@ export default async function AdminPage() {
     .select('id, full_name, display_name, role')
     .order('full_name')
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+  const appUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gatherdaily.app'
 
   return (
     <div className="min-h-screen bg-gray-50">
