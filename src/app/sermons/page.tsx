@@ -179,7 +179,7 @@ function DiscussionSection({ sermon, userId, userDisplayName }: {
           onChange={e => setBody(e.target.value)}
           placeholder="Share a thought or reflection…"
           rows={2}
-          className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
         />
         <button
           onClick={submit}
@@ -327,7 +327,7 @@ function AdminSchedulePanel({
             value={newCurrName}
             onChange={e => setNewCurrName(e.target.value)}
             placeholder="New series name…"
-            className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <button
             onClick={createCurriculum}
@@ -368,7 +368,7 @@ function AdminSchedulePanel({
               onChange={e => setSpotifyQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && searchSpotify()}
               placeholder="Search episodes… (e.g. Romans grace)"
-              className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               onClick={searchSpotify}
@@ -425,21 +425,21 @@ function AdminSchedulePanel({
             value={manualTitle}
             onChange={e => setManualTitle(e.target.value)}
             placeholder="Episode / sermon title *"
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <textarea
             value={manualDesc}
             onChange={e => setManualDesc(e.target.value)}
             placeholder="Description (optional)"
             rows={2}
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
           <input
             type="url"
             value={manualImage}
             onChange={e => setManualImage(e.target.value)}
             placeholder="Cover image URL (optional)"
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
       )}
@@ -450,21 +450,21 @@ function AdminSchedulePanel({
         value={youtubeUrl}
         onChange={e => setYoutubeUrl(e.target.value)}
         placeholder="YouTube URL (optional)"
-        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
       <input
         type="text"
         value={theme}
         onChange={e => setTheme(e.target.value)}
         placeholder="Theme / tag (e.g. Faith, Romans 8)"
-        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
       <textarea
         value={notes}
         onChange={e => setNotes(e.target.value)}
         placeholder="Notes for the group (optional)"
         rows={2}
-        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
       />
 
       {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}

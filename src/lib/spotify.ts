@@ -40,7 +40,7 @@ async function getSpotifyAccessToken(): Promise<string> {
   return tokenCache.token
 }
 
-export async function getPodcastEpisodes(podcastId: string, limit = 20): Promise<SpotifyEpisode[]> {
+export async function getPodcastEpisodes(podcastId: string, limit = 50): Promise<SpotifyEpisode[]> {
   const token = await getSpotifyAccessToken()
   const res = await fetch(
     `https://api.spotify.com/v1/shows/${podcastId}/episodes?limit=${limit}&market=US`,
@@ -51,16 +51,12 @@ export async function getPodcastEpisodes(podcastId: string, limit = 20): Promise
   return data.items ?? []
 }
 
-export async function searchEpisodesByTheme(query: string, limit = 10): Promise<SpotifyEpisode[]> {
-  const token = await getSpotifyAccessToken()
-  const params = new URLSearchParams({ q: query, type: 'episode', market: 'US', limit: String(limit) })
-  const res = await fetch(`https://api.spotify.com/v1/search?${params}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: 'no-store',
-  })
-  if (!res.ok) throw new Error(`Spotify search error: ${res.status}`)
-  const data = await res.json()
-  return data.episodes?.items ?? []
+export async function searchPodcastEpisodes(podcastId: string, query: string): Promise<SpotifyEpisode[]> {
+  const episodes = await getPodcastEpisodes(podcastId, 50)
+  const lower = query.toLowerCase()
+  return episodes.filter(
+    ep => ep.name.toLowerCase().includes(lower) || ep.description.toLowerCase().includes(lower)
+  )
 }
 
 export async function getEpisodeById(episodeId: string): Promise<SpotifyEpisode | null> {
