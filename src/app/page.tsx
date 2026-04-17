@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import type { CheckIn, Profile } from '@/lib/types'
+import Image from 'next/image'
+import type { CheckIn, Profile, SermonSchedule } from '@/lib/types'
 import { calculateStreak } from '@/lib/streaks'
 import { todayToronto, formatDateToronto } from '@/lib/date'
 import BottomNav from '@/components/BottomNav'
@@ -71,8 +72,8 @@ export default async function HomePage() {
   ninetyDaysAgoCursor.setDate(ninetyDaysAgoCursor.getDate() - 90)
   const ninetyDaysAgoStr = formatDateToronto(ninetyDaysAgoCursor)
 
-  // Load all profiles, today's check-ins, visibility grants, and recent history in parallel
-  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes] = await Promise.all([
+  // Load all profiles, today's check-ins, visibility grants, recent history, and today's sermon in parallel
+  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes, sermonRes] = await Promise.all([
     supabase.from('profiles').select('*').order('full_name'),
     supabase.from('check_ins').select('*').eq('check_in_date', today),
     supabase.from('visibility_grants').select('check_in_id, granted_to'),
@@ -81,12 +82,14 @@ export default async function HomePage() {
       .select('user_id, check_in_date')
       .gte('check_in_date', ninetyDaysAgoStr)
       .order('check_in_date', { ascending: false }),
+    supabase.from('sermon_schedule').select('*').eq('schedule_date', today).maybeSingle(),
   ])
 
   const profiles: Profile[] = profilesRes.data ?? []
   const checkIns: CheckIn[] = checkInsRes.data ?? []
   const grants = grantsRes.data ?? []
   const recentCheckIns = recentCheckInsRes.data ?? []
+  const todaySermon: SermonSchedule | null = sermonRes.data ?? null
 
   // Build streak map: userId → streak count
   const streakMap = new Map<string, number>()
@@ -203,6 +206,39 @@ export default async function HomePage() {
             <p className="text-sm text-gray-500 mt-1">not yet</p>
           </div>
         </div>
+
+        {/* Sermon of the Day card */}
+        {todaySermon && (
+          <Link href="/sermons">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex gap-3 p-4 hover:border-indigo-200 transition-colors">
+              {todaySermon.episode_image_url ? (
+                <div className="relative w-14 h-14 flex-shrink-0">
+                  <Image
+                    src={todaySermon.episode_image_url}
+                    alt={todaySermon.episode_title}
+                    fill
+                    className="rounded-xl object-cover"
+                    sizes="56px"
+                  />
+                </div>
+              ) : (
+                <div className="w-14 h-14 flex-shrink-0 rounded-xl bg-indigo-50 flex items-center justify-center text-2xl">
+                  🎙️
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide mb-0.5">
+                  Sermon of the Day
+                </p>
+                <p className="text-sm font-semibold text-gray-900 truncate">{todaySermon.episode_title}</p>
+                {todaySermon.theme && (
+                  <p className="text-xs text-gray-400 truncate">{todaySermon.theme}</p>
+                )}
+              </div>
+              <span className="text-gray-300 flex-shrink-0 self-center text-sm">›</span>
+            </div>
+          </Link>
+        )}
 
         {/* Member list */}
         <div>

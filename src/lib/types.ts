@@ -66,3 +66,36 @@ export type PrayerComment = {
   body: string
   created_at: string
 }
+
+export type SermonCurriculum = {
+  id: string
+  name: string
+  description: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export type SermonSchedule = {
+  id: string
+  schedule_date: string
+  curriculum_id: string | null
+  episode_id: string | null
+  episode_title: string
+  episode_description: string | null
+  episode_image_url: string | null
+  episode_url: string | null
+  source: 'spotify' | 'manual'
+  youtube_url: string | null
+  theme: string | null
+  notes: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export type SermonDiscussion = {
+  id: string
+  schedule_id: string
+  user_id: string
+  body: string
+  created_at: string
+}
