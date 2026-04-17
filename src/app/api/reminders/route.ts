@@ -57,8 +57,17 @@ function getEmailContent(slot: TimeSlot, firstName: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const secret = request.headers.get('x-cron-secret')
-  if (secret !== process.env.CRON_SECRET) {
+  const isVercelCron = request.headers.get('x-vercel-cron') === '1'
+  const headerSecret = request.headers.get('x-cron-secret')
+  const querySecret = request.nextUrl.searchParams.get('secret')
+  const cronSecret = process.env.CRON_SECRET
+
+  const authorized =
+    isVercelCron ||
+    (cronSecret && headerSecret === cronSecret) ||
+    (cronSecret && querySecret === cronSecret)
+
+  if (!authorized) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
