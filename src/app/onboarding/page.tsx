@@ -38,6 +38,7 @@ export default function OnboardingPage() {
       id: user.id,
       full_name: fullName.trim(),
       display_name: displayName.trim() || null,
+      email: user.email ?? null,
       role: isFirstUser ? 'admin' : 'member',
     })
 

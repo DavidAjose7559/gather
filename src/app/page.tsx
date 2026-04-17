@@ -85,7 +85,15 @@ export default async function HomePage() {
   const checkedInIds = new Set(checkIns.map((c) => c.user_id))
   const checkedInCount = checkedInIds.size
   const notYetCount = profiles.length - checkedInCount
-  const supportNeeded = checkIns.some((c) => c.support_requested)
+
+  // Support banners: only check-ins from others that are visible to the current user
+  const visibleSupportRequests = checkIns
+    .filter((c) => c.support_requested && c.user_id !== user.id)
+    .filter((c) => getVisibleCheckIn(c, user.id, grants))
+    .map((c) => {
+      const profile = profiles.find((p) => p.id === c.user_id)
+      return { checkIn: c, profile }
+    })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -110,15 +118,26 @@ export default async function HomePage() {
           )}
         </div>
 
-        {/* Support banner */}
-        {supportNeeded && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <span className="text-amber-500 text-lg">🙏</span>
-            <p className="text-sm font-medium text-amber-800">
-              Someone in the group asked for support today.
-            </p>
+        {/* Support banners — one per visible support request */}
+        {visibleSupportRequests.map(({ checkIn, profile }) => (
+          <div
+            key={checkIn.id}
+            className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-amber-500 text-lg flex-shrink-0">🙏</span>
+              <p className="text-sm font-medium text-amber-800">
+                {profile?.display_name ?? profile?.full_name ?? 'Someone'} asked for someone to reach out today.
+              </p>
+            </div>
+            <Link
+              href={`/checkin/${checkIn.id}`}
+              className="text-xs font-semibold text-amber-700 hover:text-amber-900 flex-shrink-0 min-h-[44px] flex items-center"
+            >
+              View →
+            </Link>
           </div>
-        )}
+        ))}
 
         {/* Check-in CTA or status */}
         {!myCheckIn ? (
@@ -170,8 +189,11 @@ export default async function HomePage() {
 
         {/* Member list */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3 flex items-center gap-2">
             Your group
+            {visibleSupportRequests.length > 0 && (
+              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+            )}
           </h2>
           <div className="flex flex-col gap-2">
             {profiles.map((profile) => {

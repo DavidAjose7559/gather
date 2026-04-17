@@ -168,6 +168,15 @@ export default function CheckInPage() {
       await supabase.from('visibility_grants').delete().eq('check_in_id', checkInId)
     }
 
+    // Send support notifications fire-and-forget (don't block redirect)
+    if (supportRequested) {
+      fetch('/api/notify-support', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ check_in_id: checkInId }),
+      }).catch(() => {})
+    }
+
     router.push('/')
   }
 

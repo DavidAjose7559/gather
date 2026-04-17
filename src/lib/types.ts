@@ -3,6 +3,7 @@ export type Profile = {
   full_name: string
   display_name: string | null
   avatar_url: string | null
+  email: string | null
   role: 'member' | 'admin'
   created_at: string
 }
