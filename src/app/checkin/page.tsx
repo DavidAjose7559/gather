@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, CheckIn } from '@/lib/types'
 import { calculateStreak, getNewMilestone, milestoneMessage } from '@/lib/streaks'
+import { todayToronto, formatDateToronto } from '@/lib/date'
+import BottomNav from '@/components/BottomNav'
 
 type VisibilityType = 'everyone' | 'specific' | 'one_person'
 
@@ -72,9 +74,9 @@ export default function CheckInPage() {
       if (!user) { router.push('/login'); return }
       setCurrentUserId(user.id)
 
-      const today = new Date().toISOString().split('T')[0]
+      const today = todayToronto()
 
-      const [checkInRes, membersRes] = await Promise.all([
+      const [checkInRes, membersRes, profileRes] = await Promise.all([
         supabase
           .from('check_ins')
           .select('*')
@@ -82,9 +84,15 @@ export default function CheckInPage() {
           .eq('check_in_date', today)
           .single(),
         supabase.from('profiles').select('*').neq('id', user.id).order('full_name'),
+        supabase.from('profiles').select('default_visibility').eq('id', user.id).single(),
       ])
 
       setMembers(membersRes.data ?? [])
+
+      // Pre-select default visibility from profile (only when no existing check-in)
+      if (!checkInRes.data && profileRes.data?.default_visibility) {
+        setVisibility(profileRes.data.default_visibility as VisibilityType)
+      }
 
       if (checkInRes.data) {
         const c = checkInRes.data as CheckIn
@@ -180,13 +188,13 @@ export default function CheckInPage() {
     }
 
     // Check for streak milestone
-    const ninetyDaysAgo = new Date()
-    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+    const ninetyDaysAgoCursor = new Date()
+    ninetyDaysAgoCursor.setDate(ninetyDaysAgoCursor.getDate() - 90)
     const { data: history } = await supabase
       .from('check_ins')
       .select('check_in_date')
       .eq('user_id', currentUserId)
-      .gte('check_in_date', ninetyDaysAgo.toISOString().split('T')[0])
+      .gte('check_in_date', formatDateToronto(ninetyDaysAgoCursor))
       .order('check_in_date', { ascending: false })
 
     if (history) {
@@ -230,10 +238,10 @@ export default function CheckInPage() {
 
   if (existingCheckIn && !editing) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 pb-24">
         <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Today's check-in</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Today&apos;s check-in</h1>
             <button
               onClick={() => { populateFormFromCheckIn(existingCheckIn); setEditing(true) }}
               className="min-h-[44px] px-4 text-sm font-medium text-indigo-600 hover:text-indigo-700"
@@ -251,12 +259,13 @@ export default function CheckInPage() {
             Back to home
           </button>
         </div>
+        <BottomNav />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-24">
       <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">
@@ -474,7 +483,7 @@ export default function CheckInPage() {
             <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
           )}
 
-          <div className="flex flex-col gap-3 pb-8">
+          <div className="flex flex-col gap-3 pb-4">
             <button
               type="submit"
               disabled={saving}
@@ -492,6 +501,7 @@ export default function CheckInPage() {
           </div>
         </form>
       </div>
+      <BottomNav />
     </div>
   )
 }

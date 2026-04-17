@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { CheckIn, Profile } from '@/lib/types'
 import { calculateStreak } from '@/lib/streaks'
+import { todayToronto, formatDateToronto } from '@/lib/date'
+import BottomNav from '@/components/BottomNav'
 
 function formatDate(date: Date) {
   return date.toLocaleDateString('en-US', {
@@ -64,10 +66,10 @@ export default async function HomePage() {
 
   if (!currentProfile) redirect('/onboarding')
 
-  const today = new Date().toISOString().split('T')[0]
-  const ninetyDaysAgo = new Date()
-  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
-  const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0]
+  const today = todayToronto()
+  const ninetyDaysAgoCursor = new Date()
+  ninetyDaysAgoCursor.setDate(ninetyDaysAgoCursor.getDate() - 90)
+  const ninetyDaysAgoStr = formatDateToronto(ninetyDaysAgoCursor)
 
   // Load all profiles, today's check-ins, visibility grants, and recent history in parallel
   const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes] = await Promise.all([
@@ -109,7 +111,7 @@ export default async function HomePage() {
     })
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-24">
       <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
@@ -267,6 +269,7 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+      <BottomNav />
     </div>
   )
 }
