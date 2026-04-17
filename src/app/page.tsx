@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import type { CheckIn, Profile } from '@/lib/types'
+import { calculateStreak } from '@/lib/streaks'
 
 function formatDate(date: Date) {
   return date.toLocaleDateString('en-US', {
@@ -64,22 +65,34 @@ export default async function HomePage() {
   if (!currentProfile) redirect('/onboarding')
 
   const today = new Date().toISOString().split('T')[0]
+  const ninetyDaysAgo = new Date()
+  ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+  const ninetyDaysAgoStr = ninetyDaysAgo.toISOString().split('T')[0]
 
-  // Load all profiles, today's check-ins, and visibility grants in parallel
-  const [profilesRes, checkInsRes, grantsRes] = await Promise.all([
+  // Load all profiles, today's check-ins, visibility grants, and recent history in parallel
+  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes] = await Promise.all([
     supabase.from('profiles').select('*').order('full_name'),
+    supabase.from('check_ins').select('*').eq('check_in_date', today),
+    supabase.from('visibility_grants').select('check_in_id, granted_to'),
     supabase
       .from('check_ins')
-      .select('*')
-      .eq('check_in_date', today),
-    supabase
-      .from('visibility_grants')
-      .select('check_in_id, granted_to'),
+      .select('user_id, check_in_date')
+      .gte('check_in_date', ninetyDaysAgoStr)
+      .order('check_in_date', { ascending: false }),
   ])
 
   const profiles: Profile[] = profilesRes.data ?? []
   const checkIns: CheckIn[] = checkInsRes.data ?? []
   const grants = grantsRes.data ?? []
+  const recentCheckIns = recentCheckInsRes.data ?? []
+
+  // Build streak map: userId → streak count
+  const streakMap = new Map<string, number>()
+  for (const profile of profiles) {
+    const history = recentCheckIns.filter((c) => c.user_id === profile.id)
+    streakMap.set(profile.id, calculateStreak(history))
+  }
+  const myStreak = streakMap.get(user.id) ?? 0
 
   const myCheckIn = checkIns.find((c) => c.user_id === user.id)
   const checkedInIds = new Set(checkIns.map((c) => c.user_id))
@@ -160,7 +173,9 @@ export default async function HomePage() {
               <div>
                 <p className="font-semibold text-gray-900">You've checked in</p>
                 <p className="text-sm text-gray-500">
-                  {myCheckIn.emotional_state
+                  {myStreak >= 3
+                    ? `${myStreak} days in a row 🔥`
+                    : myCheckIn.emotional_state
                     ? emotionalLabels[myCheckIn.emotional_state]
                     : 'Checked in today'}
                 </p>
@@ -201,6 +216,8 @@ export default async function HomePage() {
               const isCheckedIn = checkedInIds.has(profile.id)
               const isVisible = getVisibleCheckIn(checkIn, user.id, grants)
 
+              const memberStreak = streakMap.get(profile.id) ?? 0
+
               return (
                 <div
                   key={profile.id}
@@ -212,10 +229,13 @@ export default async function HomePage() {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">
+                    <p className="font-medium text-gray-900 truncate flex items-center gap-1.5">
                       {profile.display_name ?? profile.full_name}
                       {profile.id === user.id && (
-                        <span className="ml-1.5 text-xs text-gray-400 font-normal">you</span>
+                        <span className="text-xs text-gray-400 font-normal">you</span>
+                      )}
+                      {memberStreak >= 2 && (
+                        <span className="text-xs text-orange-500 font-semibold">🔥 {memberStreak}</span>
                       )}
                     </p>
                     {isCheckedIn && (

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, CheckIn } from '@/lib/types'
+import { calculateStreak, getNewMilestone, milestoneMessage } from '@/lib/streaks'
 
 type VisibilityType = 'everyone' | 'specific' | 'one_person'
 
@@ -44,6 +45,7 @@ export default function CheckInPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [milestone, setMilestone] = useState<string | null>(null)
   const [existingCheckIn, setExistingCheckIn] = useState<CheckIn | null>(null)
   const [editing, setEditing] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -177,6 +179,26 @@ export default function CheckInPage() {
       }).catch(() => {})
     }
 
+    // Check for streak milestone
+    const ninetyDaysAgo = new Date()
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90)
+    const { data: history } = await supabase
+      .from('check_ins')
+      .select('check_in_date')
+      .eq('user_id', currentUserId)
+      .gte('check_in_date', ninetyDaysAgo.toISOString().split('T')[0])
+      .order('check_in_date', { ascending: false })
+
+    if (history) {
+      const streak = calculateStreak(history)
+      const hit = getNewMilestone(streak, currentUserId)
+      if (hit) {
+        setMilestone(milestoneMessage(hit))
+        setSaving(false)
+        return
+      }
+    }
+
     router.push('/')
   }
 
@@ -184,6 +206,24 @@ export default function CheckInPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-gray-400">Loading…</p>
+      </div>
+    )
+  }
+
+  if (milestone) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-8 text-center shadow-sm flex flex-col gap-4">
+          <div className="text-5xl">🎉</div>
+          <h2 className="text-xl font-bold text-gray-900">Milestone reached!</h2>
+          <p className="text-gray-600 leading-relaxed">{milestone}</p>
+          <button
+            onClick={() => router.push('/')}
+            className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 transition-all mt-2"
+          >
+            Back to home
+          </button>
+        </div>
       </div>
     )
   }
