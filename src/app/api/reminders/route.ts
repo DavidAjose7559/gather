@@ -57,20 +57,6 @@ function getEmailContent(slot: TimeSlot, firstName: string) {
 }
 
 export async function GET(request: NextRequest) {
-  const isVercelCron = request.headers.get('x-vercel-cron') === '1'
-  const headerSecret = request.headers.get('x-cron-secret')
-  const querySecret = request.nextUrl.searchParams.get('secret')
-  const cronSecret = process.env.CRON_SECRET
-
-  const authorized =
-    isVercelCron ||
-    (cronSecret && headerSecret === cronSecret) ||
-    (cronSecret && querySecret === cronSecret)
-
-  if (!authorized) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
   const slot = (request.nextUrl.searchParams.get('time') ?? 'morning') as TimeSlot
   if (!['morning', 'midday', 'evening'].includes(slot)) {
     return NextResponse.json({ error: 'Invalid time param' }, { status: 400 })
