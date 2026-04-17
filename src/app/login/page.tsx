@@ -1,13 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [email, setEmail] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  // Fallback: if Supabase sends the magic link to /login?code=... instead of
+  // /auth/callback?code=..., forward the code to the real callback route.
+  useEffect(() => {
+    const code = searchParams.get('code')
+    if (code) {
+      router.replace(`/auth/callback?code=${encodeURIComponent(code)}`)
+    }
+  }, [searchParams, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -18,7 +30,7 @@ export default function LoginPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: 'https://gatherdaily.app/auth/callback',
       },
     })
 
