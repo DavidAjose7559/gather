@@ -388,6 +388,22 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Sign out */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', paddingLeft: 4 }}>
+            Signed in as {email}
+          </p>
+          <button
+            onClick={async () => {
+              await supabase.auth.signOut()
+              router.push('/login')
+            }}
+            style={{ width: '100%', minHeight: 52, backgroundColor: '#1A1A1A', color: 'white', fontWeight: 600, fontSize: 15, borderRadius: 14, border: '1px solid #333333', cursor: 'pointer' }}
+          >
+            Sign out
+          </button>
+        </div>
+
         {/* Danger zone */}
         <div style={cardStyle}>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>

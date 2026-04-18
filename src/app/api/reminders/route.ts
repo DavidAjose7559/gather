@@ -65,7 +65,6 @@ export async function GET(request: NextRequest) {
   const supabase = await createClient()
   const today = todayToronto()
 
-  // Only load members who have reminders enabled and have an email
   const { data: members, error: membersError } = await supabase
     .from('profiles')
     .select('id, full_name, display_name, email, reminder_enabled')
@@ -81,24 +80,28 @@ export async function GET(request: NextRequest) {
     .eq('check_in_date', today)
 
   const checkedInIds = new Set((todayCheckIns ?? []).map((c) => c.user_id))
-
   const pending = members.filter((m) => m.email && !checkedInIds.has(m.id))
 
   if (pending.length === 0) {
     return NextResponse.json({ sent: 0, note: 'everyone has checked in or reminders disabled' })
   }
 
-  const sends = pending.map((member) => {
+  const emailBatch = pending.map((member) => {
     const firstName = (member.display_name ?? member.full_name).split(' ')[0]
     const { subject, html } = getEmailContent(slot, firstName)
-    return resend.emails.send({ from: fromEmail, to: member.email!, subject, html })
+    return { from: fromEmail, to: member.email!, subject, html }
   })
 
-  const results = await Promise.allSettled(sends)
-  const failed = results.filter(r => r.status === 'rejected')
-  if (failed.length > 0) {
-    console.error(`[reminders] ${failed.length} of ${pending.length} email(s) failed`, failed)
+  const { data: batchData, error: batchError } = await resend.batch.send(emailBatch)
+  if (batchError) {
+    console.error('[reminders] batch send failed', batchError)
+    return NextResponse.json({ error: 'Failed to send emails' }, { status: 500 })
   }
 
-  return NextResponse.json({ sent: pending.length - failed.length, attempted: pending.length, slot, date: today })
+  return NextResponse.json({
+    sent: batchData?.data?.length ?? pending.length,
+    attempted: pending.length,
+    slot,
+    date: today,
+  })
 }

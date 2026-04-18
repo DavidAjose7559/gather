@@ -32,7 +32,6 @@ export async function POST(request: NextRequest) {
   const submitterName =
     submitterRes.data?.display_name ?? submitterRes.data?.full_name ?? 'Someone in your group'
 
-  // Determine recipient profile ids based on visibility
   let recipientIds: string[] = []
 
   if (checkIn.visibility_type === 'everyone') {
@@ -53,7 +52,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ sent: 0 })
   }
 
-  // Load recipients with email
   const { data: recipients } = await supabase
     .from('profiles')
     .select('full_name, display_name, email')
@@ -67,15 +65,15 @@ export async function POST(request: NextRequest) {
 
   const checkInUrl = `${appUrl}/checkin/${check_in_id}`
 
-  const sends = eligible.map((recipient) => {
-    const recipientName = recipient.display_name ?? recipient.full_name
-    return resend.emails.send({
+  const emailBatch = eligible.map((recipient) => {
+    const firstName = (recipient.display_name ?? recipient.full_name).split(' ')[0]
+    return {
       from: fromEmail,
       to: recipient.email!,
       subject: '[Gather] Someone in your group needs support',
       html: `
         <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111827;">
-          <p style="font-size: 16px; margin-bottom: 16px;">Hi ${recipientName},</p>
+          <p style="font-size: 16px; margin-bottom: 16px;">Hi ${firstName},</p>
           <p style="font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
             <strong>${submitterName}</strong> checked in today and asked if someone could reach out.
             Even a short message can mean a lot.
@@ -91,14 +89,14 @@ export async function POST(request: NextRequest) {
           </p>
         </div>
       `,
-    })
+    }
   })
 
-  const results = await Promise.allSettled(sends)
-  const failed = results.filter(r => r.status === 'rejected')
-  if (failed.length > 0) {
-    console.error(`[notify-support] ${failed.length} of ${eligible.length} email(s) failed`, failed)
+  const { data: batchData, error: batchError } = await resend.batch.send(emailBatch)
+  if (batchError) {
+    console.error('[notify-support] batch send failed', batchError)
+    return NextResponse.json({ error: 'Failed to send emails' }, { status: 500 })
   }
 
-  return NextResponse.json({ sent: eligible.length - failed.length })
+  return NextResponse.json({ sent: batchData?.data?.length ?? eligible.length })
 }

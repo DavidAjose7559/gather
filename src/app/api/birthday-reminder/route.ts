@@ -14,7 +14,6 @@ export async function GET() {
   const month = parseInt(monthStr)
   const day = parseInt(dayStr)
 
-  // Find birthdays matching today's month and day
   const { data: birthdays, error: bdError } = await supabase
     .from('birthdays')
     .select('name')
@@ -26,7 +25,6 @@ export async function GET() {
     return NextResponse.json({ sent: 0, birthdays: [], date: today, note: 'No birthdays today' })
   }
 
-  // Fetch all member emails
   const { data: members, error: membersError } = await supabase
     .from('profiles')
     .select('full_name, display_name, email')
@@ -46,31 +44,37 @@ export async function GET() {
     ? `🎂 Today is ${birthdayNames[0]}'s birthday!`
     : `🎂 Today are some birthdays in Gather!`
 
-  const emails = members.filter((m) => m.email)
+  const eligible = members.filter((m) => m.email)
 
-  const sends = emails.map((member) => {
+  const emailBatch = eligible.map((member) => {
     const firstName = (member.display_name ?? member.full_name).split(' ')[0]
-    const html = `
-      <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111827;">
-        <p style="font-size: 16px; margin-bottom: 16px;">Hey ${firstName},</p>
-        <p style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Today is ${birthdayList}'s birthday! 🎂🎉</p>
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-          Take a moment to reach out and celebrate them today.
-        </p>
-        <a href="${appUrl}" style="display: inline-block; background: #6C63FF; color: white; font-weight: 600; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-size: 15px;">
-          Open Gather &rarr;
-        </a>
-        <p style="font-size: 14px; color: #6b7280; margin-top: 32px;">— The Gather community</p>
-      </div>`
-
-    return resend.emails.send({ from: fromEmail, to: member.email!, subject, html })
+    return {
+      from: fromEmail,
+      to: member.email!,
+      subject,
+      html: `
+        <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111827;">
+          <p style="font-size: 16px; margin-bottom: 16px;">Hey ${firstName},</p>
+          <p style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Today is ${birthdayList}'s birthday! 🎂🎉</p>
+          <p style="font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+            Take a moment to reach out and celebrate them today.
+          </p>
+          <a href="${appUrl}" style="display: inline-block; background: #6C63FF; color: white; font-weight: 600; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-size: 15px;">
+            Open Gather &rarr;
+          </a>
+          <p style="font-size: 14px; color: #6b7280; margin-top: 32px;">— The Gather community</p>
+        </div>`,
+    }
   })
 
-  const results = await Promise.allSettled(sends)
-  const failed = results.filter((r) => r.status === 'rejected').length
+  const { data: batchData, error: batchError } = await resend.batch.send(emailBatch)
+  if (batchError) {
+    console.error('[birthday-reminder] batch send failed', batchError)
+    return NextResponse.json({ error: 'Failed to send emails' }, { status: 500 })
+  }
 
   return NextResponse.json({
-    sent: emails.length - failed,
+    sent: batchData?.data?.length ?? eligible.length,
     birthdays: birthdayNames,
     date: today,
   })

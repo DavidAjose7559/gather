@@ -11,7 +11,6 @@ export async function POST(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Verify admin
   const { data: profile } = await supabase
     .from('profiles').select('role').eq('id', user.id).single()
   if (!profile || profile.role !== 'admin') {
@@ -31,7 +30,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to load members' }, { status: 500 })
   }
 
-  const emails = members.filter((m) => m.email)
+  const eligible = members.filter((m) => m.email)
 
   const htmlBody = message
     .replace(/&/g, '&amp;')
@@ -39,26 +38,34 @@ export async function POST(request: NextRequest) {
     .replace(/>/g, '&gt;')
     .replace(/\n/g, '<br/>')
 
-  const sends = emails.map((member) => {
-    const html = `
-      <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111827;">
-        <p style="font-size: 13px; font-weight: 600; color: #6C63FF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;">
-          A message from your Gather community
-        </p>
-        <div style="font-size: 16px; line-height: 1.7; color: #111827; margin-bottom: 32px;">
-          ${htmlBody}
-        </div>
-        <hr style="border: none; border-top: 1px solid #e5e7eb; margin-bottom: 16px;"/>
-        <p style="font-size: 13px; color: #9ca3af;">
-          — Sent via <a href="${appUrl}" style="color: #6C63FF; text-decoration: none;">Gather</a> · gatherdaily.app
-        </p>
-      </div>`
-
-    return resend.emails.send({ from: fromEmail, to: member.email!, subject: subject.trim(), html })
+  const emailBatch = eligible.map((member) => {
+    const firstName = (member.display_name ?? member.full_name).split(' ')[0]
+    return {
+      from: fromEmail,
+      to: member.email!,
+      subject: subject.trim(),
+      html: `
+        <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111827;">
+          <p style="font-size: 13px; font-weight: 600; color: #6C63FF; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 20px;">
+            A message from your Gather community
+          </p>
+          <p style="font-size: 16px; margin-bottom: 16px;">Hi ${firstName},</p>
+          <div style="font-size: 16px; line-height: 1.7; color: #111827; margin-bottom: 32px;">
+            ${htmlBody}
+          </div>
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin-bottom: 16px;"/>
+          <p style="font-size: 13px; color: #9ca3af;">
+            — Sent via <a href="${appUrl}" style="color: #6C63FF; text-decoration: none;">Gather</a> · gatherdaily.app
+          </p>
+        </div>`,
+    }
   })
 
-  const results = await Promise.allSettled(sends)
-  const sent = results.filter((r) => r.status === 'fulfilled').length
+  const { data: batchData, error: batchError } = await resend.batch.send(emailBatch)
+  if (batchError) {
+    console.error('[broadcast] batch send failed', batchError)
+    return NextResponse.json({ error: 'Failed to send emails' }, { status: 500 })
+  }
 
-  return NextResponse.json({ sent, count: emails.length })
+  return NextResponse.json({ sent: batchData?.data?.length ?? eligible.length, count: eligible.length })
 }
