@@ -113,6 +113,16 @@ export default async function HomePage() {
       return { checkIn: c, profile }
     })
 
+  // Sort members: checked-in first (alphabetical), then not-yet (alphabetical)
+  const sortedProfiles = [...profiles].sort((a, b) => {
+    const aIn = checkedInIds.has(a.id)
+    const bIn = checkedInIds.has(b.id)
+    if (aIn !== bIn) return aIn ? -1 : 1
+    const aName = (a.display_name ?? a.full_name).toLowerCase()
+    const bName = (b.display_name ?? b.full_name).toLowerCase()
+    return aName.localeCompare(bName)
+  })
+
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
@@ -136,8 +146,8 @@ export default async function HomePage() {
           )}
         </div>
 
-        {/* Support banners — one per visible support request */}
-        {visibleSupportRequests.map(({ checkIn, profile }) => (
+        {/* Support banners — capped at 2, summary if more */}
+        {visibleSupportRequests.slice(0, 2).map(({ checkIn, profile }) => (
           <div
             key={checkIn.id}
             className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center justify-between gap-3"
@@ -156,6 +166,14 @@ export default async function HomePage() {
             </Link>
           </div>
         ))}
+        {visibleSupportRequests.length > 2 && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
+            <span className="text-amber-500 text-lg flex-shrink-0">🙏</span>
+            <p className="text-sm font-medium text-amber-800">
+              {visibleSupportRequests.length - 2} more {visibleSupportRequests.length - 2 === 1 ? 'person has' : 'people have'} asked for support today.
+            </p>
+          </div>
+        )}
 
         {/* Check-in CTA or status */}
         {!myCheckIn ? (
@@ -249,7 +267,7 @@ export default async function HomePage() {
             )}
           </h2>
           <div className="flex flex-col gap-2">
-            {profiles.map((profile) => {
+            {sortedProfiles.map((profile) => {
               const checkIn = checkIns.find((c) => c.user_id === profile.id)
               const isCheckedIn = checkedInIds.has(profile.id)
               const isVisible = getVisibleCheckIn(checkIn, user.id, grants)

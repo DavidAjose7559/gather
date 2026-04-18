@@ -94,7 +94,11 @@ export async function GET(request: NextRequest) {
     return resend.emails.send({ from: fromEmail, to: member.email!, subject, html })
   })
 
-  await Promise.allSettled(sends)
+  const results = await Promise.allSettled(sends)
+  const failed = results.filter(r => r.status === 'rejected')
+  if (failed.length > 0) {
+    console.error(`[reminders] ${failed.length} of ${pending.length} email(s) failed`, failed)
+  }
 
-  return NextResponse.json({ sent: pending.length, slot, date: today })
+  return NextResponse.json({ sent: pending.length - failed.length, attempted: pending.length, slot, date: today })
 }

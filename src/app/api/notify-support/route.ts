@@ -94,7 +94,11 @@ export async function POST(request: NextRequest) {
     })
   })
 
-  await Promise.allSettled(sends)
+  const results = await Promise.allSettled(sends)
+  const failed = results.filter(r => r.status === 'rejected')
+  if (failed.length > 0) {
+    console.error(`[notify-support] ${failed.length} of ${eligible.length} email(s) failed`, failed)
+  }
 
-  return NextResponse.json({ sent: eligible.length })
+  return NextResponse.json({ sent: eligible.length - failed.length })
 }
