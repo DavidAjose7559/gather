@@ -14,10 +14,15 @@ function LoginForm() {
 
   // Fallback: if Supabase sends the magic link to /login?code=... instead of
   // /auth/callback?code=..., forward the code to the real callback route.
+  // Also surface ?error=auth as a visible message.
   useEffect(() => {
     const code = searchParams.get('code')
     if (code) {
       router.replace(`/auth/callback?code=${encodeURIComponent(code)}`)
+      return
+    }
+    if (searchParams.get('error') === 'auth') {
+      setError('Something went wrong with your login link. Please try again.')
     }
   }, [searchParams, router])
 

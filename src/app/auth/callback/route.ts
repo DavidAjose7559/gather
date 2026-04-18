@@ -8,7 +8,8 @@ export async function GET(request: NextRequest) {
   const next = searchParams.get('next') ?? '/'
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/login?error=auth_error`)
+    console.error('[auth/callback] No code param in request')
+    return NextResponse.redirect(`${origin}/login?error=auth`)
   }
 
   // Collect cookies that Supabase wants to set so we can apply them
@@ -35,7 +36,8 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code)
 
   if (error) {
-    return NextResponse.redirect(`${origin}/login?error=auth_error`)
+    console.error('[auth/callback] exchangeCodeForSession failed:', error.message)
+    return NextResponse.redirect(`${origin}/login?error=auth`)
   }
 
   const {
