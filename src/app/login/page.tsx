@@ -12,8 +12,6 @@ function LoginForm() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Fallback: if Supabase sends the magic link to /login?code=... instead of
-  // /auth/callback?code=..., forward the code to the real callback route.
   useEffect(() => {
     const code = searchParams.get('code')
     if (code) {
@@ -46,12 +44,18 @@ function LoginForm() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-8 text-center shadow-sm">
-          <div className="text-4xl mb-4">✉️</div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Check your inbox</h2>
-          <p className="text-gray-500">
-            We sent a login link to <span className="font-medium text-gray-900">{email}</span>.
+      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: '#FAF9F7' }}>
+        <div
+          className="w-full max-w-sm rounded-2xl p-8 text-center"
+          style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}
+        >
+          <div style={{ fontSize: '40px', marginBottom: '16px' }}>✉️</div>
+          <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#1A1714', marginBottom: '8px' }}>
+            Check your inbox
+          </h2>
+          <p style={{ fontSize: '14px', color: '#6B6560', lineHeight: 1.6 }}>
+            We sent a login link to{' '}
+            <span style={{ fontWeight: 500, color: '#1A1714' }}>{email}</span>.
             Tap it to sign in — no password needed.
           </p>
         </div>
@@ -60,19 +64,30 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome to our Accountability Page</h1>
-          <p className="text-gray-500 leading-relaxed">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: '#FAF9F7' }}>
+      <div className="w-full max-w-sm flex flex-col gap-6">
+
+        {/* App name + tagline */}
+        <div className="text-center">
+          <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1A1714', marginBottom: '6px' }}>
+            Gather
+          </h1>
+          <p style={{ fontSize: '15px', color: '#6B6560', lineHeight: 1.6 }}>
             A quiet place to check in with yourself and your people.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
+        {/* Form card */}
+        <div
+          className="rounded-2xl p-6 flex flex-col gap-4"
+          style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}
+        >
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="email"
+                style={{ fontSize: '13px', fontWeight: 500, color: '#6B6560', display: 'block', marginBottom: '6px' }}
+              >
                 Your email address
               </label>
               <input
@@ -80,28 +95,42 @@ function LoginForm() {
                 type="email"
                 required
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
+                style={{
+                  background: '#F5F3EF',
+                  border: '1px solid #E8E4DE',
+                  borderRadius: '12px',
+                  padding: '12px 14px',
+                  fontSize: '15px',
+                  color: '#1A1714',
+                  width: '100%',
+                }}
               />
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+              <p
+                className="rounded-xl px-3 py-2"
+                style={{ fontSize: '13px', color: '#EF4444', background: '#FEF2F2' }}
+              >
+                {error}
+              </p>
             )}
 
             <button
               type="submit"
               disabled={loading || !email}
-              className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="w-full min-h-[48px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 600, fontSize: '15px' }}
             >
               {loading ? 'Sending…' : 'Send me a login link'}
             </button>
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-400 mt-6">
-          No account yet? Just enter your email — we'll get you set up.
+        <p style={{ fontSize: '13px', color: '#A8A29E', textAlign: 'center' }}>
+          No account yet? Just enter your email — we&apos;ll get you set up.
         </p>
       </div>
     </div>
@@ -110,7 +139,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+    <Suspense fallback={<div className="min-h-screen" style={{ background: '#FAF9F7' }} />}>
       <LoginForm />
     </Suspense>
   )

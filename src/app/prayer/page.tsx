@@ -7,37 +7,31 @@ import { timeAgo } from '@/lib/date'
 import BottomNav from '@/components/BottomNav'
 
 type PrayerProfile = { full_name: string; display_name: string | null }
-
-type Comment = {
-  id: string
-  body: string
-  user_id: string
-  created_at: string
-  profile: PrayerProfile | null
-}
-
+type Comment = { id: string; body: string; user_id: string; created_at: string; profile: PrayerProfile | null }
 type PrayerItem = {
-  id: string
-  user_id: string
-  body: string
-  is_answered: boolean
-  answered_note: string | null
-  praying_count: number
-  created_at: string
-  answered_at: string | null
-  profile: PrayerProfile | null
-  comments: Comment[]
+  id: string; user_id: string; body: string; is_answered: boolean;
+  answered_note: string | null; praying_count: number; created_at: string;
+  answered_at: string | null; profile: PrayerProfile | null; comments: Comment[]
 }
 
-function Initials({ name }: { name: string }) {
+function InitialsCircle({ name, size = 36 }: { name: string; size?: number }) {
   const parts = name.trim().split(' ')
-  const initials = parts.length >= 2
-    ? `${parts[0][0]}${parts[parts.length - 1][0]}`
-    : name.slice(0, 2)
+  const initials = parts.length >= 2 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : name.slice(0, 2)
   return (
-    <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold flex-shrink-0 uppercase">
+    <div
+      className="rounded-full flex items-center justify-center font-semibold uppercase text-white flex-shrink-0"
+      style={{ width: size, height: size, background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontSize: size * 0.36 }}
+    >
       {initials}
     </div>
+  )
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#A8A29E' }}>
+      {children}
+    </p>
   )
 }
 
@@ -51,20 +45,12 @@ export default function PrayerPage() {
   const [myPrayingIds, setMyPrayingIds] = useState<Set<string>>(new Set())
   const [showTestimonies, setShowTestimonies] = useState(false)
   const [loading, setLoading] = useState(true)
-
-  // Add request form
   const [showAddForm, setShowAddForm] = useState(false)
   const [newBody, setNewBody] = useState('')
   const [submitting, setSubmitting] = useState(false)
-
-  // Mark as answered flow
   const [markingAnsweredId, setMarkingAnsweredId] = useState<string | null>(null)
   const [answerNote, setAnswerNote] = useState('')
-
-  // Remove confirmation
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
-
-  // Encouragement comment
   const [commentingId, setCommentingId] = useState<string | null>(null)
   const [commentBody, setCommentBody] = useState('')
 
@@ -75,20 +61,13 @@ export default function PrayerPage() {
       setCurrentUserId(user.id)
 
       const [activeRes, answeredRes, prayingRes] = await Promise.all([
-        supabase
-          .from('prayer_requests')
+        supabase.from('prayer_requests')
           .select('*, profile:profiles(full_name, display_name), comments:prayer_comments(id, body, user_id, created_at, profile:profiles(full_name, display_name))')
-          .eq('is_answered', false)
-          .order('created_at', { ascending: false }),
-        supabase
-          .from('prayer_requests')
+          .eq('is_answered', false).order('created_at', { ascending: false }),
+        supabase.from('prayer_requests')
           .select('*, profile:profiles(full_name, display_name), comments:prayer_comments(id, body, user_id, created_at, profile:profiles(full_name, display_name))')
-          .eq('is_answered', true)
-          .order('answered_at', { ascending: false }),
-        supabase
-          .from('prayer_praying')
-          .select('prayer_id')
-          .eq('user_id', user.id),
+          .eq('is_answered', true).order('answered_at', { ascending: false }),
+        supabase.from('prayer_praying').select('prayer_id').eq('user_id', user.id),
       ])
 
       setActive((activeRes.data ?? []) as PrayerItem[])
@@ -103,8 +82,7 @@ export default function PrayerPage() {
     if (!newBody.trim() || !currentUserId) return
     setSubmitting(true)
     const res = await fetch('/api/prayer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ body: newBody.trim() }),
     })
     if (res.ok) {
@@ -118,27 +96,19 @@ export default function PrayerPage() {
 
   async function togglePraying(prayerId: string) {
     const res = await fetch('/api/prayer/toggle-praying', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prayer_id: prayerId }),
     })
     if (res.ok) {
       const { praying, count } = await res.json()
-      setMyPrayingIds((prev) => {
-        const next = new Set(prev)
-        praying ? next.add(prayerId) : next.delete(prayerId)
-        return next
-      })
-      setActive((prev) =>
-        prev.map((p) => p.id === prayerId ? { ...p, praying_count: count } : p)
-      )
+      setMyPrayingIds((prev) => { const next = new Set(prev); praying ? next.add(prayerId) : next.delete(prayerId); return next })
+      setActive((prev) => prev.map((p) => p.id === prayerId ? { ...p, praying_count: count } : p))
     }
   }
 
   async function markAnswered(prayerId: string) {
     const res = await fetch('/api/prayer/answer', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prayer_id: prayerId, answered_note: answerNote }),
     })
     if (res.ok) {
@@ -155,32 +125,21 @@ export default function PrayerPage() {
 
   async function removeRequest(prayerId: string) {
     const res = await fetch('/api/prayer', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: prayerId }),
     })
-    if (res.ok) {
-      setActive((prev) => prev.filter((p) => p.id !== prayerId))
-      setConfirmRemoveId(null)
-    }
+    if (res.ok) { setActive((prev) => prev.filter((p) => p.id !== prayerId)); setConfirmRemoveId(null) }
   }
 
   async function addComment(prayerId: string) {
     if (!commentBody.trim()) return
     const res = await fetch('/api/prayer/comment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prayer_id: prayerId, body: commentBody.trim() }),
     })
     if (res.ok) {
       const data = await res.json()
-      setActive((prev) =>
-        prev.map((p) =>
-          p.id === prayerId
-            ? { ...p, comments: [...p.comments, { ...data, profile: null }] }
-            : p
-        )
-      )
+      setActive((prev) => prev.map((p) => p.id === prayerId ? { ...p, comments: [...p.comments, { ...data, profile: null }] } : p))
       setCommentBody('')
       setCommentingId(null)
     }
@@ -188,51 +147,56 @@ export default function PrayerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FAF9F7' }}>
+        <p style={{ color: '#A8A29E' }}>Loading…</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen pb-24" style={{ background: '#FAF9F7' }}>
       <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
+
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Prayer Wall</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Carry each other&apos;s burdens.</p>
+            <h1 style={{ fontSize: '22px', fontWeight: 600, color: '#1A1714' }}>Prayer Wall</h1>
+            <p style={{ fontSize: '14px', color: '#6B6560', marginTop: '2px' }}>Carry each other&apos;s burdens.</p>
           </div>
           <button
             onClick={() => setShowAddForm((v) => !v)}
-            className="min-h-[44px] px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all"
+            className="min-h-[40px] px-4 rounded-xl transition-opacity hover:opacity-80"
+            style={{ background: '#F5F3EF', color: '#1A1714', fontWeight: 500, fontSize: '14px', border: '1px solid #E8E4DE' }}
           >
-            + Share
+            {showAddForm ? 'Cancel' : '+ Share'}
           </button>
         </div>
 
         {/* Add form */}
         {showAddForm && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Share a prayer request</h2>
+          <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+            <p style={{ fontSize: '15px', fontWeight: 500, color: '#1A1714' }}>Share a prayer request</p>
             <textarea
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
               placeholder="What would you like the group to pray for?"
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
+              className="w-full rounded-xl resize-none"
+              style={{ background: '#F5F3EF', border: '1px solid #E8E4DE', padding: '12px 14px', fontSize: '15px', color: '#1A1714', lineHeight: 1.5 }}
             />
             <div className="flex gap-3">
               <button
                 onClick={addRequest}
                 disabled={submitting || !newBody.trim()}
-                className="flex-1 min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl text-sm hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="flex-1 min-h-[44px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 500, fontSize: '14px' }}
               >
                 {submitting ? 'Sharing…' : 'Share request'}
               </button>
               <button
                 onClick={() => { setShowAddForm(false); setNewBody('') }}
-                className="min-h-[48px] px-4 bg-gray-100 text-gray-600 font-medium rounded-xl text-sm hover:bg-gray-200 transition-all"
+                className="min-h-[44px] px-4 rounded-xl transition-opacity hover:opacity-80"
+                style={{ background: '#F5F3EF', color: '#6B6560', fontWeight: 500, fontSize: '14px', border: '1px solid #E8E4DE' }}
               >
                 Cancel
               </button>
@@ -241,228 +205,254 @@ export default function PrayerPage() {
         )}
 
         {/* Active requests */}
-        <div className="flex flex-col gap-3">
-          {active.length === 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
-              <p className="text-gray-400 text-sm">No prayer requests yet. Be the first to share one.</p>
-            </div>
-          )}
+        {active.length === 0 ? (
+          <div className="rounded-2xl p-6 text-center" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+            <p style={{ fontSize: '14px', color: '#A8A29E' }}>No prayer requests yet. Be the first to share one.</p>
+          </div>
+        ) : (
+          <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+            {active.map((prayer, index) => {
+              const name = prayer.profile?.display_name ?? prayer.profile?.full_name ?? 'A member'
+              const isOwn = prayer.user_id === currentUserId
+              const isPraying = myPrayingIds.has(prayer.id)
 
-          {active.map((prayer) => {
-            const name = prayer.profile?.display_name ?? prayer.profile?.full_name ?? 'A member'
-            const isOwn = prayer.user_id === currentUserId
-            const isPraying = myPrayingIds.has(prayer.id)
-
-            return (
-              <div key={prayer.id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-                {/* Header */}
-                <div className="flex items-center gap-3">
-                  <Initials name={prayer.profile?.full_name ?? 'M'} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm">{name}</p>
-                    <p className="text-xs text-gray-400">{timeAgo(prayer.created_at)}</p>
-                  </div>
-                </div>
-
-                {/* Body */}
-                <p className="text-gray-800 text-sm leading-relaxed">{prayer.body}</p>
-
-                {/* Actions */}
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => togglePraying(prayer.id)}
-                    className={`min-h-[36px] px-3 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                      isPraying
-                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    🙏 {prayer.praying_count > 0 ? prayer.praying_count : ''}
-                    <span>{isPraying ? 'Praying' : 'Pray'}</span>
-                  </button>
-
-                  {!isOwn && (
-                    <button
-                      onClick={() => { setCommentingId(commentingId === prayer.id ? null : prayer.id); setCommentBody('') }}
-                      className="min-h-[36px] px-3 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all"
-                    >
-                      Encourage
-                    </button>
-                  )}
-
-                  {isOwn && (
-                    <>
-                      {markingAnsweredId === prayer.id ? null : (
-                        <button
-                          onClick={() => { setMarkingAnsweredId(prayer.id); setAnswerNote('') }}
-                          className="min-h-[36px] px-3 rounded-lg text-sm font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-all border border-green-200"
-                        >
-                          Answered
-                        </button>
-                      )}
-                      {confirmRemoveId === prayer.id ? null : (
-                        <button
-                          onClick={() => setConfirmRemoveId(prayer.id)}
-                          className="min-h-[36px] px-3 rounded-lg text-sm font-medium bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {/* Mark as answered inline form */}
-                {markingAnsweredId === prayer.id && (
-                  <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
-                    <p className="text-sm font-medium text-gray-700">How did God answer this? (optional)</p>
-                    <textarea
-                      value={answerNote}
-                      onChange={(e) => setAnswerNote(e.target.value)}
-                      placeholder="Share the testimony…"
-                      rows={3}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm resize-none"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => markAnswered(prayer.id)}
-                        className="flex-1 min-h-[40px] bg-green-600 text-white font-semibold rounded-lg text-sm hover:bg-green-700 transition-all"
-                      >
-                        Save testimony
-                      </button>
-                      <button
-                        onClick={() => markAnswered(prayer.id)}
-                        className="min-h-[40px] px-3 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-all"
-                      >
-                        Skip
-                      </button>
-                      <button
-                        onClick={() => setMarkingAnsweredId(null)}
-                        className="min-h-[40px] px-3 bg-gray-100 text-gray-400 rounded-lg text-sm hover:bg-gray-200 transition-all"
-                      >
-                        Cancel
-                      </button>
+              return (
+                <div
+                  key={prayer.id}
+                  className="px-4 py-4 flex flex-col gap-3"
+                  style={index > 0 ? { borderTop: '1px solid #EBEBEB' } : {}}
+                >
+                  {/* Header row */}
+                  <div className="flex items-center gap-3">
+                    <InitialsCircle name={prayer.profile?.full_name ?? 'M'} size={36} />
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1714' }}>{name}</p>
+                      <p style={{ fontSize: '12px', color: '#A8A29E' }}>{timeAgo(prayer.created_at)}</p>
                     </div>
                   </div>
-                )}
 
-                {/* Remove confirmation */}
-                {confirmRemoveId === prayer.id && (
-                  <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
-                    <p className="text-sm text-gray-600">Remove this request? It won&apos;t be marked as answered.</p>
-                    <div className="flex gap-2">
+                  {/* Body */}
+                  <p style={{ fontSize: '15px', color: '#1A1714', lineHeight: 1.6 }}>{prayer.body}</p>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => togglePraying(prayer.id)}
+                      className="min-h-[34px] px-3 rounded-full transition-all"
+                      style={{
+                        background: isPraying ? '#EEF0FB' : '#F5F3EF',
+                        color: isPraying ? '#5B4FCF' : '#6B6560',
+                        fontSize: '13px', fontWeight: 500,
+                        border: isPraying ? '1px solid #C7D0F8' : '1px solid #E8E4DE',
+                      }}
+                    >
+                      {prayer.praying_count > 0 ? `${prayer.praying_count} ` : ''}{isPraying ? 'Praying' : 'Pray'}
+                    </button>
+
+                    {!isOwn && (
                       <button
-                        onClick={() => removeRequest(prayer.id)}
-                        className="flex-1 min-h-[40px] bg-red-50 text-red-600 font-semibold rounded-lg text-sm hover:bg-red-100 transition-all border border-red-200"
+                        onClick={() => { setCommentingId(commentingId === prayer.id ? null : prayer.id); setCommentBody('') }}
+                        className="min-h-[34px] px-3 rounded-full transition-all"
+                        style={{ background: '#F5F3EF', color: '#6B6560', fontSize: '13px', fontWeight: 500, border: '1px solid #E8E4DE' }}
+                      >
+                        Encourage
+                      </button>
+                    )}
+
+                    {isOwn && markingAnsweredId !== prayer.id && (
+                      <button
+                        onClick={() => { setMarkingAnsweredId(prayer.id); setAnswerNote('') }}
+                        className="min-h-[34px] px-3 rounded-full transition-all"
+                        style={{ background: '#DCFCE7', color: '#166534', fontSize: '13px', fontWeight: 500, border: '1px solid #BBF7D0' }}
+                      >
+                        Answered
+                      </button>
+                    )}
+
+                    {isOwn && confirmRemoveId !== prayer.id && (
+                      <button
+                        onClick={() => setConfirmRemoveId(prayer.id)}
+                        className="min-h-[34px] px-3 rounded-full transition-all"
+                        style={{ background: '#F5F3EF', color: '#A8A29E', fontSize: '13px', fontWeight: 500, border: '1px solid #E8E4DE' }}
                       >
                         Remove
                       </button>
-                      <button
-                        onClick={() => setConfirmRemoveId(null)}
-                        className="min-h-[40px] px-4 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-all"
-                      >
-                        Keep it
-                      </button>
-                    </div>
+                    )}
                   </div>
-                )}
 
-                {/* Encouragement comment form */}
-                {commentingId === prayer.id && (
-                  <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
-                    <textarea
-                      value={commentBody}
-                      onChange={(e) => setCommentBody(e.target.value)}
-                      placeholder="Still praying for you 🙏"
-                      rows={2}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm resize-none"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => addComment(prayer.id)}
-                        disabled={!commentBody.trim()}
-                        className="flex-1 min-h-[40px] bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 transition-all"
-                      >
-                        Send
-                      </button>
-                      <button
-                        onClick={() => { setCommentingId(null); setCommentBody('') }}
-                        className="min-h-[40px] px-4 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-all"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Comments */}
-                {prayer.comments.length > 0 && (
-                  <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
-                    {prayer.comments.map((c) => (
-                      <div key={c.id} className="flex gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0 mt-0.5 uppercase">
-                          {(c.profile?.full_name ?? 'M')[0]}
-                        </div>
-                        <div>
-                          <span className="text-xs font-medium text-gray-600 mr-1.5">
-                            {c.profile?.display_name ?? c.profile?.full_name ?? 'A member'}
-                          </span>
-                          <span className="text-sm text-gray-700">{c.body}</span>
-                        </div>
+                  {/* Mark as answered */}
+                  {markingAnsweredId === prayer.id && (
+                    <div className="flex flex-col gap-2 pt-3" style={{ borderTop: '1px solid #EBEBEB' }}>
+                      <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1714' }}>How did God answer this? <span style={{ color: '#A8A29E', fontWeight: 400 }}>(optional)</span></p>
+                      <textarea
+                        value={answerNote}
+                        onChange={(e) => setAnswerNote(e.target.value)}
+                        placeholder="Share the testimony…"
+                        rows={3}
+                        className="w-full rounded-xl resize-none"
+                        style={{ background: '#F5F3EF', border: '1px solid #E8E4DE', padding: '10px 12px', fontSize: '14px', color: '#1A1714' }}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => markAnswered(prayer.id)}
+                          className="flex-1 min-h-[40px] rounded-xl text-white transition-opacity hover:opacity-90"
+                          style={{ background: '#22C55E', fontWeight: 500, fontSize: '14px' }}
+                        >
+                          Save testimony
+                        </button>
+                        <button
+                          onClick={() => markAnswered(prayer.id)}
+                          className="min-h-[40px] px-4 rounded-xl transition-opacity hover:opacity-80"
+                          style={{ background: '#F5F3EF', color: '#6B6560', fontSize: '14px', border: '1px solid #E8E4DE' }}
+                        >
+                          Skip
+                        </button>
+                        <button
+                          onClick={() => setMarkingAnsweredId(null)}
+                          className="min-h-[40px] px-4 rounded-xl transition-opacity hover:opacity-80"
+                          style={{ background: '#F5F3EF', color: '#A8A29E', fontSize: '14px', border: '1px solid #E8E4DE' }}
+                        >
+                          Cancel
+                        </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
+                    </div>
+                  )}
 
-        {/* Testimonies section */}
+                  {/* Remove confirmation */}
+                  {confirmRemoveId === prayer.id && (
+                    <div className="flex flex-col gap-2 pt-3" style={{ borderTop: '1px solid #EBEBEB' }}>
+                      <p style={{ fontSize: '14px', color: '#6B6560' }}>Remove this request? It won&apos;t be marked as answered.</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => removeRequest(prayer.id)}
+                          className="flex-1 min-h-[40px] rounded-xl transition-opacity hover:opacity-80"
+                          style={{ background: '#FEF2F2', color: '#EF4444', fontSize: '14px', fontWeight: 500 }}
+                        >
+                          Remove
+                        </button>
+                        <button
+                          onClick={() => setConfirmRemoveId(null)}
+                          className="min-h-[40px] px-4 rounded-xl transition-opacity hover:opacity-80"
+                          style={{ background: '#F5F3EF', color: '#6B6560', fontSize: '14px', border: '1px solid #E8E4DE' }}
+                        >
+                          Keep it
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Encourage comment form */}
+                  {commentingId === prayer.id && (
+                    <div className="flex flex-col gap-2 pt-3" style={{ borderTop: '1px solid #EBEBEB' }}>
+                      <textarea
+                        value={commentBody}
+                        onChange={(e) => setCommentBody(e.target.value)}
+                        placeholder="Still praying for you…"
+                        rows={2}
+                        className="w-full rounded-xl resize-none"
+                        style={{ background: '#F5F3EF', border: '1px solid #E8E4DE', padding: '10px 12px', fontSize: '14px', color: '#1A1714' }}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => addComment(prayer.id)}
+                          disabled={!commentBody.trim()}
+                          className="flex-1 min-h-[40px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                          style={{ background: '#5B4FCF', fontWeight: 500, fontSize: '14px' }}
+                        >
+                          Send
+                        </button>
+                        <button
+                          onClick={() => { setCommentingId(null); setCommentBody('') }}
+                          className="min-h-[40px] px-4 rounded-xl transition-opacity hover:opacity-80"
+                          style={{ background: '#F5F3EF', color: '#6B6560', fontSize: '14px', border: '1px solid #E8E4DE' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Comments */}
+                  {prayer.comments.length > 0 && (
+                    <div className="flex flex-col gap-2 pt-3" style={{ borderTop: '1px solid #EBEBEB' }}>
+                      {prayer.comments.map((c) => (
+                        <div key={c.id} className="flex gap-2 items-start">
+                          <div
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold uppercase flex-shrink-0 mt-0.5"
+                            style={{ background: '#F5F3EF', color: '#6B6560' }}
+                          >
+                            {(c.profile?.full_name ?? 'M')[0]}
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '13px', fontWeight: 500, color: '#6B6560', marginRight: '6px' }}>
+                              {c.profile?.display_name ?? c.profile?.full_name ?? 'A member'}
+                            </span>
+                            <span style={{ fontSize: '14px', color: '#1A1714' }}>{c.body}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* Testimonies */}
         <div>
           <button
             onClick={() => setShowTestimonies((v) => !v)}
             className="w-full flex items-center justify-between min-h-[44px] py-2"
           >
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
-              <span>✨</span> Testimonies
-              {answered.length > 0 && (
-                <span className="text-xs font-normal text-gray-400 normal-case tracking-normal">
-                  ({answered.length})
-                </span>
-              )}
-            </h2>
-            <span className="text-gray-400 text-sm">{showTestimonies ? '▲' : '▼'}</span>
+            <SectionLabel>
+              Testimonies{answered.length > 0 && ` (${answered.length})`}
+            </SectionLabel>
+            <svg
+              width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="#A8A29E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ transform: showTestimonies ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
           </button>
 
           {showTestimonies && (
             <div className="flex flex-col gap-3 mt-2">
               {answered.length === 0 && (
-                <p className="text-sm text-gray-400 px-1">Answered prayers will appear here.</p>
+                <p style={{ fontSize: '14px', color: '#A8A29E', padding: '4px' }}>Answered prayers will appear here.</p>
               )}
-              {answered.map((prayer) => {
-                const name = prayer.profile?.display_name ?? prayer.profile?.full_name ?? 'A member'
-                return (
-                  <div key={prayer.id} className="bg-green-50 border border-green-100 rounded-2xl p-5 flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                        God is faithful 🙏
-                      </span>
-                      <span className="text-xs text-gray-400 ml-auto">
-                        {prayer.answered_at ? timeAgo(prayer.answered_at) : ''}
-                      </span>
-                    </div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{name}&apos;s prayer</p>
-                    <p className="text-gray-700 text-sm leading-relaxed">{prayer.body}</p>
-                    {prayer.answered_note && (
-                      <div className="border-t border-green-200 pt-2 mt-1">
-                        <p className="text-xs font-medium text-green-700 mb-1">How God answered:</p>
-                        <p className="text-gray-700 text-sm leading-relaxed">{prayer.answered_note}</p>
+              {answered.length > 0 && (
+                <div className="rounded-2xl overflow-hidden" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0' }}>
+                  {answered.map((prayer, index) => {
+                    const name = prayer.profile?.display_name ?? prayer.profile?.full_name ?? 'A member'
+                    return (
+                      <div
+                        key={prayer.id}
+                        className="px-4 py-4 flex flex-col gap-2"
+                        style={index > 0 ? { borderTop: '1px solid #BBF7D0' } : {}}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="rounded-full px-2.5 py-1" style={{ background: '#DCFCE7', color: '#166534', fontSize: '12px', fontWeight: 600 }}>
+                            God is faithful
+                          </span>
+                          <span style={{ fontSize: '12px', color: '#A8A29E' }}>
+                            {prayer.answered_at ? timeAgo(prayer.answered_at) : ''}
+                          </span>
+                        </div>
+                        <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6B6560' }}>{name}&apos;s prayer</p>
+                        <p style={{ fontSize: '14px', color: '#1A1714', lineHeight: 1.6 }}>{prayer.body}</p>
+                        {prayer.answered_note && (
+                          <div className="pt-2" style={{ borderTop: '1px solid #BBF7D0' }}>
+                            <p style={{ fontSize: '12px', fontWeight: 600, color: '#166534', marginBottom: '4px' }}>How God answered:</p>
+                            <p style={{ fontSize: '14px', color: '#1A1714', lineHeight: 1.6 }}>{prayer.answered_note}</p>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )}
         </div>

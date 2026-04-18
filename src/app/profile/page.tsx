@@ -10,27 +10,18 @@ import Link from 'next/link'
 import type { CheckIn } from '@/lib/types'
 
 const emotionalLabels: Record<string, string> = {
-  peaceful: 'Peaceful',
-  okay: 'Okay',
-  anxious: 'Anxious',
-  overwhelmed: 'Overwhelmed',
-  low: 'Feeling low',
-  joyful: 'Joyful',
+  peaceful: 'Peaceful', okay: 'Okay', anxious: 'Anxious',
+  overwhelmed: 'Overwhelmed', low: 'Feeling low', joyful: 'Joyful',
 }
-
 const spiritualLabels: Record<string, string> = {
-  strong: 'Strong',
-  okay: 'Okay',
-  struggling: 'Struggling',
+  strong: 'Strong', okay: 'Okay', struggling: 'Struggling',
 }
 
-function Chip({ label, color = 'gray' }: { label: string; color?: 'indigo' | 'gray' }) {
+function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${
-      color === 'indigo' ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-100 text-gray-600'
-    }`}>
-      {label}
-    </span>
+    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#A8A29E', marginBottom: '8px' }}>
+      {children}
+    </p>
   )
 }
 
@@ -70,18 +61,8 @@ export default function ProfilePage() {
 
       const [profileRes, historyRes, checkInListRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', user.id).single(),
-        supabase
-          .from('check_ins')
-          .select('check_in_date')
-          .eq('user_id', user.id)
-          .gte('check_in_date', ninetyDaysAgoStr)
-          .order('check_in_date', { ascending: false }),
-        supabase
-          .from('check_ins')
-          .select('*')
-          .eq('user_id', user.id)
-          .gte('check_in_date', formatDateToronto(thirtyDaysAgoCursor))
-          .order('check_in_date', { ascending: false }),
+        supabase.from('check_ins').select('check_in_date').eq('user_id', user.id).gte('check_in_date', ninetyDaysAgoStr).order('check_in_date', { ascending: false }),
+        supabase.from('check_ins').select('*').eq('user_id', user.id).gte('check_in_date', formatDateToronto(thirtyDaysAgoCursor)).order('check_in_date', { ascending: false }),
       ])
 
       if (profileRes.data) {
@@ -92,8 +73,7 @@ export default function ProfilePage() {
         setDefaultVisibility(p.default_visibility ?? 'everyone')
       }
 
-      const history = historyRes.data ?? []
-      setStreak(calculateStreak(history))
+      setStreak(calculateStreak(historyRes.data ?? []))
       setCheckIns((checkInListRes.data ?? []) as CheckIn[])
       setLoading(false)
     }
@@ -106,15 +86,12 @@ export default function ProfilePage() {
     setSaveError(null)
     setSaveSuccess(false)
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        full_name: fullName.trim(),
-        display_name: displayName.trim() || null,
-        reminder_enabled: reminderEnabled,
-        default_visibility: defaultVisibility,
-      })
-      .eq('id', userId)
+    const { error } = await supabase.from('profiles').update({
+      full_name: fullName.trim(),
+      display_name: displayName.trim() || null,
+      reminder_enabled: reminderEnabled,
+      default_visibility: defaultVisibility,
+    }).eq('id', userId)
 
     if (error) {
       setSaveError(error.message)
@@ -128,8 +105,6 @@ export default function ProfilePage() {
   async function leaveGroup() {
     if (!userId) return
     setLeavingGroup(true)
-
-    // Delete all user data, then profile, then sign out
     await supabase.from('check_ins').delete().eq('user_id', userId)
     await supabase.from('prayer_requests').delete().eq('user_id', userId)
     await supabase.from('profiles').delete().eq('id', userId)
@@ -141,117 +116,127 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FAF9F7' }}>
+        <p style={{ fontSize: '14px', color: '#A8A29E' }}>Loading…</p>
       </div>
     )
   }
 
-  const initials = fullName.trim().split(' ').length >= 2
-    ? `${fullName.trim().split(' ')[0][0]}${fullName.trim().split(' ').at(-1)![0]}`
-    : fullName.slice(0, 2)
+  const parts = fullName.trim().split(' ')
+  const initials = parts.length >= 2 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : fullName.slice(0, 2)
+  const inputStyle = {
+    background: '#F5F3EF',
+    border: '1px solid #E8E4DE',
+    borderRadius: '12px',
+    padding: '12px 14px',
+    fontSize: '15px',
+    color: '#1A1714',
+    width: '100%',
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen pb-24" style={{ background: '#FAF9F7' }}>
       <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
-        {/* Header */}
-        <h1 className="text-2xl font-bold text-gray-900">Your profile</h1>
 
-        {/* Avatar + personal info */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xl font-bold uppercase flex-shrink-0">
-              {initials}
+        {/* Avatar header */}
+        <div className="flex flex-col items-center gap-3 py-2">
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold uppercase text-white"
+            style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)' }}
+          >
+            {initials}
+          </div>
+          <div className="text-center">
+            <p style={{ fontSize: '18px', fontWeight: 600, color: '#1A1714' }}>{displayName || fullName}</p>
+            <p style={{ fontSize: '13px', color: '#A8A29E', marginTop: '2px' }}>{email}</p>
+          </div>
+          {streak > 0 && (
+            <span style={{ fontSize: '14px', fontWeight: 500, color: '#FB923C' }}>🔥 {streak} day streak</span>
+          )}
+        </div>
+
+        {/* Profile fields */}
+        <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+          <SectionLabel>Your name</SectionLabel>
+          <div className="flex flex-col gap-3">
+            <div>
+              <label style={{ fontSize: '13px', color: '#6B6560', fontWeight: 500, display: 'block', marginBottom: '6px' }}>
+                Full name
+              </label>
+              <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} style={inputStyle} />
             </div>
             <div>
-              <p className="font-semibold text-gray-900">{displayName || fullName}</p>
-              <p className="text-sm text-gray-400">{email}</p>
+              <label style={{ fontSize: '13px', color: '#6B6560', fontWeight: 500, display: 'block', marginBottom: '6px' }}>
+                Display name <span style={{ color: '#A8A29E', fontWeight: 400 }}>(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={displayName}
+                onChange={e => setDisplayName(e.target.value)}
+                placeholder="Nickname your group sees"
+                style={inputStyle}
+              />
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Display name <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Nickname your group sees"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
-            />
-          </div>
-
-          <div className="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-2">
-            <p className="text-sm text-gray-500 flex-1 truncate">{email}</p>
-            <p className="text-xs text-gray-400 flex-shrink-0">Contact admin to change</p>
+            <div
+              className="rounded-xl px-4 py-3 flex items-center justify-between"
+              style={{ background: '#F5F3EF' }}
+            >
+              <p style={{ fontSize: '13px', color: '#6B6560' }} className="truncate flex-1">{email}</p>
+              <p style={{ fontSize: '12px', color: '#A8A29E', flexShrink: 0, marginLeft: '8px' }}>Contact admin to change</p>
+            </div>
           </div>
 
           {saveError && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{saveError}</p>
+            <p className="rounded-xl px-3 py-2" style={{ fontSize: '13px', color: '#EF4444', background: '#FEF2F2' }}>{saveError}</p>
           )}
           {saveSuccess && (
-            <p className="text-sm text-green-600 bg-green-50 rounded-lg px-3 py-2">Saved!</p>
+            <p className="rounded-xl px-3 py-2" style={{ fontSize: '13px', color: '#166534', background: '#DCFCE7' }}>Saved!</p>
           )}
 
           <button
             onClick={saveProfile}
             disabled={saving || !fullName.trim()}
-            className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="w-full min-h-[44px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 600, fontSize: '15px' }}
           >
             {saving ? 'Saving…' : 'Save changes'}
           </button>
         </div>
 
         {/* Check-in history */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">Your check-ins</h2>
-            {streak > 0 ? (
-              <span className="text-sm font-semibold text-orange-500">🔥 {streak} day streak</span>
-            ) : (
-              <span className="text-xs text-gray-400">Check in today to start your streak</span>
-            )}
-          </div>
-
+        <div>
+          <SectionLabel>Your check-ins · last 30 days</SectionLabel>
           {checkIns.length === 0 ? (
-            <p className="text-sm text-gray-400">No check-ins in the last 30 days.</p>
+            <p style={{ fontSize: '14px', color: '#A8A29E' }}>No check-ins in the last 30 days.</p>
           ) : (
-            <div className="flex flex-col gap-2">
-              {checkIns.map((c) => (
+            <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+              {checkIns.map((c, i) => (
                 <Link
                   key={c.id}
                   href={`/checkin/${c.id}`}
-                  className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0 hover:bg-gray-50 rounded-lg px-1 -mx-1 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 hover:opacity-70 transition-opacity"
+                  style={i > 0 ? { borderTop: '1px solid #EBEBEB', display: 'flex' } : { display: 'flex' }}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1714' }}>
                       {new Date(c.check_in_date + 'T00:00:00').toLocaleDateString('en-US', {
                         weekday: 'short', month: 'short', day: 'numeric',
                       })}
                       {c.check_in_date === today && (
-                        <span className="ml-1.5 text-xs text-indigo-600 font-semibold">today</span>
+                        <span style={{ fontSize: '12px', color: '#5B4FCF', fontWeight: 600, marginLeft: '6px' }}>today</span>
                       )}
                     </p>
-                  </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                    {c.emotional_state && (
-                      <Chip label={emotionalLabels[c.emotional_state]} color="indigo" />
+                    {(c.emotional_state || c.spiritual_life) && (
+                      <p style={{ fontSize: '12px', color: '#A8A29E', marginTop: '2px' }}>
+                        {c.emotional_state ? emotionalLabels[c.emotional_state] : ''}
+                        {c.emotional_state && c.spiritual_life ? ' · ' : ''}
+                        {c.spiritual_life ? spiritualLabels[c.spiritual_life] : ''}
+                      </p>
                     )}
-                    {c.spiritual_life && (
-                      <Chip label={spiritualLabels[c.spiritual_life]} />
-                    )}
                   </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A8A29E" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
                 </Link>
               ))}
             </div>
@@ -259,82 +244,107 @@ export default function ProfilePage() {
         </div>
 
         {/* Settings */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
-          <h2 className="font-semibold text-gray-900">Settings</h2>
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+          <div className="px-4 pt-4 pb-2">
+            <SectionLabel>Settings</SectionLabel>
+          </div>
 
-          <label className="flex items-center justify-between gap-4 cursor-pointer min-h-[44px]">
+          {/* Reminder toggle */}
+          <div className="px-4 py-3 flex items-center justify-between gap-4" style={{ borderTop: '1px solid #EBEBEB' }}>
             <div>
-              <p className="text-sm font-medium text-gray-900">Daily reminder emails</p>
-              <p className="text-xs text-gray-400">Get a gentle nudge if you haven&apos;t checked in</p>
+              <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1714' }}>Daily reminder emails</p>
+              <p style={{ fontSize: '12px', color: '#A8A29E', marginTop: '2px' }}>A gentle nudge if you haven&apos;t checked in</p>
             </div>
             <button
               type="button"
               onClick={() => setReminderEnabled(!reminderEnabled)}
-              className={`relative flex-shrink-0 w-12 h-6 rounded-full transition-colors ${reminderEnabled ? 'bg-indigo-600' : 'bg-gray-200'}`}
+              className="relative flex-shrink-0 transition-colors"
+              style={{
+                width: '44px', height: '24px', borderRadius: '12px',
+                background: reminderEnabled ? '#5B4FCF' : '#D4D0CB',
+              }}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${reminderEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+              <span
+                className="absolute top-0.5 transition-transform"
+                style={{
+                  left: '2px',
+                  width: '20px', height: '20px',
+                  background: '#FFFFFF',
+                  borderRadius: '10px',
+                  transform: reminderEnabled ? 'translateX(20px)' : 'translateX(0)',
+                }}
+              />
             </button>
-          </label>
-
-          <div>
-            <p className="text-sm font-medium text-gray-900 mb-2">Default visibility</p>
-            <div className="flex flex-col gap-2">
-              {([
-                { value: 'everyone', label: 'Everyone in the group', emoji: '👥' },
-                { value: 'specific', label: 'Specific people', emoji: '👤' },
-                { value: 'one_person', label: 'Just one person', emoji: '🤫' },
-              ] as const).map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setDefaultVisibility(opt.value)}
-                  className={`min-h-[44px] px-4 py-2.5 rounded-xl border text-left text-sm font-medium transition-all flex items-center gap-3 ${
-                    defaultVisibility === opt.value
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-200'
-                  }`}
-                >
-                  <span>{opt.emoji}</span> {opt.label}
-                </button>
-              ))}
-            </div>
           </div>
 
-          <button
-            onClick={saveProfile}
-            disabled={saving || !fullName.trim()}
-            className="w-full min-h-[44px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-2.5 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 transition-all text-sm"
-          >
-            {saving ? 'Saving…' : 'Save settings'}
-          </button>
+          {/* Default visibility */}
+          <div className="px-4 py-3 flex flex-col gap-2" style={{ borderTop: '1px solid #EBEBEB' }}>
+            <p style={{ fontSize: '14px', fontWeight: 500, color: '#1A1714', marginBottom: '4px' }}>Default check-in visibility</p>
+            {([
+              { value: 'everyone', label: 'Everyone in the group' },
+              { value: 'specific', label: 'Specific people' },
+              { value: 'one_person', label: 'Just one person' },
+            ] as const).map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setDefaultVisibility(opt.value)}
+                className="min-h-[44px] px-4 rounded-xl text-left transition-all"
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  background: defaultVisibility === opt.value ? '#EEF0FB' : '#F5F3EF',
+                  color: defaultVisibility === opt.value ? '#5B4FCF' : '#6B6560',
+                  border: `1px solid ${defaultVisibility === opt.value ? '#C7D0F8' : '#E8E4DE'}`,
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Save settings */}
+          <div className="px-4 pb-4 pt-2" style={{ borderTop: '1px solid #EBEBEB' }}>
+            <button
+              onClick={saveProfile}
+              disabled={saving || !fullName.trim()}
+              className="w-full min-h-[44px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 600, fontSize: '14px' }}
+            >
+              {saving ? 'Saving…' : 'Save settings'}
+            </button>
+          </div>
         </div>
 
-        {/* Danger zone */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-          <h2 className="font-semibold text-gray-900">Leave group</h2>
+        {/* Leave group */}
+        <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+          <SectionLabel>Leave group</SectionLabel>
           {!confirmLeave ? (
             <button
               onClick={() => setConfirmLeave(true)}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-medium hover:bg-red-50 transition-all text-left"
+              className="min-h-[44px] px-4 rounded-xl text-left transition-opacity hover:opacity-70"
+              style={{ fontSize: '14px', fontWeight: 500, color: '#EF4444', background: '#FEF2F2', border: '1px solid #FECACA' }}
             >
               Leave this group
             </button>
           ) : (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-gray-600 leading-relaxed">
+            <div className="flex flex-col gap-3">
+              <p style={{ fontSize: '14px', color: '#6B6560', lineHeight: 1.6 }}>
                 Are you sure? This will remove your profile and check-in history. It cannot be undone.
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={leaveGroup}
                   disabled={leavingGroup}
-                  className="flex-1 min-h-[44px] bg-red-500 text-white font-semibold rounded-xl text-sm hover:bg-red-600 disabled:opacity-50 transition-all"
+                  className="flex-1 min-h-[44px] rounded-xl text-white transition-opacity hover:opacity-80 disabled:opacity-50"
+                  style={{ background: '#EF4444', fontWeight: 600, fontSize: '14px' }}
                 >
                   {leavingGroup ? 'Leaving…' : 'Yes, leave group'}
                 </button>
                 <button
                   onClick={() => setConfirmLeave(false)}
-                  className="min-h-[44px] px-4 bg-gray-100 text-gray-600 rounded-xl text-sm hover:bg-gray-200 transition-all"
+                  className="min-h-[44px] px-5 rounded-xl transition-opacity hover:opacity-80"
+                  style={{ background: '#F5F3EF', color: '#6B6560', fontWeight: 500, fontSize: '14px', border: '1px solid #E8E4DE' }}
                 >
                   Cancel
                 </button>
@@ -343,7 +353,6 @@ export default function ProfilePage() {
           )}
         </div>
       </div>
-
       <BottomNav />
     </div>
   )

@@ -19,19 +19,14 @@ export default function OnboardingPage() {
     setError(null)
 
     const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       router.push('/login')
       return
     }
 
-    const { count } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-
+    const { count } = await supabase.from('profiles').select('id', { count: 'exact', head: true })
     const isFirstUser = count === 0
 
     const { error } = await supabase.from('profiles').insert({
@@ -51,60 +46,86 @@ export default function OnboardingPage() {
     router.push('/')
   }
 
+  const inputStyle = {
+    background: '#F5F3EF',
+    border: '1px solid #E8E4DE',
+    borderRadius: '12px',
+    padding: '12px 14px',
+    fontSize: '15px',
+    color: '#1A1714',
+    width: '100%',
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Welcome to Gather</h1>
-          <p className="text-gray-500 leading-relaxed mb-1">
-            Gather is a quiet daily check-in for your fellowship group — a simple way
-            to share how you're really doing spiritually, emotionally, and physically.
-          </p>
-          <p className="text-gray-500 leading-relaxed">
-            Your group shows up for each other here. Let's get you set up.
+    <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: '#FAF9F7' }}>
+      <div className="w-full max-w-sm flex flex-col gap-6">
+
+        {/* Heading */}
+        <div className="text-center">
+          <h1 style={{ fontSize: '28px', fontWeight: 600, color: '#1A1714', marginBottom: '6px' }}>
+            Welcome to Gather
+          </h1>
+          <p style={{ fontSize: '15px', color: '#6B6560', lineHeight: 1.6 }}>
+            A simple way to share how you&apos;re really doing with your group. Let&apos;s get you set up.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {/* Form card */}
+        <div
+          className="rounded-2xl p-6 flex flex-col gap-4"
+          style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}
+        >
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1.5">
-                What's your full name? <span className="text-indigo-600">*</span>
+              <label
+                htmlFor="fullName"
+                style={{ fontSize: '13px', fontWeight: 500, color: '#6B6560', display: 'block', marginBottom: '6px' }}
+              >
+                Full name <span style={{ color: '#5B4FCF' }}>*</span>
               </label>
               <input
                 id="fullName"
                 type="text"
                 required
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                onChange={e => setFullName(e.target.value)}
                 placeholder="Your name"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
+                style={inputStyle}
               />
             </div>
 
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1.5">
-                Nickname or display name{' '}
-                <span className="text-gray-400 font-normal">(optional)</span>
+              <label
+                htmlFor="displayName"
+                style={{ fontSize: '13px', fontWeight: 500, color: '#6B6560', display: 'block', marginBottom: '6px' }}
+              >
+                Display name{' '}
+                <span style={{ color: '#A8A29E', fontWeight: 400 }}>(optional)</span>
               </label>
               <input
                 id="displayName"
                 type="text"
                 value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                onChange={e => setDisplayName(e.target.value)}
                 placeholder="How your group sees you"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
+                style={inputStyle}
               />
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+              <p
+                className="rounded-xl px-3 py-2"
+                style={{ fontSize: '13px', color: '#EF4444', background: '#FEF2F2' }}
+              >
+                {error}
+              </p>
             )}
 
             <button
               type="submit"
               disabled={loading || !fullName.trim()}
-              className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-1"
+              className="w-full min-h-[48px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 600, fontSize: '15px', marginTop: '4px' }}
             >
               {loading ? 'Setting up…' : 'Join Gather'}
             </button>

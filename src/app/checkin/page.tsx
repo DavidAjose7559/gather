@@ -10,6 +10,14 @@ import BottomNav from '@/components/BottomNav'
 
 type VisibilityType = 'everyone' | 'specific' | 'one_person'
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#A8A29E' }}>
+      {children}
+    </p>
+  )
+}
+
 function OptionGrid<T extends string>({
   options,
   value,
@@ -21,21 +29,27 @@ function OptionGrid<T extends string>({
 }) {
   return (
     <div className="grid grid-cols-3 gap-2">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onChange(opt.value)}
-          className={`min-h-[48px] px-2 py-2.5 rounded-xl border text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 ${
-            value === opt.value
-              ? 'bg-indigo-600 border-indigo-600 text-white'
-              : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-indigo-50'
-          }`}
-        >
-          {opt.emoji && <span className="text-base">{opt.emoji}</span>}
-          <span className="leading-tight text-center">{opt.label}</span>
-        </button>
-      ))}
+      {options.map((opt) => {
+        const selected = value === opt.value
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className="min-h-[48px] px-2 py-2.5 rounded-xl flex flex-col items-center justify-center gap-0.5 transition-all"
+            style={{
+              background: selected ? '#EEF0FB' : '#FFFFFF',
+              border: selected ? '1.5px solid #5B4FCF' : '1px solid #E8E4DE',
+              color: selected ? '#5B4FCF' : '#6B6560',
+              fontWeight: selected ? 500 : 400,
+              fontSize: '13px',
+            }}
+          >
+            {opt.emoji && <span style={{ fontSize: '16px' }}>{opt.emoji}</span>}
+            <span className="leading-tight text-center">{opt.label}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -53,7 +67,6 @@ export default function CheckInPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [members, setMembers] = useState<Profile[]>([])
 
-  // Form state
   const [spiritualLife, setSpiritualLife] = useState<CheckIn['spiritual_life']>(null)
   const [wordTime, setWordTime] = useState<CheckIn['word_time']>(null)
   const [prayerLife, setPrayerLife] = useState<CheckIn['prayer_life']>(null)
@@ -68,28 +81,19 @@ export default function CheckInPage() {
 
   useEffect(() => {
     async function load() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
       setCurrentUserId(user.id)
 
       const today = todayToronto()
-
       const [checkInRes, membersRes, profileRes] = await Promise.all([
-        supabase
-          .from('check_ins')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('check_in_date', today)
-          .single(),
+        supabase.from('check_ins').select('*').eq('user_id', user.id).eq('check_in_date', today).single(),
         supabase.from('profiles').select('*').neq('id', user.id).order('full_name'),
         supabase.from('profiles').select('default_visibility').eq('id', user.id).single(),
       ])
 
       setMembers(membersRes.data ?? [])
 
-      // Pre-select default visibility from profile (only when no existing check-in)
       if (!checkInRes.data && profileRes.data?.default_visibility) {
         setVisibility(profileRes.data.default_visibility as VisibilityType)
       }
@@ -150,15 +154,10 @@ export default function CheckInPage() {
     let checkInId: string
 
     if (existingCheckIn) {
-      const { error } = await supabase
-        .from('check_ins')
-        .update(payload)
-        .eq('id', existingCheckIn.id)
+      const { error } = await supabase.from('check_ins').update(payload).eq('id', existingCheckIn.id)
       if (error) { setError(error.message); setSaving(false); return }
       checkInId = existingCheckIn.id
     } else {
-      // Always pass check_in_date explicitly — DB default is current_date in UTC
-      // which is wrong for Toronto users after 8pm ET.
       const { data, error } = await supabase
         .from('check_ins')
         .insert({ ...payload, check_in_date: todayToronto() })
@@ -168,7 +167,6 @@ export default function CheckInPage() {
       checkInId = data.id
     }
 
-    // Handle visibility grants
     if (visibility === 'specific' || visibility === 'one_person') {
       await supabase.from('visibility_grants').delete().eq('check_in_id', checkInId)
       if (selectedMembers.length > 0) {
@@ -180,7 +178,6 @@ export default function CheckInPage() {
       await supabase.from('visibility_grants').delete().eq('check_in_id', checkInId)
     }
 
-    // Send support notifications fire-and-forget (don't block redirect)
     if (supportRequested) {
       fetch('/api/notify-support', {
         method: 'POST',
@@ -189,7 +186,6 @@ export default function CheckInPage() {
       }).catch(() => {})
     }
 
-    // Check for streak milestone
     const ninetyDaysAgoCursor = new Date()
     ninetyDaysAgoCursor.setDate(ninetyDaysAgoCursor.getDate() - 90)
     const { data: history } = await supabase
@@ -214,22 +210,23 @@ export default function CheckInPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FAF9F7' }}>
+        <p style={{ color: '#A8A29E' }}>Loading…</p>
       </div>
     )
   }
 
   if (milestone) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-8 text-center shadow-sm flex flex-col gap-4">
-          <div className="text-5xl">🎉</div>
-          <h2 className="text-xl font-bold text-gray-900">Milestone reached!</h2>
-          <p className="text-gray-600 leading-relaxed">{milestone}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: '#FAF9F7' }}>
+        <div className="w-full max-w-md rounded-2xl p-8 text-center flex flex-col gap-4" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+          <div style={{ fontSize: '48px' }}>🎉</div>
+          <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#1A1714' }}>Milestone reached!</h2>
+          <p style={{ color: '#6B6560', lineHeight: 1.6 }}>{milestone}</p>
           <button
             onClick={() => router.push('/')}
-            className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 transition-all mt-2"
+            className="w-full min-h-[48px] rounded-xl text-white transition-opacity hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 500, fontSize: '15px' }}
           >
             Back to home
           </button>
@@ -240,23 +237,25 @@ export default function CheckInPage() {
 
   if (existingCheckIn && !editing) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-24">
+      <div className="min-h-screen pb-24" style={{ background: '#FAF9F7' }}>
         <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Today&apos;s check-in</h1>
+            <h1 style={{ fontSize: '22px', fontWeight: 600, color: '#1A1714' }}>Today&apos;s check-in</h1>
             <button
               onClick={() => { populateFormFromCheckIn(existingCheckIn); setEditing(true) }}
-              className="min-h-[44px] px-4 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+              className="min-h-[44px] px-4 hover:opacity-70"
+              style={{ fontSize: '14px', fontWeight: 500, color: '#5B4FCF' }}
             >
               Edit
             </button>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <p className="text-gray-500 text-sm">You already checked in today. Tap Edit to update it.</p>
+          <div className="rounded-2xl p-5" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+            <p style={{ color: '#6B6560', fontSize: '14px' }}>You already checked in today. Tap Edit to update it.</p>
           </div>
           <button
             onClick={() => router.push('/')}
-            className="min-h-[48px] bg-gray-100 text-gray-700 font-semibold rounded-xl px-4 py-3 hover:bg-gray-200 transition-all"
+            className="min-h-[48px] rounded-xl transition-opacity hover:opacity-80"
+            style={{ background: '#F5F3EF', color: '#1A1714', fontWeight: 500, fontSize: '15px', border: '1px solid #E8E4DE' }}
           >
             Back to home
           </button>
@@ -267,21 +266,17 @@ export default function CheckInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {editing ? 'Update your check-in' : 'How are you today?'}
-          </h1>
-          <p className="text-gray-500 mt-1 text-sm">
-            Be honest. This is a safe space.
-          </p>
-        </div>
+    <div className="min-h-screen pb-28" style={{ background: '#FAF9F7' }}>
+      <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-8">
+        <h1 style={{ fontSize: '22px', fontWeight: 600, color: '#1A1714' }}>
+          {editing ? 'Update your check-in' : 'How are you today?'}
+        </h1>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+
           {/* Spiritual life */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Spiritual life</h2>
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Spiritual life</SectionLabel>
             <OptionGrid
               options={[
                 { value: 'strong', label: 'Strong', emoji: '🔥' },
@@ -294,8 +289,8 @@ export default function CheckInPage() {
           </div>
 
           {/* Word time */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Time in the Word</h2>
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Time in the Word</SectionLabel>
             <OptionGrid
               options={[
                 { value: 'yes', label: 'Yes', emoji: '📖' },
@@ -308,8 +303,8 @@ export default function CheckInPage() {
           </div>
 
           {/* Prayer life */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Prayer life</h2>
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Prayer life</SectionLabel>
             <OptionGrid
               options={[
                 { value: 'strong', label: 'Strong', emoji: '🙏' },
@@ -321,9 +316,9 @@ export default function CheckInPage() {
             />
           </div>
 
-          {/* Emotional state */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Emotionally</h2>
+          {/* Emotional */}
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Emotionally</SectionLabel>
             <OptionGrid
               options={[
                 { value: 'joyful', label: 'Joyful', emoji: '😄' },
@@ -338,9 +333,9 @@ export default function CheckInPage() {
             />
           </div>
 
-          {/* Physical state */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Physically</h2>
+          {/* Physical */}
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Physically</SectionLabel>
             <OptionGrid
               options={[
                 { value: 'good', label: 'Good', emoji: '💪' },
@@ -354,149 +349,146 @@ export default function CheckInPage() {
           </div>
 
           {/* Text fields */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
-            <h2 className="font-semibold text-gray-900">A little more (optional)</h2>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Anything you're struggling with?
-              </label>
-              <textarea
-                value={struggles}
-                onChange={(e) => setStruggles(e.target.value)}
-                placeholder="Share as much or as little as you like…"
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Something you're grateful for?
-              </label>
-              <textarea
-                value={gratitude}
-                onChange={(e) => setGratitude(e.target.value)}
-                placeholder="Big or small, it counts…"
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Anything else on your mind?
-              </label>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Whatever you want to share…"
-                rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
-              />
-            </div>
+          <div className="flex flex-col gap-5">
+            <SectionLabel>A little more <span style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 400, color: '#A8A29E' }}>(optional)</span></SectionLabel>
+            {[
+              { val: struggles, set: setStruggles, label: "Anything you're struggling with?", ph: 'Share as much or as little as you like…' },
+              { val: gratitude, set: setGratitude, label: 'Something you\'re grateful for?', ph: 'Big or small, it counts…' },
+              { val: notes, set: setNotes, label: 'Anything else on your mind?', ph: 'Whatever you want to share…' },
+            ].map(({ val, set, label, ph }) => (
+              <div key={label}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#6B6560', marginBottom: '6px' }}>{label}</label>
+                <textarea
+                  value={val}
+                  onChange={(e) => set(e.target.value)}
+                  placeholder={ph}
+                  rows={3}
+                  className="w-full rounded-xl resize-none"
+                  style={{
+                    background: '#F5F3EF',
+                    border: '1px solid #E8E4DE',
+                    padding: '12px 14px',
+                    fontSize: '15px',
+                    color: '#1A1714',
+                    lineHeight: 1.5,
+                  }}
+                />
+              </div>
+            ))}
           </div>
 
           {/* Support toggle */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <label className="flex items-center justify-between gap-4 cursor-pointer min-h-[44px]">
-              <div>
-                <p className="font-semibold text-gray-900">I'd like someone to reach out</p>
-                <p className="text-sm text-gray-500">Let your group know you could use support.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSupportRequested(!supportRequested)}
-                className={`relative flex-shrink-0 w-12 h-6 rounded-full transition-colors ${
-                  supportRequested ? 'bg-indigo-600' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    supportRequested ? 'translate-x-6' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </label>
+          <div className="flex items-center justify-between gap-4 min-h-[44px]">
+            <div>
+              <p style={{ fontSize: '15px', fontWeight: 500, color: '#1A1714' }}>I&apos;d like someone to reach out</p>
+              <p style={{ fontSize: '13px', color: '#6B6560', marginTop: '2px' }}>Let your group know you could use support.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSupportRequested(!supportRequested)}
+              className="flex-shrink-0 rounded-full transition-colors"
+              style={{
+                width: '48px', height: '26px',
+                background: supportRequested ? '#5B4FCF' : '#D4D0CB',
+                position: 'relative',
+              }}
+            >
+              <span
+                className="absolute rounded-full bg-white transition-transform"
+                style={{
+                  width: '20px', height: '20px',
+                  top: '3px', left: '3px',
+                  transform: supportRequested ? 'translateX(22px)' : 'translateX(0)',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                }}
+              />
+            </button>
           </div>
 
           {/* Visibility */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Who can see this?</h2>
+          <div className="flex flex-col gap-3">
+            <SectionLabel>Who can see this?</SectionLabel>
             <div className="flex flex-col gap-2">
               {([
-                { value: 'everyone', label: 'Everyone in the group', emoji: '👥' },
-                { value: 'specific', label: 'Specific people', emoji: '👤' },
-                { value: 'one_person', label: 'Just one person', emoji: '🤫' },
-              ] as { value: VisibilityType; label: string; emoji: string }[]).map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setVisibility(opt.value)}
-                  className={`min-h-[48px] px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all flex items-center gap-3 ${
-                    visibility === opt.value
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-200'
-                  }`}
-                >
-                  <span>{opt.emoji}</span>
-                  {opt.label}
-                </button>
-              ))}
+                { value: 'everyone', label: 'Everyone in the group', sub: 'Visible to all members' },
+                { value: 'specific', label: 'Specific people', sub: 'Choose who sees this' },
+                { value: 'one_person', label: 'Just one person', sub: 'Private to one person' },
+              ] as { value: VisibilityType; label: string; sub: string }[]).map((opt) => {
+                const selected = visibility === opt.value
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setVisibility(opt.value)}
+                    className="min-h-[52px] px-4 py-3 rounded-xl text-left transition-all"
+                    style={{
+                      background: selected ? '#EEF0FB' : '#FFFFFF',
+                      border: selected ? '1px solid #5B4FCF' : '1px solid #E8E4DE',
+                      borderLeft: selected ? '3px solid #5B4FCF' : '1px solid #E8E4DE',
+                    }}
+                  >
+                    <p style={{ fontSize: '14px', fontWeight: selected ? 500 : 400, color: selected ? '#5B4FCF' : '#1A1714' }}>
+                      {opt.label}
+                    </p>
+                    <p style={{ fontSize: '12px', color: selected ? '#5B4FCF' : '#6B6560', opacity: 0.8 }}>{opt.sub}</p>
+                  </button>
+                )
+              })}
             </div>
 
             {(visibility === 'specific' || visibility === 'one_person') && (
               <div className="flex flex-col gap-2 mt-1">
-                <p className="text-sm text-gray-500">
-                  {visibility === 'one_person' ? 'Choose one person' : 'Choose people'}:
+                <p style={{ fontSize: '13px', color: '#6B6560' }}>
+                  {visibility === 'one_person' ? 'Choose one person:' : 'Choose people:'}
                 </p>
-                {members.map((m) => (
-                  <label
-                    key={m.id}
-                    className="flex items-center gap-3 min-h-[44px] cursor-pointer"
-                  >
-                    <input
-                      type={visibility === 'one_person' ? 'radio' : 'checkbox'}
-                      name="member-select"
-                      checked={selectedMembers.includes(m.id)}
-                      onChange={(e) => {
-                        if (visibility === 'one_person') {
-                          setSelectedMembers(e.target.checked ? [m.id] : [])
-                        } else {
-                          setSelectedMembers((prev) =>
-                            e.target.checked
-                              ? [...prev, m.id]
-                              : prev.filter((id) => id !== m.id)
-                          )
-                        }
-                      }}
-                      className="w-4 h-4 accent-indigo-600"
-                    />
-                    <span className="text-sm text-gray-900">
-                      {m.display_name ?? m.full_name}
-                    </span>
-                  </label>
-                ))}
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #E8E4DE', background: '#FFFFFF' }}>
+                  {members.map((m, i) => (
+                    <label
+                      key={m.id}
+                      className="flex items-center gap-3 px-4 min-h-[48px] cursor-pointer"
+                      style={i > 0 ? { borderTop: '1px solid #EBEBEB' } : {}}
+                    >
+                      <input
+                        type={visibility === 'one_person' ? 'radio' : 'checkbox'}
+                        name="member-select"
+                        checked={selectedMembers.includes(m.id)}
+                        onChange={(e) => {
+                          if (visibility === 'one_person') {
+                            setSelectedMembers(e.target.checked ? [m.id] : [])
+                          } else {
+                            setSelectedMembers((prev) =>
+                              e.target.checked ? [...prev, m.id] : prev.filter((id) => id !== m.id)
+                            )
+                          }
+                        }}
+                        style={{ accentColor: '#5B4FCF', width: '16px', height: '16px' }}
+                      />
+                      <span style={{ fontSize: '14px', color: '#1A1714' }}>{m.display_name ?? m.full_name}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
             )}
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <p className="rounded-xl px-3 py-2" style={{ fontSize: '14px', color: '#EF4444', background: '#FEF2F2' }}>{error}</p>
           )}
 
-          <div className="flex flex-col gap-3 pb-4">
+          <div className="flex flex-col gap-3">
             <button
               type="submit"
               disabled={saving}
-              className="w-full min-h-[52px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base"
+              className="w-full min-h-[52px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 500, fontSize: '15px' }}
             >
               {saving ? 'Saving…' : editing ? 'Update check-in' : 'Submit check-in'}
             </button>
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="w-full min-h-[48px] bg-gray-100 text-gray-600 font-medium rounded-xl px-4 py-3 hover:bg-gray-200 transition-all"
+              className="w-full min-h-[48px] rounded-xl transition-opacity hover:opacity-80"
+              style={{ background: '#F5F3EF', color: '#6B6560', fontWeight: 500, fontSize: '15px', border: '1px solid #E8E4DE' }}
             >
               Cancel
             </button>

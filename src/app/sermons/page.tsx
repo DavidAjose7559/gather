@@ -3,8 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { todayToronto } from '@/lib/date'
-import { timeAgo } from '@/lib/date'
+import { todayToronto, timeAgo } from '@/lib/date'
 import BottomNav from '@/components/BottomNav'
 import Image from 'next/image'
 import type { SermonSchedule, SermonCurriculum, SermonDiscussion } from '@/lib/types'
@@ -34,6 +33,14 @@ function formatSermonDate(dateStr: string): string {
   })
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#A8A29E', marginBottom: '8px' }}>
+      {children}
+    </p>
+  )
+}
+
 function SermonCard({
   sermon,
   isAdmin,
@@ -45,66 +52,99 @@ function SermonCard({
 }) {
   const imageUrl = sermon.episode_image_url
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {imageUrl && (
-        <div className="relative w-full h-48">
-          <Image
-            src={imageUrl}
-            alt={sermon.episode_title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 448px) 100vw, 448px"
-          />
+    <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+      <div className="p-4 flex gap-4">
+        {imageUrl ? (
+          <div className="relative w-16 h-16 flex-shrink-0">
+            <Image
+              src={imageUrl}
+              alt={sermon.episode_title}
+              fill
+              className="rounded-xl object-cover"
+              sizes="64px"
+            />
+          </div>
+        ) : (
+          <div
+            className="w-16 h-16 flex-shrink-0 rounded-xl flex items-center justify-center"
+            style={{ background: '#EEF0FB', fontSize: '24px' }}
+          >
+            🎙️
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          {sermon.theme && (
+            <p style={{ fontSize: '11px', fontWeight: 600, color: '#5B4FCF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '4px' }}>
+              {sermon.theme}
+            </p>
+          )}
+          <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1714', lineHeight: 1.3, marginBottom: '4px' }}>
+            {sermon.episode_title}
+          </p>
+          {sermon.episode_description && (
+            <p
+              style={{ fontSize: '13px', color: '#6B6560', lineHeight: 1.5 }}
+              className="line-clamp-2"
+            >
+              {sermon.episode_description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {(sermon.notes || sermon.episode_url || sermon.youtube_url || (isAdmin && onDeleted)) && (
+        <div style={{ borderTop: '1px solid #E8E4DE', padding: '12px 16px' }} className="flex flex-col gap-3">
+          {sermon.notes && (
+            <p
+              className="rounded-xl px-3 py-2"
+              style={{ fontSize: '13px', color: '#5B4FCF', background: '#EEF0FB', lineHeight: 1.5 }}
+            >
+              {sermon.notes}
+            </p>
+          )}
+          {(sermon.episode_url || sermon.youtube_url) && (
+            <div className="flex flex-wrap gap-2">
+              {sermon.episode_url && (
+                <a
+                  href={ensureAbsoluteUrl(sermon.episode_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl transition-opacity hover:opacity-80"
+                  style={{ background: '#1DB954', color: '#FFFFFF', fontSize: '13px', fontWeight: 600, padding: '8px 14px' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                  </svg>
+                  Spotify
+                </a>
+              )}
+              {sermon.youtube_url && (
+                <a
+                  href={ensureAbsoluteUrl(sermon.youtube_url)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-xl transition-opacity hover:opacity-80"
+                  style={{ background: '#FEE2E2', color: '#B91C1C', fontSize: '13px', fontWeight: 600, padding: '8px 14px' }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M23.495 6.205a3.007 3.007 0 0 0-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 0 0 .527 6.205a31.247 31.247 0 0 0-.522 5.805 31.247 31.247 0 0 0 .522 5.783 3.007 3.007 0 0 0 2.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 0 0 2.088-2.088 31.247 31.247 0 0 0 .5-5.783 31.247 31.247 0 0 0-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/>
+                  </svg>
+                  YouTube
+                </a>
+              )}
+            </div>
+          )}
+          {isAdmin && onDeleted && (
+            <button
+              onClick={onDeleted}
+              className="text-left transition-opacity hover:opacity-70"
+              style={{ fontSize: '12px', color: '#A8A29E' }}
+            >
+              Remove from schedule
+            </button>
+          )}
         </div>
       )}
-      <div className="p-5 flex flex-col gap-3">
-        {sermon.theme && (
-          <span className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
-            {sermon.theme}
-          </span>
-        )}
-        <h2 className="font-bold text-gray-900 text-lg leading-snug">{sermon.episode_title}</h2>
-        {sermon.episode_description && (
-          <p className="text-sm text-gray-500 leading-relaxed line-clamp-3">
-            {sermon.episode_description}
-          </p>
-        )}
-        {sermon.notes && (
-          <p className="text-sm text-indigo-700 bg-indigo-50 rounded-xl px-3 py-2 leading-relaxed">
-            {sermon.notes}
-          </p>
-        )}
-        <div className="flex flex-wrap gap-2 mt-1">
-          {sermon.episode_url && (
-            <a
-              href={ensureAbsoluteUrl(sermon.episode_url)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 bg-green-500 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-green-600 transition-colors"
-            >
-              <span>🎵</span> Spotify
-            </a>
-          )}
-          {sermon.youtube_url && (
-            <a
-              href={ensureAbsoluteUrl(sermon.youtube_url)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-red-600 transition-colors"
-            >
-              <span>▶️</span> YouTube
-            </a>
-          )}
-        </div>
-        {isAdmin && onDeleted && (
-          <button
-            onClick={onDeleted}
-            className="text-xs text-red-400 hover:text-red-600 text-left mt-1 transition-colors"
-          >
-            Remove from schedule
-          </button>
-        )}
-      </div>
     </div>
   )
 }
@@ -147,50 +187,64 @@ function DiscussionSection({ sermon, userId, userDisplayName }: {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <h3 className="text-sm font-semibold text-gray-700">Discussion</h3>
+    <div className="flex flex-col gap-4">
+      <SectionLabel>Discussion</SectionLabel>
       {posts.length === 0 && (
-        <p className="text-sm text-gray-400">No replies yet. Be the first to share a thought.</p>
+        <p style={{ fontSize: '14px', color: '#A8A29E' }}>No replies yet. Be the first to share a thought.</p>
       )}
-      {posts.map(post => {
-        const name = post.profiles?.display_name ?? post.profiles?.full_name ?? 'Member'
-        const isOwn = post.user_id === userId
-        return (
-          <div key={post.id} className="flex gap-3">
-            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 uppercase">
-              {name[0]}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2">
-                <span className="text-sm font-medium text-gray-900">{name}</span>
-                <span className="text-xs text-gray-400">{timeAgo(post.created_at)}</span>
-              </div>
-              <p className="text-sm text-gray-600 mt-0.5 leading-relaxed">{post.body}</p>
-              {isOwn && (
-                <button
-                  onClick={() => deletePost(post.id)}
-                  className="text-xs text-gray-400 hover:text-red-500 mt-0.5 transition-colors"
+      {posts.length > 0 && (
+        <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+          {posts.map((post, i) => {
+            const name = post.profiles?.display_name ?? post.profiles?.full_name ?? 'Member'
+            const isOwn = post.user_id === userId
+            return (
+              <div
+                key={post.id}
+                className="px-4 py-4 flex gap-3"
+                style={i > 0 ? { borderTop: '1px solid #EBEBEB' } : {}}
+              >
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 uppercase text-white"
+                  style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)' }}
                 >
-                  Delete
-                </button>
-              )}
-            </div>
-          </div>
-        )
-      })}
-      <div className="flex gap-2 mt-1">
+                  {name[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2 mb-1">
+                    <span style={{ fontSize: '13px', fontWeight: 500, color: '#1A1714' }}>{name}</span>
+                    <span style={{ fontSize: '12px', color: '#A8A29E' }}>{timeAgo(post.created_at)}</span>
+                  </div>
+                  <p style={{ fontSize: '14px', color: '#6B6560', lineHeight: 1.5 }}>{post.body}</p>
+                  {isOwn && (
+                    <button
+                      onClick={() => deletePost(post.id)}
+                      className="transition-opacity hover:opacity-70"
+                      style={{ fontSize: '12px', color: '#A8A29E', marginTop: '4px' }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+      <div className="flex gap-2">
         <textarea
           ref={textareaRef}
           value={body}
           onChange={e => setBody(e.target.value)}
-          placeholder="Share a thought or reflection…"
+          placeholder={`Reply as ${userDisplayName}…`}
           rows={2}
-          className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className="flex-1 rounded-xl resize-none"
+          style={{ background: '#F5F3EF', border: '1px solid #E8E4DE', padding: '10px 12px', fontSize: '14px', color: '#1A1714' }}
         />
         <button
           onClick={submit}
           disabled={!body.trim() || submitting}
-          className="flex-shrink-0 bg-indigo-600 text-white text-sm font-semibold px-4 rounded-xl hover:bg-indigo-700 disabled:opacity-40 transition-all"
+          className="flex-shrink-0 rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+          style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 600, fontSize: '14px', padding: '0 16px' }}
         >
           Post
         </button>
@@ -225,6 +279,16 @@ function AdminSchedulePanel({
   const [newCurrName, setNewCurrName] = useState('')
   const [creatingCurr, setCreatingCurr] = useState(false)
   const [currList, setCurrList] = useState(curricula)
+
+  const inputStyle = {
+    background: '#F5F3EF',
+    border: '1px solid #E8E4DE',
+    borderRadius: '12px',
+    padding: '10px 12px',
+    fontSize: '14px',
+    color: '#1A1714',
+    width: '100%',
+  }
 
   async function searchSpotify() {
     if (!spotifyQuery.trim()) return
@@ -303,26 +367,20 @@ function AdminSchedulePanel({
   }
 
   return (
-    <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 flex flex-col gap-4">
-      <h3 className="font-semibold text-indigo-900 text-sm">Schedule a sermon</h3>
+    <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ background: '#EEF0FB', border: '1px solid #C7D0F8' }}>
+      <p style={{ fontSize: '14px', fontWeight: 600, color: '#1A1714' }}>Schedule a sermon</p>
 
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Date</label>
-        <input
-          type="date"
-          value={date}
-          onChange={e => setDate(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        />
+        <SectionLabel>Date</SectionLabel>
+        <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} />
       </div>
 
-      {/* Curriculum */}
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Series / curriculum <span className="text-gray-400">(optional)</span></label>
+        <SectionLabel>Series / curriculum <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></SectionLabel>
         <select
           value={curriculumId}
           onChange={e => setCurriculumId(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+          style={{ ...inputStyle, appearance: 'none' }}
         >
           <option value="">None</option>
           {currList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -333,31 +391,35 @@ function AdminSchedulePanel({
             value={newCurrName}
             onChange={e => setNewCurrName(e.target.value)}
             placeholder="New series name…"
-            className="flex-1 px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            style={{ ...inputStyle, width: 'auto', flex: 1 }}
           />
           <button
             onClick={createCurriculum}
             disabled={!newCurrName.trim() || creatingCurr}
-            className="px-3 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-xl hover:bg-indigo-700 disabled:opacity-40 transition-all"
+            className="rounded-xl transition-opacity hover:opacity-80 disabled:opacity-40"
+            style={{ background: '#5B4FCF', color: '#FFFFFF', fontWeight: 600, fontSize: '13px', padding: '0 14px' }}
           >
             Add
           </button>
         </div>
       </div>
 
-      {/* Source toggle */}
       <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">Source</label>
+        <SectionLabel>Source</SectionLabel>
         <div className="flex gap-2">
           {(['spotify', 'manual'] as const).map(s => (
             <button
               key={s}
               onClick={() => setSource(s)}
-              className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-all ${
-                source === s
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-white text-gray-700 border-gray-200 hover:border-indigo-300'
-              }`}
+              className="flex-1 rounded-xl transition-all"
+              style={{
+                padding: '8px 0',
+                fontSize: '13px',
+                fontWeight: 500,
+                background: source === s ? '#5B4FCF' : '#FFFFFF',
+                color: source === s ? '#FFFFFF' : '#6B6560',
+                border: `1px solid ${source === s ? '#5B4FCF' : '#E8E4DE'}`,
+              }}
             >
               {s === 'spotify' ? '🎵 Spotify' : '✍️ Manual'}
             </button>
@@ -374,50 +436,51 @@ function AdminSchedulePanel({
               onChange={e => setSpotifyQuery(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && searchSpotify()}
               placeholder="Search episodes… (e.g. Romans grace)"
-              className="flex-1 px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              style={{ ...inputStyle, width: 'auto', flex: 1 }}
             />
             <button
               onClick={searchSpotify}
               disabled={searchLoading || !spotifyQuery.trim()}
-              className="px-3 py-2 bg-green-500 text-white text-xs font-semibold rounded-xl hover:bg-green-600 disabled:opacity-40 transition-all"
+              className="rounded-xl transition-opacity hover:opacity-80 disabled:opacity-40 flex-shrink-0"
+              style={{ background: '#1DB954', color: '#FFFFFF', fontWeight: 600, fontSize: '13px', padding: '0 14px' }}
             >
               {searchLoading ? '…' : 'Search'}
             </button>
           </div>
           {spotifyResults.length > 0 && (
-            <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
-              {spotifyResults.map(ep => (
+            <div className="flex flex-col gap-1 max-h-60 overflow-y-auto rounded-xl" style={{ border: '1px solid #E8E4DE' }}>
+              {spotifyResults.map((ep, i) => (
                 <button
                   key={ep.id}
                   onClick={() => setSelectedEpisode(ep)}
-                  className={`flex items-center gap-3 p-2 rounded-xl text-left transition-all border ${
-                    selectedEpisode?.id === ep.id
-                      ? 'bg-indigo-50 border-indigo-300'
-                      : 'bg-white border-gray-100 hover:bg-gray-50'
-                  }`}
+                  className="flex items-center gap-3 p-2 text-left transition-all"
+                  style={{
+                    background: selectedEpisode?.id === ep.id ? '#EEF0FB' : '#FFFFFF',
+                    borderTop: i > 0 ? '1px solid #EBEBEB' : undefined,
+                  }}
                 >
                   {ep.images?.[0]?.url && (
                     <Image
                       src={ep.images[0].url}
                       alt={ep.name}
-                      width={40}
-                      height={40}
+                      width={36}
+                      height={36}
                       className="rounded-lg flex-shrink-0 object-cover"
                     />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-gray-900 truncate">{ep.name}</p>
-                    <p className="text-xs text-gray-400">{ep.release_date}</p>
+                    <p style={{ fontSize: '13px', fontWeight: 500, color: '#1A1714' }} className="truncate">{ep.name}</p>
+                    <p style={{ fontSize: '12px', color: '#A8A29E' }}>{ep.release_date}</p>
                   </div>
                   {selectedEpisode?.id === ep.id && (
-                    <span className="text-indigo-600 text-xs font-bold flex-shrink-0">✓</span>
+                    <span style={{ color: '#5B4FCF', fontSize: '13px', fontWeight: 700 }} className="flex-shrink-0">✓</span>
                   )}
                 </button>
               ))}
             </div>
           )}
           {selectedEpisode && (
-            <p className="text-xs text-indigo-700 font-medium bg-indigo-50 rounded-lg px-3 py-1.5">
+            <p className="rounded-xl px-3 py-2" style={{ fontSize: '13px', color: '#5B4FCF', background: '#FFFFFF', fontWeight: 500 }}>
               Selected: {selectedEpisode.name}
             </p>
           )}
@@ -426,60 +489,26 @@ function AdminSchedulePanel({
 
       {source === 'manual' && (
         <div className="flex flex-col gap-2">
-          <input
-            type="text"
-            value={manualTitle}
-            onChange={e => setManualTitle(e.target.value)}
-            placeholder="Episode / sermon title *"
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <textarea
-            value={manualDesc}
-            onChange={e => setManualDesc(e.target.value)}
-            placeholder="Description (optional)"
-            rows={2}
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-          <input
-            type="url"
-            value={manualImage}
-            onChange={e => setManualImage(e.target.value)}
-            placeholder="Cover image URL (optional)"
-            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+          <input type="text" value={manualTitle} onChange={e => setManualTitle(e.target.value)} placeholder="Episode / sermon title *" style={inputStyle} />
+          <textarea value={manualDesc} onChange={e => setManualDesc(e.target.value)} placeholder="Description (optional)" rows={2} className="resize-none" style={inputStyle} />
+          <input type="url" value={manualImage} onChange={e => setManualImage(e.target.value)} placeholder="Cover image URL (optional)" style={inputStyle} />
         </div>
       )}
 
-      {/* Shared fields */}
-      <input
-        type="url"
-        value={youtubeUrl}
-        onChange={e => setYoutubeUrl(e.target.value)}
-        placeholder="YouTube URL (optional)"
-        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-      <p className="text-xs text-gray-400 -mt-1">Paste the full URL including https://</p>
-      <input
-        type="text"
-        value={theme}
-        onChange={e => setTheme(e.target.value)}
-        placeholder="Theme / tag (e.g. Faith, Romans 8)"
-        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-      <textarea
-        value={notes}
-        onChange={e => setNotes(e.target.value)}
-        placeholder="Notes for the group (optional)"
-        rows={2}
-        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
+      <input type="url" value={youtubeUrl} onChange={e => setYoutubeUrl(e.target.value)} placeholder="YouTube URL (optional)" style={inputStyle} />
+      <p style={{ fontSize: '12px', color: '#A8A29E', marginTop: '-12px' }}>Paste the full URL including https://</p>
+      <input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder="Theme / tag (e.g. Faith, Romans 8)" style={inputStyle} />
+      <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes for the group (optional)" rows={2} className="resize-none" style={inputStyle} />
 
-      {error && <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+      {error && (
+        <p className="rounded-xl px-3 py-2" style={{ fontSize: '13px', color: '#EF4444', background: '#FEF2F2' }}>{error}</p>
+      )}
 
       <button
         onClick={save}
         disabled={saving}
-        className="w-full min-h-[44px] bg-indigo-600 text-white font-semibold rounded-xl py-3 text-sm hover:bg-indigo-700 disabled:opacity-50 transition-all"
+        className="w-full min-h-[44px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+        style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 600, fontSize: '15px' }}
       >
         {saving ? 'Saving…' : 'Save to schedule'}
       </button>
@@ -550,44 +579,52 @@ export default function SermonsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading…</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FAF9F7' }}>
+        <p style={{ fontSize: '14px', color: '#A8A29E' }}>Loading…</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
+    <div className="min-h-screen pb-24" style={{ background: '#FAF9F7' }}>
       <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
+
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Sermon of the Day</h1>
+          <h1 style={{ fontSize: '22px', fontWeight: 600, color: '#1A1714' }}>Sermons</h1>
           {isAdmin && (
             <button
               onClick={() => { setShowAdminPanel(p => !p); setTab('schedule') }}
-              className="text-xs font-medium text-indigo-600 hover:text-indigo-700 min-h-[44px] flex items-center"
+              className="min-h-[44px] flex items-center transition-opacity hover:opacity-70"
+              style={{ fontSize: '14px', fontWeight: 500, color: showAdminPanel ? '#A8A29E' : '#5B4FCF' }}
             >
               {showAdminPanel ? 'Close' : '+ Schedule'}
             </button>
           )}
         </div>
 
-        {/* Tabs */}
-        <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+        {/* Pill tabs */}
+        <div className="flex gap-2">
           {(['today', 'schedule'] as const).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
-              }`}
+              className="rounded-full transition-all"
+              style={{
+                padding: '6px 16px',
+                fontSize: '14px',
+                fontWeight: 500,
+                background: tab === t ? '#5B4FCF' : '#F5F3EF',
+                color: tab === t ? '#FFFFFF' : '#6B6560',
+                border: `1px solid ${tab === t ? '#5B4FCF' : '#E8E4DE'}`,
+              }}
             >
-              {t === 'today' ? "Today's Sermon" : 'Schedule'}
+              {t === 'today' ? "Today" : 'Schedule'}
             </button>
           ))}
         </div>
 
-        {/* Admin panel (inline on Schedule tab) */}
+        {/* Admin panel */}
         {isAdmin && showAdminPanel && tab === 'schedule' && (
           <AdminSchedulePanel curricula={curricula} onSaved={onAdminSaved} />
         )}
@@ -596,33 +633,34 @@ export default function SermonsPage() {
         {tab === 'today' && (
           <>
             {!todaySermon ? (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
-                <p className="text-4xl mb-3">🎙️</p>
-                <p className="font-semibold text-gray-900 mb-1">No sermon scheduled today</p>
-                <p className="text-sm text-gray-400">
-                  {isAdmin ? 'Use the Schedule tab to add one.' : 'Check back soon.'}
+              <div className="flex flex-col items-center py-12 text-center">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                  style={{ background: '#F5F3EF', fontSize: '28px' }}
+                >
+                  🎙️
+                </div>
+                <p style={{ fontSize: '15px', fontWeight: 500, color: '#1A1714', marginBottom: '4px' }}>No sermon scheduled today</p>
+                <p style={{ fontSize: '14px', color: '#A8A29E' }}>
+                  {isAdmin ? 'Switch to Schedule to add one.' : 'Check back soon.'}
                 </p>
               </div>
             ) : (
               <>
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wide">
-                    {formatSermonDate(todaySermon.schedule_date)}
-                  </p>
-                </div>
+                <p style={{ fontSize: '13px', color: '#A8A29E', marginBottom: '-8px' }}>
+                  {formatSermonDate(todaySermon.schedule_date)}
+                </p>
                 <SermonCard
                   sermon={todaySermon}
                   isAdmin={isAdmin}
                   onDeleted={() => deleteSermon(todaySermon.id)}
                 />
                 {userId && (
-                  <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                    <DiscussionSection
-                      sermon={todaySermon}
-                      userId={userId}
-                      userDisplayName={userDisplayName}
-                    />
-                  </div>
+                  <DiscussionSection
+                    sermon={todaySermon}
+                    userId={userId}
+                    userDisplayName={userDisplayName}
+                  />
                 )}
               </>
             )}
@@ -633,22 +671,29 @@ export default function SermonsPage() {
         {tab === 'schedule' && (
           <>
             {scheduleSermons.length === 0 && !showAdminPanel && (
-              <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
-                <p className="text-4xl mb-3">📅</p>
-                <p className="font-semibold text-gray-900 mb-1">No sermons scheduled yet</p>
+              <div className="flex flex-col items-center py-12 text-center">
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+                  style={{ background: '#F5F3EF', fontSize: '28px' }}
+                >
+                  📅
+                </div>
+                <p style={{ fontSize: '15px', fontWeight: 500, color: '#1A1714', marginBottom: '4px' }}>No sermons scheduled yet</p>
                 {isAdmin && (
-                  <p className="text-sm text-gray-400">Click &quot;+ Schedule&quot; to add one.</p>
+                  <p style={{ fontSize: '14px', color: '#A8A29E' }}>Click &quot;+ Schedule&quot; to add one.</p>
                 )}
               </div>
             )}
             {scheduleSermons.map(sermon => (
-              <div key={sermon.id} className="flex flex-col gap-1">
-                <p className={`text-xs font-semibold uppercase tracking-wide ${
-                  sermon.schedule_date === today ? 'text-indigo-600' : 'text-gray-400'
-                }`}>
+              <div key={sermon.id} className="flex flex-col gap-2">
+                <p style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: sermon.schedule_date === today ? '#5B4FCF' : '#A8A29E',
+                }}>
                   {formatSermonDate(sermon.schedule_date)}
                   {sermon.schedule_date === today && (
-                    <span className="ml-1.5 text-indigo-600">· Today</span>
+                    <span style={{ fontWeight: 400, color: '#A8A29E' }}> · Today</span>
                   )}
                 </p>
                 <SermonCard

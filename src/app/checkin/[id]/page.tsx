@@ -3,27 +3,30 @@ import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import ResponseForm from './ResponseForm'
 
-const spiritualLabels = { strong: '🔥 Strong', okay: '🙂 Okay', struggling: '😔 Struggling' }
-const wordTimeLabels = { yes: '📖 Yes', a_little: '✏️ A little', no: '😬 Not today' }
-const prayerLabels = { strong: '🙏 Strong', somewhat: '🤲 Somewhat', weak: '😶 Weak' }
+const spiritualLabels = { strong: 'Strong', okay: 'Okay', struggling: 'Struggling' }
+const wordTimeLabels = { yes: 'In the Word', a_little: 'A little', no: 'Not today' }
+const prayerLabels = { strong: 'Strong', somewhat: 'Somewhat', weak: 'Weak' }
 const emotionalLabels = {
-  peaceful: '😌 Peaceful',
-  okay: '🙂 Okay',
-  anxious: '😰 Anxious',
-  overwhelmed: '😩 Overwhelmed',
-  low: '😞 Low',
-  joyful: '😄 Joyful',
+  peaceful: 'Peaceful', okay: 'Okay', anxious: 'Anxious',
+  overwhelmed: 'Overwhelmed', low: 'Feeling low', joyful: 'Joyful',
 }
-const physicalLabels = {
-  good: '💪 Good',
-  tired: '😴 Tired',
-  low_energy: '🪫 Low energy',
-  sick: '🤒 Sick',
-}
+const physicalLabels = { good: 'Good', tired: 'Tired', low_energy: 'Low energy', sick: 'Sick' }
 
-function Chip({ label }: { label: string }) {
+type ChipColor = 'indigo' | 'amber' | 'green' | 'gray'
+
+function Chip({ label, color = 'gray' }: { label: string; color?: ChipColor }) {
+  const styles: Record<ChipColor, { bg: string; color: string }> = {
+    indigo: { bg: '#EEF0FB', color: '#5B4FCF' },
+    amber:  { bg: '#FEF3C7', color: '#92400E' },
+    green:  { bg: '#DCFCE7', color: '#166534' },
+    gray:   { bg: '#F5F3EF', color: '#6B6560' },
+  }
+  const s = styles[color]
   return (
-    <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-medium">
+    <span
+      className="inline-flex items-center rounded-full px-3 py-1"
+      style={{ background: s.bg, color: s.color, fontSize: '13px', fontWeight: 500 }}
+    >
       {label}
     </span>
   )
@@ -31,34 +34,40 @@ function Chip({ label }: { label: string }) {
 
 function formatDate(dateStr: string) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
+    weekday: 'long', month: 'long', day: 'numeric',
   })
 }
 
-export default async function CheckInDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+function InitialsCircle({ name }: { name: string }) {
+  const parts = name.trim().split(' ')
+  const initials = parts.length >= 2 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : name.slice(0, 2)
+  return (
+    <div
+      className="w-12 h-12 rounded-full flex items-center justify-center text-base font-semibold uppercase text-white flex-shrink-0"
+      style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)' }}
+    >
+      {initials}
+    </div>
+  )
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#A8A29E', marginBottom: '8px' }}>
+      {children}
+    </p>
+  )
+}
+
+export default async function CheckInDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: checkIn } = await supabase
-    .from('check_ins')
-    .select('*')
-    .eq('id', id)
-    .single()
-
+  const { data: checkIn } = await supabase.from('check_ins').select('*').eq('id', id).single()
   if (!checkIn) notFound()
 
-  // Visibility check
   let canView = false
   if (checkIn.user_id === user.id) {
     canView = true
@@ -66,22 +75,18 @@ export default async function CheckInDetailPage({
     canView = true
   } else {
     const { data: grant } = await supabase
-      .from('visibility_grants')
-      .select('id')
-      .eq('check_in_id', id)
-      .eq('granted_to', user.id)
-      .single()
+      .from('visibility_grants').select('id').eq('check_in_id', id).eq('granted_to', user.id).single()
     canView = !!grant
   }
 
   if (!canView) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-8 text-center shadow-sm">
-          <p className="text-4xl mb-3">🔒</p>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">This check-in is private</h2>
-          <p className="text-gray-500 text-sm">Only certain people can see it.</p>
-          <Link href="/" className="mt-5 inline-block text-indigo-600 font-medium text-sm hover:text-indigo-700">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4" style={{ background: '#FAF9F7' }}>
+        <div className="w-full max-w-md rounded-2xl p-8 text-center" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+          <div style={{ fontSize: '40px', marginBottom: '12px' }}>🔒</div>
+          <h2 style={{ fontSize: '20px', fontWeight: 600, color: '#1A1714', marginBottom: '8px' }}>This check-in is private</h2>
+          <p style={{ fontSize: '14px', color: '#6B6560' }}>Only certain people can see it.</p>
+          <Link href="/" style={{ display: 'inline-block', marginTop: '20px', fontSize: '14px', color: '#5B4FCF', fontWeight: 500 }}>
             ← Back to home
           </Link>
         </div>
@@ -91,20 +96,13 @@ export default async function CheckInDetailPage({
 
   const [profileRes, responsesRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', checkIn.user_id).single(),
-    supabase
-      .from('responses')
-      .select('*')
-      .eq('check_in_id', id)
-      .order('created_at', { ascending: true }),
+    supabase.from('responses').select('*').eq('check_in_id', id).order('created_at', { ascending: true }),
   ])
 
   const profile = profileRes.data
   const rawResponses = responsesRes.data ?? []
 
-  // Load responder profiles for non-anonymous responses
-  const responderIds = [...new Set(
-    rawResponses.filter((r) => !r.is_anonymous).map((r) => r.responder_id)
-  )]
+  const responderIds = [...new Set(rawResponses.filter((r) => !r.is_anonymous).map((r) => r.responder_id))]
   const { data: responderProfiles } = responderIds.length
     ? await supabase.from('profiles').select('id, full_name, display_name').in('id', responderIds)
     : { data: [] }
@@ -118,113 +116,141 @@ export default async function CheckInDetailPage({
     responderName: r.is_anonymous ? null : (responderMap[r.responder_id] ?? 'A member'),
   }))
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-5">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-gray-400 hover:text-gray-600 min-h-[44px] flex items-center text-sm">
-            ← Home
-          </Link>
-        </div>
+  const displayName = profile?.display_name ?? profile?.full_name ?? 'Member'
 
-        {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {profile?.display_name ?? profile?.full_name ?? 'Member'}
-            {checkIn.user_id === user.id && (
-              <span className="ml-2 text-base font-normal text-gray-400">(you)</span>
-            )}
-          </h1>
-          <p className="text-gray-500 text-sm mt-0.5">{formatDate(checkIn.check_in_date)}</p>
+  return (
+    <div className="min-h-screen pb-12" style={{ background: '#FAF9F7' }}>
+      <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
+
+        {/* Back link */}
+        <Link href="/" style={{ fontSize: '14px', color: '#6B6560', fontWeight: 500 }} className="flex items-center gap-1 hover:opacity-70 w-fit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+          Home
+        </Link>
+
+        {/* Header with avatar */}
+        <div className="flex items-center gap-4">
+          <InitialsCircle name={displayName} />
+          <div>
+            <h1 style={{ fontSize: '20px', fontWeight: 600, color: '#1A1714' }}>
+              {displayName}
+              {checkIn.user_id === user.id && (
+                <span style={{ fontSize: '14px', fontWeight: 400, color: '#A8A29E', marginLeft: '6px' }}>(you)</span>
+              )}
+            </h1>
+            <p style={{ fontSize: '13px', color: '#6B6560', marginTop: '2px' }}>{formatDate(checkIn.check_in_date)}</p>
+          </div>
         </div>
 
         {/* Support banner */}
         {checkIn.support_requested && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <span className="text-amber-500 text-lg">🙏</span>
-            <p className="text-sm font-medium text-amber-800">
+          <div
+            className="px-4 py-3 rounded-2xl"
+            style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderLeftWidth: '3px', borderLeftColor: '#F59E0B' }}
+          >
+            <p style={{ fontSize: '14px', fontWeight: 500, color: '#92400E' }}>
               {checkIn.user_id === user.id
                 ? 'You asked for support today.'
-                : `${profile?.display_name ?? profile?.full_name} asked for support.`}
+                : `${displayName} asked for support.`}
             </p>
           </div>
         )}
 
-        {/* Check-in chips */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
+        {/* Check-in status chips */}
+        <div className="rounded-2xl p-5 flex flex-col gap-4" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
           {checkIn.spiritual_life && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Spiritual life</p>
-              <Chip label={spiritualLabels[checkIn.spiritual_life as keyof typeof spiritualLabels]} />
+              <SectionLabel>Spiritual life</SectionLabel>
+              <Chip label={spiritualLabels[checkIn.spiritual_life as keyof typeof spiritualLabels]} color="indigo" />
             </div>
           )}
           {checkIn.word_time && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Time in the Word</p>
-              <Chip label={wordTimeLabels[checkIn.word_time as keyof typeof wordTimeLabels]} />
+              <SectionLabel>Time in the Word</SectionLabel>
+              <Chip label={wordTimeLabels[checkIn.word_time as keyof typeof wordTimeLabels]} color="indigo" />
             </div>
           )}
           {checkIn.prayer_life && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Prayer life</p>
-              <Chip label={prayerLabels[checkIn.prayer_life as keyof typeof prayerLabels]} />
+              <SectionLabel>Prayer life</SectionLabel>
+              <Chip label={prayerLabels[checkIn.prayer_life as keyof typeof prayerLabels]} color="indigo" />
             </div>
           )}
           {checkIn.emotional_state && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Emotionally</p>
-              <Chip label={emotionalLabels[checkIn.emotional_state as keyof typeof emotionalLabels]} />
+              <SectionLabel>Emotionally</SectionLabel>
+              <Chip label={emotionalLabels[checkIn.emotional_state as keyof typeof emotionalLabels]} color="amber" />
             </div>
           )}
           {checkIn.physical_state && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Physically</p>
-              <Chip label={physicalLabels[checkIn.physical_state as keyof typeof physicalLabels]} />
+              <SectionLabel>Physically</SectionLabel>
+              <Chip label={physicalLabels[checkIn.physical_state as keyof typeof physicalLabels]} color="green" />
             </div>
           )}
         </div>
 
         {/* Text sections */}
         {checkIn.struggles && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Struggles</p>
-            <p className="text-gray-900 text-sm leading-relaxed">{checkIn.struggles}</p>
+          <div>
+            <SectionLabel>Struggles</SectionLabel>
+            <p style={{ fontSize: '15px', color: '#1A1714', lineHeight: 1.6 }}>{checkIn.struggles}</p>
           </div>
         )}
         {checkIn.gratitude && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Grateful for</p>
-            <p className="text-gray-900 text-sm leading-relaxed">{checkIn.gratitude}</p>
+          <div>
+            <SectionLabel>Grateful for</SectionLabel>
+            <p style={{ fontSize: '15px', color: '#1A1714', lineHeight: 1.6 }}>{checkIn.gratitude}</p>
           </div>
         )}
         {checkIn.notes && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Notes</p>
-            <p className="text-gray-900 text-sm leading-relaxed">{checkIn.notes}</p>
+          <div>
+            <SectionLabel>Notes</SectionLabel>
+            <p style={{ fontSize: '15px', color: '#1A1714', lineHeight: 1.6 }}>{checkIn.notes}</p>
           </div>
         )}
 
         {/* Responses */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            Responses {responses.length > 0 && `(${responses.length})`}
-          </h2>
+          <SectionLabel>Responses {responses.length > 0 && `(${responses.length})`}</SectionLabel>
           {responses.length === 0 && (
-            <p className="text-sm text-gray-400 px-1">No responses yet. Be the first to encourage.</p>
+            <p style={{ fontSize: '14px', color: '#A8A29E' }}>No responses yet. Be the first to encourage.</p>
           )}
-          <div className="flex flex-col gap-3">
-            {responses.map((r) => (
-              <div key={r.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-                <p className="text-xs font-medium text-gray-400 mb-1.5">
-                  {r.responderName ?? 'A member of your group'}
-                </p>
-                <p className="text-gray-900 text-sm leading-relaxed">{r.body}</p>
-              </div>
-            ))}
-          </div>
+          {responses.length > 0 && (
+            <div className="rounded-2xl overflow-hidden" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+              {responses.map((r, i) => {
+                const name = r.responderName ?? 'Someone in your group'
+                const initial = name[0].toUpperCase()
+                return (
+                  <div
+                    key={r.id}
+                    className="px-4 py-4 flex gap-3"
+                    style={i > 0 ? { borderTop: '1px solid #EBEBEB' } : {}}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 uppercase"
+                      style={{
+                        background: r.is_anonymous ? '#F5F3EF' : '#EEF0FB',
+                        color: r.is_anonymous ? '#A8A29E' : '#5B4FCF',
+                      }}
+                    >
+                      {r.is_anonymous ? '?' : initial}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontSize: '13px', fontWeight: 500, color: '#6B6560', marginBottom: '4px' }}>
+                        {name}
+                      </p>
+                      <p style={{ fontSize: '15px', color: '#1A1714', lineHeight: 1.6 }}>{r.body}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Response form */}
         <ResponseForm checkInId={id} currentUserId={user.id} />
       </div>
     </div>

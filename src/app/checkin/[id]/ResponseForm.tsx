@@ -3,13 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function ResponseForm({
-  checkInId,
-  currentUserId,
-}: {
-  checkInId: string
-  currentUserId: string
-}) {
+export default function ResponseForm({ checkInId, currentUserId }: { checkInId: string; currentUserId: string }) {
   const router = useRouter()
   const [body, setBody] = useState('')
   const [mode, setMode] = useState<'named' | 'anonymous' | null>(null)
@@ -24,12 +18,7 @@ export default function ResponseForm({
     const res = await fetch('/api/responses', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        check_in_id: checkInId,
-        responder_id: currentUserId,
-        body: body.trim(),
-        is_anonymous: anonymous,
-      }),
+      body: JSON.stringify({ check_in_id: checkInId, responder_id: currentUserId, body: body.trim(), is_anonymous: anonymous }),
     })
 
     if (!res.ok) {
@@ -47,19 +36,21 @@ export default function ResponseForm({
 
   if (mode === null) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3 pb-8">
-        <h2 className="font-semibold text-gray-900">Respond</h2>
-        <p className="text-sm text-gray-500">Offer a word of encouragement or support.</p>
+      <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+        <p style={{ fontSize: '15px', fontWeight: 500, color: '#1A1714' }}>Respond</p>
+        <p style={{ fontSize: '13px', color: '#6B6560' }}>Offer a word of encouragement or support.</p>
         <div className="flex gap-3">
           <button
             onClick={() => setMode('named')}
-            className="flex-1 min-h-[48px] border border-indigo-200 text-indigo-700 font-medium rounded-xl text-sm hover:bg-indigo-50 transition-all"
+            className="flex-1 min-h-[44px] rounded-xl transition-opacity hover:opacity-80"
+            style={{ background: '#EEF0FB', color: '#5B4FCF', fontWeight: 500, fontSize: '14px', border: '1px solid #C7D0F8' }}
           >
             Respond
           </button>
           <button
             onClick={() => setMode('anonymous')}
-            className="flex-1 min-h-[48px] border border-gray-200 text-gray-600 font-medium rounded-xl text-sm hover:bg-gray-50 transition-all"
+            className="flex-1 min-h-[44px] rounded-xl transition-opacity hover:opacity-80"
+            style={{ background: '#F5F3EF', color: '#6B6560', fontWeight: 500, fontSize: '14px', border: '1px solid #E8E4DE' }}
           >
             Reply anonymously
           </button>
@@ -69,34 +60,37 @@ export default function ResponseForm({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3 pb-8">
-      <h2 className="font-semibold text-gray-900">
+    <div className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: '#FFFFFF', border: '1px solid #E8E4DE' }}>
+      <p style={{ fontSize: '15px', fontWeight: 500, color: '#1A1714' }}>
         {mode === 'anonymous' ? 'Anonymous reply' : 'Your response'}
-      </h2>
+      </p>
       {mode === 'anonymous' && (
-        <p className="text-xs text-gray-400">Your name won't be shown.</p>
+        <p style={{ fontSize: '12px', color: '#A8A29E' }}>Your name won&apos;t be shown.</p>
       )}
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder="Write something kind…"
         rows={4}
-        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
+        className="w-full rounded-xl resize-none"
+        style={{ background: '#F5F3EF', border: '1px solid #E8E4DE', padding: '12px 14px', fontSize: '15px', color: '#1A1714', lineHeight: 1.5 }}
       />
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        <p className="rounded-xl px-3 py-2" style={{ fontSize: '13px', color: '#EF4444', background: '#FEF2F2' }}>{error}</p>
       )}
       <div className="flex gap-3">
         <button
           onClick={() => submit(mode === 'anonymous')}
           disabled={saving || !body.trim()}
-          className="flex-1 min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl text-sm hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          className="flex-1 min-h-[44px] rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ background: 'linear-gradient(135deg, #5B4FCF, #7C3AED)', fontWeight: 500, fontSize: '14px' }}
         >
           {saving ? 'Sending…' : 'Send'}
         </button>
         <button
           onClick={() => { setMode(null); setBody('') }}
-          className="min-h-[48px] px-4 bg-gray-100 text-gray-600 font-medium rounded-xl text-sm hover:bg-gray-200 transition-all"
+          className="min-h-[44px] px-5 rounded-xl transition-opacity hover:opacity-80"
+          style={{ background: '#F5F3EF', color: '#6B6560', fontWeight: 500, fontSize: '14px', border: '1px solid #E8E4DE' }}
         >
           Cancel
         </button>
