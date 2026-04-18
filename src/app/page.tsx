@@ -4,11 +4,19 @@ import Link from 'next/link'
 import Image from 'next/image'
 import type { CheckIn, Profile, SermonSchedule } from '@/lib/types'
 import { calculateStreak } from '@/lib/streaks'
-import { todayToronto, formatDateToronto } from '@/lib/date'
+import { todayToronto, formatDateToronto, offsetTorontoDay } from '@/lib/date'
 import BottomNav from '@/components/BottomNav'
 
 const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
 const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
+
+function daysUntilBirthday(month: number, day: number, todayStr: string): number {
+  const [y, m, d] = todayStr.split('-').map(Number)
+  const todayDate = new Date(Date.UTC(y, m - 1, d))
+  let next = new Date(Date.UTC(y, month - 1, day))
+  if (next < todayDate) next = new Date(Date.UTC(y + 1, month - 1, day))
+  return Math.round((next.getTime() - todayDate.getTime()) / 86400000)
+}
 
 function formatDate(date: Date) {
   return date.toLocaleDateString('en-US', {
@@ -75,8 +83,10 @@ export default async function HomePage() {
   ninetyDaysAgoCursor.setDate(ninetyDaysAgoCursor.getDate() - 90)
   const ninetyDaysAgoStr = formatDateToronto(ninetyDaysAgoCursor)
 
-  // Load all profiles, today's check-ins, visibility grants, recent history, and today's sermon in parallel
-  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes, sermonRes] = await Promise.all([
+  const sevenDaysFromNow = offsetTorontoDay(7)
+
+  // Load all profiles, today's check-ins, visibility grants, recent history, sermon, birthdays, events
+  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes, sermonRes, birthdaysRes, upcomingEventsRes] = await Promise.all([
     supabase.from('profiles').select('*').order('full_name'),
     supabase.from('check_ins').select('*').eq('check_in_date', today),
     supabase.from('visibility_grants').select('check_in_id, granted_to'),
@@ -86,6 +96,9 @@ export default async function HomePage() {
       .gte('check_in_date', ninetyDaysAgoStr)
       .order('check_in_date', { ascending: false }),
     supabase.from('sermon_schedule').select('*').eq('schedule_date', today).maybeSingle(),
+    supabase.from('birthdays').select('name, month, day'),
+    supabase.from('events').select('id, title, event_date')
+      .gte('event_date', today).lte('event_date', sevenDaysFromNow).order('event_date'),
   ])
 
   const profiles: Profile[] = profilesRes.data ?? []
@@ -93,6 +106,28 @@ export default async function HomePage() {
   const grants = grantsRes.data ?? []
   const recentCheckIns = recentCheckInsRes.data ?? []
   const todaySermon: SermonSchedule | null = sermonRes.data ?? null
+
+  // Compute the soonest upcoming birthday or event within 7 days
+  const allBirthdays = birthdaysRes.data ?? []
+  const upcomingEvents = upcomingEventsRes.data ?? []
+
+  type Reminder = { type: 'birthday'; name: string; days: number } | { type: 'event'; title: string; days: number }
+  let soonestReminder: Reminder | null = null
+
+  for (const bd of allBirthdays) {
+    const days = daysUntilBirthday(bd.month, bd.day, today)
+    if (days <= 7 && (soonestReminder === null || days < soonestReminder.days)) {
+      soonestReminder = { type: 'birthday', name: bd.name, days }
+    }
+  }
+  for (const ev of upcomingEvents) {
+    const [ey, em, ed] = ev.event_date.split('-').map(Number)
+    const [ty, tm, td] = today.split('-').map(Number)
+    const days = Math.round((new Date(Date.UTC(ey, em - 1, ed)).getTime() - new Date(Date.UTC(ty, tm - 1, td)).getTime()) / 86400000)
+    if (days <= 7 && (soonestReminder === null || days < soonestReminder.days)) {
+      soonestReminder = { type: 'event', title: ev.title, days }
+    }
+  }
 
   // Build streak map: userId → streak count
   const streakMap = new Map<string, number>()
@@ -231,6 +266,32 @@ export default async function HomePage() {
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>not yet</p>
             </div>
           </div>
+
+          {/* Upcoming reminder */}
+          {soonestReminder && (() => {
+            const r = soonestReminder
+            const isBirthday = r.type === 'birthday'
+            const accentColor = isBirthday ? '#FF9500' : '#6C63FF'
+            let text = ''
+            if (r.type === 'birthday') {
+              if (r.days === 0) text = `🎂 Today is ${r.name}'s birthday! 🎉`
+              else if (r.days === 1) text = `🎂 ${r.name}'s birthday is tomorrow`
+              else if (r.days === 7) text = `🎂 ${r.name}'s birthday is in 1 week`
+              else text = `🎂 ${r.name}'s birthday is in ${r.days} days`
+            } else {
+              if (r.days === 0) text = `📅 ${r.title} is today`
+              else if (r.days === 1) text = `📅 ${r.title} is tomorrow`
+              else text = `📅 ${r.title} is in ${r.days} days`
+            }
+            return (
+              <div style={{ backgroundColor: '#1A1A1A', borderRadius: 16, border: '1px solid #2A2A2A', borderLeft: `3px solid ${accentColor}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{text}</p>
+                <Link href="/calendar" style={{ fontSize: 13, color: accentColor, fontWeight: 600, flexShrink: 0, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                  View calendar →
+                </Link>
+              </div>
+            )
+          })()}
 
           {/* Sermon of the Day */}
           {todaySermon && (

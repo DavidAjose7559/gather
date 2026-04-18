@@ -30,7 +30,7 @@ export default function RoleToggle({
 
   if (isSelf) {
     return (
-      <span className="text-xs text-gray-400 px-2 py-1 bg-gray-50 rounded-lg">
+      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', padding: '4px 10px', backgroundColor: '#2A2A2A', borderRadius: 8 }}>
         {role}
       </span>
     )
@@ -40,11 +40,19 @@ export default function RoleToggle({
     <button
       onClick={toggle}
       disabled={saving}
-      className={`text-xs font-medium px-3 py-1.5 rounded-lg min-h-[36px] transition-all disabled:opacity-50 ${
-        role === 'admin'
-          ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-      }`}
+      style={{
+        fontSize: 12,
+        fontWeight: 600,
+        padding: '6px 14px',
+        borderRadius: 10,
+        minHeight: 36,
+        border: 'none',
+        cursor: saving ? 'not-allowed' : 'pointer',
+        opacity: saving ? 0.5 : 1,
+        backgroundColor: role === 'admin' ? 'rgba(108,99,255,0.15)' : '#2A2A2A',
+        color: role === 'admin' ? '#A09AF8' : 'rgba(255,255,255,0.5)',
+        transition: 'all 0.15s',
+      }}
     >
       {saving ? '…' : role === 'admin' ? 'Admin' : 'Member'}
     </button>

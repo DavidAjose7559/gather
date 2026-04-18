@@ -14,7 +14,18 @@ export default function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="text-xs font-medium text-indigo-600 hover:text-indigo-700 min-h-[36px] px-2 flex-shrink-0"
+      style={{
+        fontSize: 12,
+        fontWeight: 600,
+        color: copied ? '#4CAF50' : '#6C63FF',
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        flexShrink: 0,
+        minHeight: 36,
+        padding: '0 8px',
+        transition: 'color 0.2s',
+      }}
     >
       {copied ? 'Copied!' : 'Copy'}
     </button>

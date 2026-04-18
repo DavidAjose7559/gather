@@ -99,3 +99,34 @@ export type SermonDiscussion = {
   body: string
   created_at: string
 }
+
+export type Birthday = {
+  id: string
+  name: string
+  month: number
+  day: number
+  created_at: string
+}
+
+export type CalendarEvent = {
+  id: string
+  title: string
+  description: string | null
+  event_date: string
+  event_time: string | null
+  location: string | null
+  created_by: string
+  created_at: string
+}
+
+export type EventRsvp = {
+  id: string
+  event_id: string
+  user_id: string
+  status: 'going' | 'not_going' | 'maybe'
+}
+
+export type EventWithMeta = CalendarEvent & {
+  rsvp_counts: { going: number; maybe: number; not_going: number }
+  my_rsvp: 'going' | 'maybe' | 'not_going' | null
+}

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import RoleToggle from './RoleToggle'
 import CopyButton from './CopyButton'
+import BroadcastForm from './BroadcastForm'
 
 const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
 const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
@@ -62,6 +63,17 @@ export default async function AdminPage() {
           <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
             Anyone with the link can join — adjust their role below if needed.
           </p>
+        </div>
+
+        {/* Broadcast message */}
+        <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Send a message to everyone</h2>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+              Email all {members?.length ?? 0} members at once.
+            </p>
+          </div>
+          <BroadcastForm memberCount={members?.length ?? 0} />
         </div>
 
         {/* Member list */}

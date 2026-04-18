@@ -1,0 +1,545 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { todayToronto } from '@/lib/date'
+import BottomNav from '@/components/BottomNav'
+import type { Birthday, EventWithMeta } from '@/lib/types'
+
+const MONTH_NAMES = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+]
+const MONTH_SHORT = [
+  'Jan','Feb','Mar','Apr','May','Jun',
+  'Jul','Aug','Sep','Oct','Nov','Dec',
+]
+
+function daysUntilBirthday(month: number, day: number, todayStr: string): number {
+  const [y, m, d] = todayStr.split('-').map(Number)
+  const todayDate = new Date(Date.UTC(y, m - 1, d))
+  let next = new Date(Date.UTC(y, month - 1, day))
+  if (next < todayDate) next = new Date(Date.UTC(y + 1, month - 1, day))
+  return Math.round((next.getTime() - todayDate.getTime()) / 86400000)
+}
+
+function daysUntilDate(dateStr: string, todayStr: string): number {
+  const [ey, em, ed] = dateStr.split('-').map(Number)
+  const [ty, tm, td] = todayStr.split('-').map(Number)
+  return Math.round(
+    (new Date(Date.UTC(ey, em - 1, ed)).getTime() - new Date(Date.UTC(ty, tm - 1, td)).getTime()) / 86400000
+  )
+}
+
+function daysLabel(days: number): string {
+  if (days === 0) return 'today 🎉'
+  if (days === 1) return 'tomorrow'
+  return `in ${days} days`
+}
+
+function RsvpButtons({
+  event,
+  onRsvp,
+}: {
+  event: EventWithMeta
+  onRsvp: (eventId: string, status: 'going' | 'maybe' | 'not_going') => void
+}) {
+  const buttons: { status: 'going' | 'maybe' | 'not_going'; label: string }[] = [
+    { status: 'going', label: 'Going' },
+    { status: 'maybe', label: 'Maybe' },
+    { status: 'not_going', label: "Can't make it" },
+  ]
+
+  return (
+    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      {buttons.map(({ status, label }) => {
+        const isActive = event.my_rsvp === status
+        const isGoing = status === 'going'
+        return (
+          <button
+            key={status}
+            onClick={() => onRsvp(event.id, status)}
+            style={{
+              minHeight: 36,
+              padding: '0 14px',
+              borderRadius: 10,
+              fontSize: 13,
+              fontWeight: 500,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              border: isActive
+                ? isGoing ? '1px solid #4CAF50' : '1px solid #6C63FF'
+                : '1px solid #2A2A2A',
+              backgroundColor: isActive
+                ? isGoing ? 'rgba(76,175,80,0.15)' : 'rgba(108,99,255,0.15)'
+                : '#111111',
+              color: isActive
+                ? isGoing ? '#4CAF50' : '#A09AF8'
+                : 'rgba(255,255,255,0.5)',
+            }}
+          >
+            {isActive && isGoing ? '✓ ' : ''}{label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+export default function CalendarPage() {
+  const router = useRouter()
+  const supabase = createClient()
+
+  const [loading, setLoading] = useState(true)
+  const [today, setToday] = useState('')
+  const [birthdays, setBirthdays] = useState<Birthday[]>([])
+  const [events, setEvents] = useState<EventWithMeta[]>([])
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  // Month collapsible state — current month expanded by default
+  const [expandedMonths, setExpandedMonths] = useState<Set<number>>(new Set())
+
+  // Admin add event form
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const [newDate, setNewDate] = useState('')
+  const [newTime, setNewTime] = useState('')
+  const [newLocation, setNewLocation] = useState('')
+  const [newDesc, setNewDesc] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [addError, setAddError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const todayStr = todayToronto()
+    setToday(todayStr)
+    const currentMonth = parseInt(todayStr.split('-')[1])
+    setExpandedMonths(new Set([currentMonth]))
+
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.push('/login'); return }
+      setUserId(user.id)
+
+      const [profileRes, birthdaysRes, eventsRes] = await Promise.all([
+        supabase.from('profiles').select('role').eq('id', user.id).single(),
+        fetch('/api/birthdays').then(r => r.json()),
+        fetch('/api/events').then(r => r.json()),
+      ])
+
+      if (profileRes.data) setIsAdmin(profileRes.data.role === 'admin')
+      setBirthdays(birthdaysRes.birthdays ?? [])
+      setEvents(eventsRes.events ?? [])
+      setLoading(false)
+    }
+    load()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function toggleRsvp(eventId: string, status: 'going' | 'maybe' | 'not_going') {
+    const event = events.find(e => e.id === eventId)
+    if (!event) return
+
+    const newStatus = event.my_rsvp === status ? null : status
+
+    // Optimistic update
+    setEvents(prev => prev.map(e => {
+      if (e.id !== eventId) return e
+      const counts = { ...e.rsvp_counts }
+      if (e.my_rsvp) counts[e.my_rsvp]--
+      if (newStatus) counts[newStatus]++
+      return { ...e, my_rsvp: newStatus, rsvp_counts: counts }
+    }))
+
+    const res = await fetch('/api/events/rsvp', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_id: eventId, status: newStatus }),
+    })
+    if (!res.ok) {
+      // Revert on failure
+      setEvents(prev => prev.map(e => e.id === eventId ? event : e))
+    }
+  }
+
+  async function addEvent() {
+    if (!newTitle.trim() || !newDate) return
+    setSaving(true)
+    setAddError(null)
+    const res = await fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: newTitle.trim(),
+        event_date: newDate,
+        event_time: newTime.trim() || null,
+        location: newLocation.trim() || null,
+        description: newDesc.trim() || null,
+      }),
+    })
+    const data = await res.json()
+    if (data.error) {
+      setAddError(data.error)
+    } else {
+      const newEvent: EventWithMeta = {
+        ...data.event,
+        rsvp_counts: { going: 0, maybe: 0, not_going: 0 },
+        my_rsvp: null,
+      }
+      setEvents(prev => [...prev, newEvent].sort((a, b) => a.event_date.localeCompare(b.event_date)))
+      setNewTitle('')
+      setNewDate('')
+      setNewTime('')
+      setNewLocation('')
+      setNewDesc('')
+      setShowAddForm(false)
+    }
+    setSaving(false)
+  }
+
+  async function deleteEvent(eventId: string) {
+    const res = await fetch(`/api/events?id=${eventId}`, { method: 'DELETE' })
+    if (res.ok) setEvents(prev => prev.filter(e => e.id !== eventId))
+  }
+
+  function toggleMonth(month: number) {
+    setExpandedMonths(prev => {
+      const next = new Set(prev)
+      next.has(month) ? next.delete(month) : next.add(month)
+      return next
+    })
+  }
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
+      </div>
+    )
+  }
+
+  const cardStyle = {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    border: '1px solid #2A2A2A',
+  }
+
+  // Upcoming items: birthdays within 30 days + events within 30 days, sorted by days
+  const upcomingBirthdays = birthdays
+    .map(b => ({ type: 'birthday' as const, ...b, days: daysUntilBirthday(b.month, b.day, today) }))
+    .filter(b => b.days <= 30)
+
+  const upcomingEvents = events
+    .filter(e => {
+      const days = daysUntilDate(e.event_date, today)
+      return days >= 0 && days <= 30
+    })
+    .map(e => ({ type: 'event' as const, ...e, days: daysUntilDate(e.event_date, today) }))
+
+  const upcomingItems = [...upcomingBirthdays, ...upcomingEvents].sort((a, b) => a.days - b.days)
+  const todayBirthdays = upcomingBirthdays.filter(b => b.days === 0)
+
+  // Birthdays grouped by month
+  const birthdaysByMonth: Record<number, Birthday[]> = {}
+  for (let m = 1; m <= 12; m++) {
+    birthdaysByMonth[m] = birthdays.filter(b => b.month === m).sort((a, b) => a.day - b.day)
+  }
+
+  // Future events only
+  const futureEvents = events.filter(e => daysUntilDate(e.event_date, today) >= 0)
+
+  const rsvpSummary = (e: EventWithMeta) => {
+    const parts: string[] = []
+    if (e.rsvp_counts.going > 0) parts.push(`${e.rsvp_counts.going} going`)
+    if (e.rsvp_counts.maybe > 0) parts.push(`${e.rsvp_counts.maybe} maybe`)
+    if (e.rsvp_counts.not_going > 0) parts.push(`${e.rsvp_counts.not_going} can't make it`)
+    return parts.join(' · ')
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+      <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+        {/* ─── HEADER ─── */}
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>Calendar</h1>
+
+        {/* ─── SECTION 1: UPCOMING ─── */}
+        <div>
+          <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            Upcoming — next 30 days
+          </h2>
+
+          {/* Today's birthday celebratory cards */}
+          {todayBirthdays.map(b => (
+            <div key={b.id} style={{ backgroundColor: 'rgba(76,175,80,0.12)', border: '1px solid rgba(76,175,80,0.3)', borderRadius: 16, padding: '14px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 28 }}>🎉</span>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#4CAF50' }}>
+                {b.name}&apos;s birthday is today! 🎂
+              </p>
+            </div>
+          ))}
+
+          {upcomingItems.length === 0 ? (
+            <div style={{ ...cardStyle, padding: 24, textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>Nothing in the next 30 days.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {upcomingItems.map((item, i) => {
+                if (item.type === 'birthday') {
+                  return (
+                    <div key={`bd-${item.id}-${i}`} style={{ ...cardStyle, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, borderLeft: '3px solid #FF9500' }}>
+                      <span style={{ fontSize: 20, flexShrink: 0 }}>🎂</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>{item.name}&apos;s birthday</p>
+                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                          {MONTH_SHORT[item.month - 1]} {item.day}
+                        </p>
+                      </div>
+                      <span style={{ fontSize: 12, color: item.days === 0 ? '#4CAF50' : '#FF9500', fontWeight: 600, flexShrink: 0 }}>
+                        {daysLabel(item.days)}
+                      </span>
+                    </div>
+                  )
+                } else {
+                  // Event item
+                  const ev = item as typeof item & EventWithMeta
+                  const [, em, ed] = ev.event_date.split('-').map(Number)
+                  return (
+                    <div key={`ev-${ev.id}-${i}`} style={{ ...cardStyle, padding: '14px 16px', borderLeft: '3px solid #6C63FF', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                        <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>📅</span>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>{ev.title}</p>
+                          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                            {MONTH_SHORT[em - 1]} {ed}
+                            {ev.event_time && ` · ${ev.event_time}`}
+                            {ev.location && ` · ${ev.location}`}
+                          </p>
+                        </div>
+                        <span style={{ fontSize: 12, color: '#6C63FF', fontWeight: 600, flexShrink: 0 }}>
+                          {daysLabel(ev.days)}
+                        </span>
+                      </div>
+                      <RsvpButtons event={ev} onRsvp={toggleRsvp} />
+                    </div>
+                  )
+                }
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* ─── SECTION 2: BIRTHDAY CALENDAR ─── */}
+        <div>
+          <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+            Birthday calendar
+          </h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {MONTH_NAMES.map((monthName, idx) => {
+              const month = idx + 1
+              const monthBirthdays = birthdaysByMonth[month] ?? []
+              if (monthBirthdays.length === 0) return null
+              const isExpanded = expandedMonths.has(month)
+              const currentMonth = today ? parseInt(today.split('-')[1]) : 0
+
+              return (
+                <div key={month} style={{ ...cardStyle, overflow: 'hidden' }}>
+                  <button
+                    onClick={() => toggleMonth(month)}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '14px 16px',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      minHeight: 48,
+                    }}
+                  >
+                    <span style={{ fontSize: 15, fontWeight: 600, color: month === currentMonth ? '#6C63FF' : 'white' }}>
+                      {monthName}
+                      <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.3)', marginLeft: 8 }}>
+                        {monthBirthdays.length} {monthBirthdays.length === 1 ? 'birthday' : 'birthdays'}
+                      </span>
+                    </span>
+                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>{isExpanded ? '▲' : '▼'}</span>
+                  </button>
+
+                  {isExpanded && (
+                    <div style={{ borderTop: '1px solid #2A2A2A' }}>
+                      {monthBirthdays.map((b, bi) => {
+                        const days = today ? daysUntilBirthday(b.month, b.day, today) : null
+                        const isToday = days === 0
+                        return (
+                          <div
+                            key={b.id}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              padding: '11px 16px',
+                              borderBottom: bi < monthBirthdays.length - 1 ? '1px solid #222' : 'none',
+                              backgroundColor: isToday ? 'rgba(76,175,80,0.05)' : 'transparent',
+                            }}
+                          >
+                            <p style={{ flex: 1, fontSize: 14, color: isToday ? '#4CAF50' : 'white', fontWeight: isToday ? 600 : 400 }}>
+                              {MONTH_SHORT[b.month - 1]} {b.day} — {b.name}
+                              {isToday && ' 🎉'}
+                            </p>
+                            {days !== null && days <= 14 && days > 0 && (
+                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                                {daysLabel(days)}
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* ─── SECTION 3: EVENTS ─── */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Events
+            </h2>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAddForm(v => !v)}
+                style={{ fontSize: 13, fontWeight: 600, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36 }}
+              >
+                {showAddForm ? 'Cancel' : '+ Add event'}
+              </button>
+            )}
+          </div>
+
+          {/* Admin add event form */}
+          {isAdmin && showAddForm && (
+            <div style={{ ...cardStyle, padding: 20, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12, borderColor: 'rgba(108,99,255,0.3)' }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: '#A09AF8' }}>New event</h3>
+              <input
+                type="text"
+                value={newTitle}
+                onChange={e => setNewTitle(e.target.value)}
+                placeholder="Event title *"
+                style={{ width: '100%' }}
+              />
+              <input
+                type="date"
+                value={newDate}
+                onChange={e => setNewDate(e.target.value)}
+                style={{ width: '100%' }}
+              />
+              <input
+                type="text"
+                value={newTime}
+                onChange={e => setNewTime(e.target.value)}
+                placeholder="Time (e.g. 7:00 PM) — optional"
+                style={{ width: '100%' }}
+              />
+              <input
+                type="text"
+                value={newLocation}
+                onChange={e => setNewLocation(e.target.value)}
+                placeholder="Location — optional"
+                style={{ width: '100%' }}
+              />
+              <textarea
+                value={newDesc}
+                onChange={e => setNewDesc(e.target.value)}
+                placeholder="Description — optional"
+                rows={3}
+                style={{ width: '100%', resize: 'none' }}
+              />
+              {addError && (
+                <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{addError}</p>
+              )}
+              <button
+                onClick={addEvent}
+                disabled={saving || !newTitle.trim() || !newDate}
+                style={{
+                  width: '100%',
+                  minHeight: 48,
+                  backgroundColor: '#6C63FF',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  borderRadius: 12,
+                  border: 'none',
+                  cursor: saving || !newTitle.trim() || !newDate ? 'not-allowed' : 'pointer',
+                  opacity: saving || !newTitle.trim() || !newDate ? 0.5 : 1,
+                }}
+              >
+                {saving ? 'Saving…' : 'Save event'}
+              </button>
+            </div>
+          )}
+
+          {futureEvents.length === 0 && !showAddForm ? (
+            <div style={{ ...cardStyle, padding: 24, textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
+                {isAdmin ? 'No upcoming events. Add one above.' : 'No upcoming events yet.'}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {futureEvents.map(event => {
+                const [, em, ed] = event.event_date.split('-').map(Number)
+                const days = daysUntilDate(event.event_date, today)
+                const summary = rsvpSummary(event)
+                return (
+                  <div key={event.id} style={{ ...cardStyle, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{event.title}</p>
+                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+                          {MONTH_SHORT[em - 1]} {ed}
+                          {event.event_time && ` · ${event.event_time}`}
+                        </p>
+                        {event.location && (
+                          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>📍 {event.location}</p>
+                        )}
+                        {event.description && (
+                          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 8, lineHeight: 1.5 }}>{event.description}</p>
+                        )}
+                      </div>
+                      <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                        <span style={{ fontSize: 12, color: '#6C63FF', fontWeight: 600 }}>
+                          {days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}
+                        </span>
+                      </div>
+                    </div>
+
+                    {summary && (
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{summary}</p>
+                    )}
+
+                    <RsvpButtons event={event} onRsvp={toggleRsvp} />
+
+                    {isAdmin && (
+                      <button
+                        onClick={() => deleteEvent(event.id)}
+                        style={{ fontSize: 12, color: 'rgba(255,77,77,0.6)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', marginTop: 4 }}
+                      >
+                        Remove event
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <BottomNav />
+    </div>
+  )
+}
