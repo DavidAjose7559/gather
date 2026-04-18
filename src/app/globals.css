@@ -1,39 +1,75 @@
 @import "tailwindcss";
 
 :root {
-  --bg-base: #FAF9F7;
-  --bg-card: #FFFFFF;
-  --bg-subtle: #F5F3EF;
-  --accent: #5B4FCF;
-  --accent-light: #EEF0FB;
-  --accent-gradient: linear-gradient(135deg, #5B4FCF, #7C3AED);
-  --text-primary: #1A1714;
-  --text-secondary: #6B6560;
-  --text-tertiary: #A8A29E;
-  --green: #22C55E;
-  --green-light: #DCFCE7;
-  --amber: #F59E0B;
-  --amber-light: #FEF3C7;
-  --red-light: #FEF2F2;
-  --red: #EF4444;
-  --border: #EBEBEB;
-  --border-warm: #E8E4DE;
+  --bg-base: #0A0A0A;
+  --bg-card: #1A1A1A;
+  --bg-card-2: #222222;
+  --bg-input: #2A2A2A;
+  --accent: #6C63FF;
+  --accent-2: #FF4D4D;
+  --accent-dim: rgba(108, 99, 255, 0.15);
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A0;
+  --text-tertiary: #606060;
+  --green: #4CAF50;
+  --green-dark: #1A2E1A;
+  --green-border: #2D4A2D;
+  --amber: #FF9500;
+  --amber-dark: #2E1E00;
+  --amber-border: #4A3000;
+  --red: #FF4D4D;
+  --red-dark: #2E1212;
+  --border: #2A2A2A;
+  --border-light: #333333;
 }
 
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-body {
-  background: var(--bg-base);
-  color: var(--text-primary);
-  font-family: var(--font-geist-sans, system-ui, -apple-system, sans-serif);
+html, body {
+  background-color: #0A0A0A;
+  color: #FFFFFF;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+
+input, textarea, select {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-tertiary);
 }
 
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px var(--accent-light);
+  box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+}
+
+select option {
+  background: #222222;
+  color: #FFFFFF;
+}
+
+button { transition: all 0.15s ease; font-family: inherit; }
+a { color: inherit; text-decoration: none; }
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
