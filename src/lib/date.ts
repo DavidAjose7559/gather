@@ -18,6 +18,26 @@ export function formatDateToronto(date: Date): string {
   }).format(date)
 }
 
+// Returns yesterday's date string in Toronto timezone using pure calendar arithmetic.
+// Never uses UTC offset math so it's immune to DST edge cases.
+export function yesterdayToronto(): string {
+  return offsetTorontoDay(-1)
+}
+
+// Returns a YYYY-MM-DD date string offset by `days` from today in Toronto timezone.
+export function offsetTorontoDay(days: number): string {
+  const today = todayToronto() // YYYY-MM-DD
+  const [y, m, d] = today.split('-').map(Number)
+  // Date.UTC treats components as UTC calendar — pure arithmetic, no TZ conversion
+  const result = new Date(Date.UTC(y, m - 1, d + days))
+  return result.toISOString().split('T')[0]
+}
+
+// Returns true if the given YYYY-MM-DD string matches today in Toronto timezone.
+export function isToday(dateStr: string): boolean {
+  return dateStr === todayToronto()
+}
+
 export function timeAgo(isoString: string): string {
   const diff = Date.now() - new Date(isoString).getTime()
   const mins = Math.floor(diff / 60000)

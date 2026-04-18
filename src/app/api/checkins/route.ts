@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+import { todayToronto } from '@/lib/date'
 
 export async function GET() {
   const supabase = await createClient()
@@ -9,7 +10,7 @@ export async function GET() {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayToronto()
 
   const [checkInsRes, grantsRes] = await Promise.all([
     supabase.from('check_ins').select('*').eq('check_in_date', today),

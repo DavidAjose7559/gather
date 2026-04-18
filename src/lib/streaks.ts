@@ -1,4 +1,4 @@
-import { todayToronto, formatDateToronto } from './date'
+import { todayToronto, yesterdayToronto, offsetTorontoDay } from './date'
 
 export function calculateStreak(
   checkIns: { check_in_date: string }[]
@@ -9,19 +9,18 @@ export function calculateStreak(
   const todayStr = todayToronto()
   const hasToday = checkedDates.has(todayStr)
 
-  // Start counting from today if checked in, otherwise from yesterday
-  // so the streak doesn't reset mid-day before the user checks in
-  const cursor = new Date()
-  if (!hasToday) {
-    cursor.setDate(cursor.getDate() - 1)
-  }
-
+  // Start from today if checked in, otherwise from yesterday — streak never
+  // resets mid-day just because the user hasn't checked in yet.
+  // Uses pure date-string arithmetic to avoid DST edge cases.
+  let current = hasToday ? todayStr : yesterdayToronto()
   let streak = 0
-  while (true) {
-    const dateStr = formatDateToronto(cursor)
-    if (!checkedDates.has(dateStr)) break
+
+  while (checkedDates.has(current)) {
     streak++
-    cursor.setDate(cursor.getDate() - 1)
+    // Step back one Toronto calendar day using pure arithmetic
+    const [y, m, d] = current.split('-').map(Number)
+    const prev = new Date(Date.UTC(y, m - 1, d - 1))
+    current = prev.toISOString().split('T')[0]
   }
 
   return streak

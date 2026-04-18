@@ -157,9 +157,11 @@ export default function CheckInPage() {
       if (error) { setError(error.message); setSaving(false); return }
       checkInId = existingCheckIn.id
     } else {
+      // Always pass check_in_date explicitly — DB default is current_date in UTC
+      // which is wrong for Toronto users after 8pm ET.
       const { data, error } = await supabase
         .from('check_ins')
-        .insert(payload)
+        .insert({ ...payload, check_in_date: todayToronto() })
         .select('id')
         .single()
       if (error || !data) { setError(error?.message ?? 'Failed to save'); setSaving(false); return }
