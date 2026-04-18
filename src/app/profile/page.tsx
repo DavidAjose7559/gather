@@ -9,6 +9,9 @@ import BottomNav from '@/components/BottomNav'
 import Link from 'next/link'
 import type { CheckIn } from '@/lib/types'
 
+const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
+const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
+
 const emotionalLabels: Record<string, string> = {
   peaceful: 'Peaceful',
   okay: 'Okay',
@@ -24,16 +27,6 @@ const spiritualLabels: Record<string, string> = {
   struggling: 'Struggling',
 }
 
-function Chip({ label, color = 'gray' }: { label: string; color?: 'indigo' | 'gray' }) {
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${
-      color === 'indigo' ? 'bg-indigo-50 text-indigo-700' : 'bg-gray-100 text-gray-600'
-    }`}>
-      {label}
-    </span>
-  )
-}
-
 export default function ProfilePage() {
   const router = useRouter()
   const supabase = createClient()
@@ -42,6 +35,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [confirmLeave, setConfirmLeave] = useState(false)
   const [leavingGroup, setLeavingGroup] = useState(false)
+  const [editingName, setEditingName] = useState(false)
 
   const [userId, setUserId] = useState<string | null>(null)
   const [email, setEmail] = useState<string | null>(null)
@@ -120,6 +114,7 @@ export default function ProfilePage() {
       setSaveError(error.message)
     } else {
       setSaveSuccess(true)
+      setEditingName(false)
       setTimeout(() => setSaveSuccess(false), 2500)
     }
     setSaving(false)
@@ -141,115 +136,145 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading…</p>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
       </div>
     )
   }
 
+  const avatarColor = getAvatarColor(fullName)
   const initials = fullName.trim().split(' ').length >= 2
     ? `${fullName.trim().split(' ')[0][0]}${fullName.trim().split(' ').at(-1)![0]}`
     : fullName.slice(0, 2)
 
+  const cardStyle = {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    border: '1px solid #2A2A2A',
+    overflow: 'hidden' as const,
+  }
+
+  const rowStyle = {
+    display: 'flex' as const,
+    alignItems: 'center' as const,
+    justifyContent: 'space-between' as const,
+    padding: '16px 20px',
+    borderBottom: '1px solid #2A2A2A',
+    minHeight: 60,
+    gap: 12,
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+      <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Header */}
-        <h1 className="text-2xl font-bold text-gray-900">Your profile</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>Account</h1>
 
-        {/* Avatar + personal info */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white text-xl font-bold uppercase flex-shrink-0">
-              {initials}
+        {/* Avatar + name card */}
+        <div style={cardStyle}>
+          {/* Avatar row */}
+          <div style={{ ...rowStyle, borderBottom: editingName ? '1px solid #2A2A2A' : 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', backgroundColor: avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 700, color: 'white', flexShrink: 0, textTransform: 'uppercase' }}>
+                {initials}
+              </div>
+              <div>
+                <p style={{ fontWeight: 600, color: 'white', fontSize: 16 }}>{displayName || fullName}</p>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{email}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-semibold text-gray-900">{displayName || fullName}</p>
-              <p className="text-sm text-gray-400">{email}</p>
+            <button
+              onClick={() => setEditingName(v => !v)}
+              style={{ fontSize: 14, fontWeight: 500, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}
+            >
+              {editingName ? 'Cancel' : 'Edit'}
+            </button>
+          </div>
+
+          {/* Inline edit form */}
+          {editingName && (
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>Full name</label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  style={{ width: '100%' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>
+                  Display name <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>(optional)</span>
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Nickname your group sees"
+                  style={{ width: '100%' }}
+                />
+              </div>
+              {saveError && (
+                <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{saveError}</p>
+              )}
+              {saveSuccess && (
+                <p style={{ fontSize: 13, color: '#4CAF50', backgroundColor: 'rgba(76,175,80,0.1)', borderRadius: 10, padding: '8px 12px' }}>Saved!</p>
+              )}
+              <button
+                onClick={saveProfile}
+                disabled={saving || !fullName.trim()}
+                style={{ width: '100%', minHeight: 48, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, fontSize: 15, borderRadius: 12, border: 'none', cursor: saving || !fullName.trim() ? 'not-allowed' : 'pointer', opacity: saving || !fullName.trim() ? 0.5 : 1 }}
+              >
+                {saving ? 'Saving…' : 'Save changes'}
+              </button>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Full name</label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Display name <span className="text-gray-400 font-normal">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Nickname your group sees"
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
-            />
-          </div>
-
-          <div className="bg-gray-50 rounded-xl px-4 py-3 flex items-center gap-2">
-            <p className="text-sm text-gray-500 flex-1 truncate">{email}</p>
-            <p className="text-xs text-gray-400 flex-shrink-0">Contact admin to change</p>
-          </div>
-
-          {saveError && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{saveError}</p>
           )}
-          {saveSuccess && (
-            <p className="text-sm text-green-600 bg-green-50 rounded-lg px-3 py-2">Saved!</p>
-          )}
-
-          <button
-            onClick={saveProfile}
-            disabled={saving || !fullName.trim()}
-            className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {saving ? 'Saving…' : 'Save changes'}
-          </button>
         </div>
 
         {/* Check-in history */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-gray-900">Your check-ins</h2>
+        <div style={cardStyle}>
+          <div style={{ ...rowStyle, borderBottom: checkIns.length > 0 ? '1px solid #2A2A2A' : 'none' }}>
+            <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Your check-ins</h2>
             {streak > 0 ? (
-              <span className="text-sm font-semibold text-orange-500">🔥 {streak} day streak</span>
+              <span style={{ fontSize: 14, fontWeight: 700, color: '#FF9500' }}>🔥 {streak} day streak</span>
             ) : (
-              <span className="text-xs text-gray-400">Check in today to start your streak</span>
+              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Start a streak today</span>
             )}
           </div>
 
           {checkIns.length === 0 ? (
-            <p className="text-sm text-gray-400">No check-ins in the last 30 days.</p>
+            <div style={{ padding: '16px 20px' }}>
+              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }}>No check-ins in the last 30 days.</p>
+            </div>
           ) : (
-            <div className="flex flex-col gap-2">
+            <div>
               {checkIns.map((c) => (
                 <Link
                   key={c.id}
                   href={`/checkin/${c.id}`}
-                  className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0 hover:bg-gray-50 rounded-lg px-1 -mx-1 transition-colors"
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid #222222', textDecoration: 'none' }}
                 >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>
                       {new Date(c.check_in_date + 'T00:00:00').toLocaleDateString('en-US', {
                         weekday: 'short', month: 'short', day: 'numeric',
                       })}
                       {c.check_in_date === today && (
-                        <span className="ml-1.5 text-xs text-indigo-600 font-semibold">today</span>
+                        <span style={{ marginLeft: 6, fontSize: 12, color: '#6C63FF', fontWeight: 700 }}>today</span>
                       )}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                     {c.emotional_state && (
-                      <Chip label={emotionalLabels[c.emotional_state]} color="indigo" />
+                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: 8, backgroundColor: 'rgba(108,99,255,0.15)', color: '#A09AF8', fontSize: 12, fontWeight: 500 }}>
+                        {emotionalLabels[c.emotional_state]}
+                      </span>
                     )}
                     {c.spiritual_life && (
-                      <Chip label={spiritualLabels[c.spiritual_life]} />
+                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: 8, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500 }}>
+                        {spiritualLabels[c.spiritual_life]}
+                      </span>
                     )}
                   </div>
                 </Link>
@@ -259,26 +284,63 @@ export default function ProfilePage() {
         </div>
 
         {/* Settings */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
-          <h2 className="font-semibold text-gray-900">Settings</h2>
+        <div style={cardStyle}>
+          {/* Section header */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
+            <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Settings</h2>
+          </div>
 
-          <label className="flex items-center justify-between gap-4 cursor-pointer min-h-[44px]">
-            <div>
-              <p className="text-sm font-medium text-gray-900">Daily reminder emails</p>
-              <p className="text-xs text-gray-400">Get a gentle nudge if you haven&apos;t checked in</p>
+          {/* Daily reminder toggle */}
+          <div style={rowStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(108,99,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                🔔
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>Daily reminders</p>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Gentle nudge if you haven&apos;t checked in</p>
+              </div>
             </div>
             <button
               type="button"
               onClick={() => setReminderEnabled(!reminderEnabled)}
-              className={`relative flex-shrink-0 w-12 h-6 rounded-full transition-colors ${reminderEnabled ? 'bg-indigo-600' : 'bg-gray-200'}`}
+              style={{
+                position: 'relative',
+                flexShrink: 0,
+                width: 48,
+                height: 26,
+                borderRadius: 13,
+                backgroundColor: reminderEnabled ? '#6C63FF' : '#2A2A2A',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
             >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${reminderEnabled ? 'translate-x-6' : 'translate-x-0'}`} />
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 3,
+                  left: reminderEnabled ? 25 : 3,
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  backgroundColor: 'white',
+                  transition: 'left 0.2s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                }}
+              />
             </button>
-          </label>
+          </div>
 
-          <div>
-            <p className="text-sm font-medium text-gray-900 mb-2">Default visibility</p>
-            <div className="flex flex-col gap-2">
+          {/* Default visibility */}
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,188,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                👁
+              </div>
+              <p style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>Default visibility</p>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {([
                 { value: 'everyone', label: 'Everyone in the group', emoji: '👥' },
                 { value: 'specific', label: 'Specific people', emoji: '👤' },
@@ -288,11 +350,22 @@ export default function ProfilePage() {
                   key={opt.value}
                   type="button"
                   onClick={() => setDefaultVisibility(opt.value)}
-                  className={`min-h-[44px] px-4 py-2.5 rounded-xl border text-left text-sm font-medium transition-all flex items-center gap-3 ${
-                    defaultVisibility === opt.value
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-200'
-                  }`}
+                  style={{
+                    minHeight: 44,
+                    padding: '10px 16px',
+                    borderRadius: 12,
+                    border: defaultVisibility === opt.value ? '1px solid #6C63FF' : '1px solid #2A2A2A',
+                    backgroundColor: defaultVisibility === opt.value ? 'rgba(108,99,255,0.15)' : '#111111',
+                    color: defaultVisibility === opt.value ? '#A09AF8' : 'rgba(255,255,255,0.5)',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    transition: 'all 0.15s',
+                  }}
                 >
                   <span>{opt.emoji}</span> {opt.label}
                 </button>
@@ -300,47 +373,57 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <button
-            onClick={saveProfile}
-            disabled={saving || !fullName.trim()}
-            className="w-full min-h-[44px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-2.5 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 transition-all text-sm"
-          >
-            {saving ? 'Saving…' : 'Save settings'}
-          </button>
+          {/* Save settings */}
+          <div style={{ padding: '16px 20px' }}>
+            {saveSuccess && (
+              <p style={{ fontSize: 13, color: '#4CAF50', backgroundColor: 'rgba(76,175,80,0.1)', borderRadius: 10, padding: '8px 12px', marginBottom: 12 }}>Saved!</p>
+            )}
+            <button
+              onClick={saveProfile}
+              disabled={saving || !fullName.trim()}
+              style={{ width: '100%', minHeight: 48, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, fontSize: 15, borderRadius: 12, border: 'none', cursor: saving || !fullName.trim() ? 'not-allowed' : 'pointer', opacity: saving || !fullName.trim() ? 0.5 : 1 }}
+            >
+              {saving ? 'Saving…' : 'Save settings'}
+            </button>
+          </div>
         </div>
 
         {/* Danger zone */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-          <h2 className="font-semibold text-gray-900">Leave group</h2>
-          {!confirmLeave ? (
-            <button
-              onClick={() => setConfirmLeave(true)}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl border border-red-200 text-red-500 text-sm font-medium hover:bg-red-50 transition-all text-left"
-            >
-              Leave this group
-            </button>
-          ) : (
-            <div className="flex flex-col gap-2">
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Are you sure? This will remove your profile and check-in history. It cannot be undone.
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={leaveGroup}
-                  disabled={leavingGroup}
-                  className="flex-1 min-h-[44px] bg-red-500 text-white font-semibold rounded-xl text-sm hover:bg-red-600 disabled:opacity-50 transition-all"
-                >
-                  {leavingGroup ? 'Leaving…' : 'Yes, leave group'}
-                </button>
-                <button
-                  onClick={() => setConfirmLeave(false)}
-                  className="min-h-[44px] px-4 bg-gray-100 text-gray-600 rounded-xl text-sm hover:bg-gray-200 transition-all"
-                >
-                  Cancel
-                </button>
+        <div style={cardStyle}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
+            <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Leave group</h2>
+          </div>
+          <div style={{ padding: '16px 20px' }}>
+            {!confirmLeave ? (
+              <button
+                onClick={() => setConfirmLeave(true)}
+                style={{ minHeight: 44, padding: '10px 16px', borderRadius: 12, border: '1px solid rgba(255,77,77,0.3)', color: '#FF4D4D', fontSize: 14, fontWeight: 500, backgroundColor: 'rgba(255,77,77,0.08)', cursor: 'pointer', textAlign: 'left', width: '100%' }}
+              >
+                Leave this group
+              </button>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                  Are you sure? This will remove your profile and check-in history. It cannot be undone.
+                </p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={leaveGroup}
+                    disabled={leavingGroup}
+                    style={{ flex: 1, minHeight: 44, backgroundColor: '#FF4D4D', color: 'white', fontWeight: 700, borderRadius: 12, fontSize: 14, border: 'none', cursor: leavingGroup ? 'not-allowed' : 'pointer', opacity: leavingGroup ? 0.5 : 1 }}
+                  >
+                    {leavingGroup ? 'Leaving…' : 'Yes, leave group'}
+                  </button>
+                  <button
+                    onClick={() => setConfirmLeave(false)}
+                    style={{ minHeight: 44, padding: '0 16px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', borderRadius: 12, fontSize: 14, border: 'none', cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

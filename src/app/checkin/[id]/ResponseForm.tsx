@@ -45,21 +45,32 @@ export default function ResponseForm({
     router.refresh()
   }
 
+  const cardStyle = {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    border: '1px solid #2A2A2A',
+    padding: 20,
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: 12,
+    paddingBottom: 32,
+  }
+
   if (mode === null) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3 pb-8">
-        <h2 className="font-semibold text-gray-900">Respond</h2>
-        <p className="text-sm text-gray-500">Offer a word of encouragement or support.</p>
-        <div className="flex gap-3">
+      <div style={cardStyle}>
+        <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Respond</h2>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Offer a word of encouragement or support.</p>
+        <div style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={() => setMode('named')}
-            className="flex-1 min-h-[48px] border border-indigo-200 text-indigo-700 font-medium rounded-xl text-sm hover:bg-indigo-50 transition-all"
+            style={{ flex: 1, minHeight: 48, border: '1px solid #6C63FF', color: '#A09AF8', fontWeight: 500, borderRadius: 14, fontSize: 14, cursor: 'pointer', backgroundColor: 'rgba(108,99,255,0.1)' }}
           >
             Respond
           </button>
           <button
             onClick={() => setMode('anonymous')}
-            className="flex-1 min-h-[48px] border border-gray-200 text-gray-600 font-medium rounded-xl text-sm hover:bg-gray-50 transition-all"
+            style={{ flex: 1, minHeight: 48, border: '1px solid #2A2A2A', color: 'rgba(255,255,255,0.5)', fontWeight: 500, borderRadius: 14, fontSize: 14, cursor: 'pointer', backgroundColor: '#111111' }}
           >
             Reply anonymously
           </button>
@@ -69,34 +80,45 @@ export default function ResponseForm({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3 pb-8">
-      <h2 className="font-semibold text-gray-900">
+    <div style={cardStyle}>
+      <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>
         {mode === 'anonymous' ? 'Anonymous reply' : 'Your response'}
       </h2>
       {mode === 'anonymous' && (
-        <p className="text-xs text-gray-400">Your name won't be shown.</p>
+        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Your name won&apos;t be shown.</p>
       )}
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder="Write something kind…"
         rows={4}
-        className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
+        style={{ width: '100%', resize: 'none' }}
       />
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+        <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{error}</p>
       )}
-      <div className="flex gap-3">
+      <div style={{ display: 'flex', gap: 12 }}>
         <button
           onClick={() => submit(mode === 'anonymous')}
           disabled={saving || !body.trim()}
-          className="flex-1 min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl text-sm hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          style={{
+            flex: 1,
+            minHeight: 48,
+            backgroundColor: '#6C63FF',
+            color: 'white',
+            fontWeight: 700,
+            borderRadius: 14,
+            fontSize: 14,
+            border: 'none',
+            cursor: saving || !body.trim() ? 'not-allowed' : 'pointer',
+            opacity: saving || !body.trim() ? 0.5 : 1,
+          }}
         >
           {saving ? 'Sending…' : 'Send'}
         </button>
         <button
           onClick={() => { setMode(null); setBody('') }}
-          className="min-h-[48px] px-4 bg-gray-100 text-gray-600 font-medium rounded-xl text-sm hover:bg-gray-200 transition-all"
+          style={{ minHeight: 48, padding: '0 16px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', fontWeight: 500, borderRadius: 14, fontSize: 14, border: 'none', cursor: 'pointer' }}
         >
           Cancel
         </button>

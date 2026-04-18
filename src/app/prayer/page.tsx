@@ -6,6 +6,9 @@ import { createClient } from '@/lib/supabase/client'
 import { timeAgo } from '@/lib/date'
 import BottomNav from '@/components/BottomNav'
 
+const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
+const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
+
 type PrayerProfile = { full_name: string; display_name: string | null }
 
 type Comment = {
@@ -29,13 +32,14 @@ type PrayerItem = {
   comments: Comment[]
 }
 
-function Initials({ name }: { name: string }) {
+function Avatar({ name }: { name: string }) {
   const parts = name.trim().split(' ')
   const initials = parts.length >= 2
     ? `${parts[0][0]}${parts[parts.length - 1][0]}`
     : name.slice(0, 2)
+  const color = getAvatarColor(name)
   return (
-    <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold flex-shrink-0 uppercase">
+    <div style={{ width: 36, height: 36, borderRadius: '50%', backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', flexShrink: 0, textTransform: 'uppercase' }}>
       {initials}
     </div>
   )
@@ -188,24 +192,34 @@ export default function PrayerPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading…</p>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
       </div>
     )
   }
 
+  const cardStyle = {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    border: '1px solid #2A2A2A',
+    padding: 20,
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: 12,
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+      <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Prayer Wall</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Carry each other&apos;s burdens.</p>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>Prayer Wall</h1>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Carry each other&apos;s burdens.</p>
           </div>
           <button
             onClick={() => setShowAddForm((v) => !v)}
-            className="min-h-[44px] px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all"
+            style={{ minHeight: 44, padding: '0 20px', backgroundColor: '#6C63FF', color: 'white', fontSize: 14, fontWeight: 700, borderRadius: 14, border: 'none', cursor: 'pointer' }}
           >
             + Share
           </button>
@@ -213,26 +227,26 @@ export default function PrayerPage() {
 
         {/* Add form */}
         {showAddForm && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Share a prayer request</h2>
+          <div style={cardStyle}>
+            <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Share a prayer request</h2>
             <textarea
               value={newBody}
               onChange={(e) => setNewBody(e.target.value)}
               placeholder="What would you like the group to pray for?"
               rows={4}
-              className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
+              style={{ width: '100%', resize: 'none' }}
             />
-            <div className="flex gap-3">
+            <div style={{ display: 'flex', gap: 12 }}>
               <button
                 onClick={addRequest}
                 disabled={submitting || !newBody.trim()}
-                className="flex-1 min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl text-sm hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                style={{ flex: 1, minHeight: 48, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, borderRadius: 14, fontSize: 14, border: 'none', cursor: submitting || !newBody.trim() ? 'not-allowed' : 'pointer', opacity: submitting || !newBody.trim() ? 0.5 : 1 }}
               >
                 {submitting ? 'Sharing…' : 'Share request'}
               </button>
               <button
                 onClick={() => { setShowAddForm(false); setNewBody('') }}
-                className="min-h-[48px] px-4 bg-gray-100 text-gray-600 font-medium rounded-xl text-sm hover:bg-gray-200 transition-all"
+                style={{ minHeight: 48, padding: '0 16px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', fontWeight: 500, borderRadius: 14, fontSize: 14, border: 'none', cursor: 'pointer' }}
               >
                 Cancel
               </button>
@@ -241,41 +255,52 @@ export default function PrayerPage() {
         )}
 
         {/* Active requests */}
-        <div className="flex flex-col gap-3">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {active.length === 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-6 text-center shadow-sm">
-              <p className="text-gray-400 text-sm">No prayer requests yet. Be the first to share one.</p>
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No prayer requests yet. Be the first to share one.</p>
             </div>
           )}
 
           {active.map((prayer) => {
             const name = prayer.profile?.display_name ?? prayer.profile?.full_name ?? 'A member'
+            const fullName = prayer.profile?.full_name ?? 'M'
             const isOwn = prayer.user_id === currentUserId
             const isPraying = myPrayingIds.has(prayer.id)
 
             return (
-              <div key={prayer.id} className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
+              <div key={prayer.id} style={cardStyle}>
                 {/* Header */}
-                <div className="flex items-center gap-3">
-                  <Initials name={prayer.profile?.full_name ?? 'M'} />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 text-sm">{name}</p>
-                    <p className="text-xs text-gray-400">{timeAgo(prayer.created_at)}</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Avatar name={fullName} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 600, color: 'white', fontSize: 14 }}>{name}</p>
+                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{timeAgo(prayer.created_at)}</p>
                   </div>
                 </div>
 
                 {/* Body */}
-                <p className="text-gray-800 text-sm leading-relaxed">{prayer.body}</p>
+                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{prayer.body}</p>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 flex-wrap">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                   <button
                     onClick={() => togglePraying(prayer.id)}
-                    className={`min-h-[36px] px-3 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
-                      isPraying
-                        ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+                    style={{
+                      minHeight: 36,
+                      padding: '0 12px',
+                      borderRadius: 10,
+                      fontSize: 13,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      border: isPraying ? '1px solid rgba(108,99,255,0.4)' : '1px solid #2A2A2A',
+                      backgroundColor: isPraying ? 'rgba(108,99,255,0.2)' : '#2A2A2A',
+                      color: isPraying ? '#A09AF8' : 'rgba(255,255,255,0.6)',
+                      transition: 'all 0.15s',
+                    }}
                   >
                     🙏 {prayer.praying_count > 0 ? prayer.praying_count : ''}
                     <span>{isPraying ? 'Praying' : 'Pray'}</span>
@@ -284,7 +309,7 @@ export default function PrayerPage() {
                   {!isOwn && (
                     <button
                       onClick={() => { setCommentingId(commentingId === prayer.id ? null : prayer.id); setCommentBody('') }}
-                      className="min-h-[36px] px-3 rounded-lg text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all"
+                      style={{ minHeight: 36, padding: '0 12px', borderRadius: 10, fontSize: 13, fontWeight: 500, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', border: '1px solid #2A2A2A', cursor: 'pointer' }}
                     >
                       Encourage
                     </button>
@@ -295,7 +320,7 @@ export default function PrayerPage() {
                       {markingAnsweredId === prayer.id ? null : (
                         <button
                           onClick={() => { setMarkingAnsweredId(prayer.id); setAnswerNote('') }}
-                          className="min-h-[36px] px-3 rounded-lg text-sm font-medium bg-green-50 text-green-700 hover:bg-green-100 transition-all border border-green-200"
+                          style={{ minHeight: 36, padding: '0 12px', borderRadius: 10, fontSize: 13, fontWeight: 500, backgroundColor: 'rgba(76,175,80,0.15)', color: '#4CAF50', border: '1px solid rgba(76,175,80,0.3)', cursor: 'pointer' }}
                         >
                           Answered
                         </button>
@@ -303,7 +328,7 @@ export default function PrayerPage() {
                       {confirmRemoveId === prayer.id ? null : (
                         <button
                           onClick={() => setConfirmRemoveId(prayer.id)}
-                          className="min-h-[36px] px-3 rounded-lg text-sm font-medium bg-gray-100 text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all"
+                          style={{ minHeight: 36, padding: '0 12px', borderRadius: 10, fontSize: 13, fontWeight: 500, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.3)', border: '1px solid #2A2A2A', cursor: 'pointer' }}
                         >
                           Remove
                         </button>
@@ -314,31 +339,31 @@ export default function PrayerPage() {
 
                 {/* Mark as answered inline form */}
                 {markingAnsweredId === prayer.id && (
-                  <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
-                    <p className="text-sm font-medium text-gray-700">How did God answer this? (optional)</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, borderTop: '1px solid #2A2A2A' }}>
+                    <p style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)' }}>How did God answer this? (optional)</p>
                     <textarea
                       value={answerNote}
                       onChange={(e) => setAnswerNote(e.target.value)}
                       placeholder="Share the testimony…"
                       rows={3}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400 text-sm resize-none"
+                      style={{ width: '100%', resize: 'none' }}
                     />
-                    <div className="flex gap-2">
+                    <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => markAnswered(prayer.id)}
-                        className="flex-1 min-h-[40px] bg-green-600 text-white font-semibold rounded-lg text-sm hover:bg-green-700 transition-all"
+                        style={{ flex: 1, minHeight: 40, backgroundColor: '#4CAF50', color: 'white', fontWeight: 700, borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
                       >
                         Save testimony
                       </button>
                       <button
                         onClick={() => markAnswered(prayer.id)}
-                        className="min-h-[40px] px-3 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-all"
+                        style={{ minHeight: 40, padding: '0 12px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
                       >
                         Skip
                       </button>
                       <button
                         onClick={() => setMarkingAnsweredId(null)}
-                        className="min-h-[40px] px-3 bg-gray-100 text-gray-400 rounded-lg text-sm hover:bg-gray-200 transition-all"
+                        style={{ minHeight: 40, padding: '0 12px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.4)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
                       >
                         Cancel
                       </button>
@@ -348,18 +373,18 @@ export default function PrayerPage() {
 
                 {/* Remove confirmation */}
                 {confirmRemoveId === prayer.id && (
-                  <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
-                    <p className="text-sm text-gray-600">Remove this request? It won&apos;t be marked as answered.</p>
-                    <div className="flex gap-2">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, borderTop: '1px solid #2A2A2A' }}>
+                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Remove this request? It won&apos;t be marked as answered.</p>
+                    <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => removeRequest(prayer.id)}
-                        className="flex-1 min-h-[40px] bg-red-50 text-red-600 font-semibold rounded-lg text-sm hover:bg-red-100 transition-all border border-red-200"
+                        style={{ flex: 1, minHeight: 40, backgroundColor: 'rgba(255,77,77,0.15)', color: '#FF4D4D', fontWeight: 700, borderRadius: 10, fontSize: 13, border: '1px solid rgba(255,77,77,0.3)', cursor: 'pointer' }}
                       >
                         Remove
                       </button>
                       <button
                         onClick={() => setConfirmRemoveId(null)}
-                        className="min-h-[40px] px-4 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-all"
+                        style={{ minHeight: 40, padding: '0 16px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
                       >
                         Keep it
                       </button>
@@ -369,25 +394,25 @@ export default function PrayerPage() {
 
                 {/* Encouragement comment form */}
                 {commentingId === prayer.id && (
-                  <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, borderTop: '1px solid #2A2A2A' }}>
                     <textarea
                       value={commentBody}
                       onChange={(e) => setCommentBody(e.target.value)}
                       placeholder="Still praying for you 🙏"
                       rows={2}
-                      className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-sm resize-none"
+                      style={{ width: '100%', resize: 'none' }}
                     />
-                    <div className="flex gap-2">
+                    <div style={{ display: 'flex', gap: 8 }}>
                       <button
                         onClick={() => addComment(prayer.id)}
                         disabled={!commentBody.trim()}
-                        className="flex-1 min-h-[40px] bg-indigo-600 text-white font-semibold rounded-lg text-sm hover:bg-indigo-700 disabled:opacity-50 transition-all"
+                        style={{ flex: 1, minHeight: 40, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, borderRadius: 10, fontSize: 13, border: 'none', cursor: !commentBody.trim() ? 'not-allowed' : 'pointer', opacity: !commentBody.trim() ? 0.5 : 1 }}
                       >
                         Send
                       </button>
                       <button
                         onClick={() => { setCommentingId(null); setCommentBody('') }}
-                        className="min-h-[40px] px-4 bg-gray-100 text-gray-600 rounded-lg text-sm hover:bg-gray-200 transition-all"
+                        style={{ minHeight: 40, padding: '0 16px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
                       >
                         Cancel
                       </button>
@@ -397,17 +422,17 @@ export default function PrayerPage() {
 
                 {/* Comments */}
                 {prayer.comments.length > 0 && (
-                  <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 8, borderTop: '1px solid #2A2A2A' }}>
                     {prayer.comments.map((c) => (
-                      <div key={c.id} className="flex gap-2">
-                        <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0 mt-0.5 uppercase">
+                      <div key={c.id} style={{ display: 'flex', gap: 8 }}>
+                        <div style={{ width: 24, height: 24, borderRadius: '50%', backgroundColor: getAvatarColor(c.profile?.full_name ?? 'M'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white', flexShrink: 0, marginTop: 2, textTransform: 'uppercase' }}>
                           {(c.profile?.full_name ?? 'M')[0]}
                         </div>
                         <div>
-                          <span className="text-xs font-medium text-gray-600 mr-1.5">
+                          <span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginRight: 6 }}>
                             {c.profile?.display_name ?? c.profile?.full_name ?? 'A member'}
                           </span>
-                          <span className="text-sm text-gray-700">{c.body}</span>
+                          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{c.body}</span>
                         </div>
                       </div>
                     ))}
@@ -422,42 +447,42 @@ export default function PrayerPage() {
         <div>
           <button
             onClick={() => setShowTestimonies((v) => !v)}
-            className="w-full flex items-center justify-between min-h-[44px] py-2"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 44, paddingTop: 8, paddingBottom: 8, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1.5">
+            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
               <span>✨</span> Testimonies
               {answered.length > 0 && (
-                <span className="text-xs font-normal text-gray-400 normal-case tracking-normal">
+                <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.3)', textTransform: 'none', letterSpacing: 'normal' }}>
                   ({answered.length})
                 </span>
               )}
             </h2>
-            <span className="text-gray-400 text-sm">{showTestimonies ? '▲' : '▼'}</span>
+            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 13 }}>{showTestimonies ? '▲' : '▼'}</span>
           </button>
 
           {showTestimonies && (
-            <div className="flex flex-col gap-3 mt-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
               {answered.length === 0 && (
-                <p className="text-sm text-gray-400 px-1">Answered prayers will appear here.</p>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', paddingLeft: 4 }}>Answered prayers will appear here.</p>
               )}
               {answered.map((prayer) => {
                 const name = prayer.profile?.display_name ?? prayer.profile?.full_name ?? 'A member'
                 return (
-                  <div key={prayer.id} className="bg-green-50 border border-green-100 rounded-2xl p-5 flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                  <div key={prayer.id} style={{ backgroundColor: 'rgba(76,175,80,0.08)', border: '1px solid rgba(76,175,80,0.2)', borderRadius: 20, padding: 20, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#4CAF50', backgroundColor: 'rgba(76,175,80,0.15)', padding: '2px 10px', borderRadius: 20 }}>
                         God is faithful 🙏
                       </span>
-                      <span className="text-xs text-gray-400 ml-auto">
+                      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginLeft: 'auto' }}>
                         {prayer.answered_at ? timeAgo(prayer.answered_at) : ''}
                       </span>
                     </div>
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{name}&apos;s prayer</p>
-                    <p className="text-gray-700 text-sm leading-relaxed">{prayer.body}</p>
+                    <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{name}&apos;s prayer</p>
+                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, lineHeight: 1.6 }}>{prayer.body}</p>
                     {prayer.answered_note && (
-                      <div className="border-t border-green-200 pt-2 mt-1">
-                        <p className="text-xs font-medium text-green-700 mb-1">How God answered:</p>
-                        <p className="text-gray-700 text-sm leading-relaxed">{prayer.answered_note}</p>
+                      <div style={{ borderTop: '1px solid rgba(76,175,80,0.2)', paddingTop: 8, marginTop: 4 }}>
+                        <p style={{ fontSize: 12, fontWeight: 500, color: '#4CAF50', marginBottom: 4 }}>How God answered:</p>
+                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, lineHeight: 1.6 }}>{prayer.answered_note}</p>
                       </div>
                     )}
                   </div>

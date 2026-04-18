@@ -20,20 +20,32 @@ function OptionGrid<T extends string>({
   onChange: (v: T) => void
 }) {
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`min-h-[48px] px-2 py-2.5 rounded-xl border text-sm font-medium transition-all flex flex-col items-center justify-center gap-0.5 ${
-            value === opt.value
-              ? 'bg-indigo-600 border-indigo-600 text-white'
-              : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-300 hover:bg-indigo-50'
-          }`}
+          style={{
+            minHeight: 52,
+            padding: '10px 8px',
+            borderRadius: 14,
+            border: value === opt.value ? '1px solid #6C63FF' : '1px solid #2A2A2A',
+            backgroundColor: value === opt.value ? 'rgba(108,99,255,0.15)' : '#1A1A1A',
+            color: value === opt.value ? '#A09AF8' : 'rgba(255,255,255,0.6)',
+            fontSize: 13,
+            fontWeight: 500,
+            cursor: 'pointer',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 2,
+            transition: 'all 0.15s',
+          }}
         >
-          {opt.emoji && <span className="text-base">{opt.emoji}</span>}
-          <span className="leading-tight text-center">{opt.label}</span>
+          {opt.emoji && <span style={{ fontSize: 16 }}>{opt.emoji}</span>}
+          <span style={{ lineHeight: 1.2, textAlign: 'center' }}>{opt.label}</span>
         </button>
       ))}
     </div>
@@ -212,24 +224,40 @@ export default function CheckInPage() {
     router.push('/')
   }
 
+  const cardStyle = {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    border: '1px solid #2A2A2A',
+    padding: 20,
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: 12,
+  }
+
+  const sectionTitleStyle = {
+    fontWeight: 600,
+    color: 'white',
+    fontSize: 15,
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-400">Loading…</p>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
       </div>
     )
   }
 
   if (milestone) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-8 text-center shadow-sm flex flex-col gap-4">
-          <div className="text-5xl">🎉</div>
-          <h2 className="text-xl font-bold text-gray-900">Milestone reached!</h2>
-          <p className="text-gray-600 leading-relaxed">{milestone}</p>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+        <div style={{ width: '100%', maxWidth: 448, backgroundColor: '#1A1A1A', borderRadius: 24, border: '1px solid #2A2A2A', padding: 32, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ fontSize: 48 }}>🎉</div>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>Milestone reached!</h2>
+          <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{milestone}</p>
           <button
             onClick={() => router.push('/')}
-            className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 transition-all mt-2"
+            style={{ width: '100%', minHeight: 52, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, fontSize: 16, borderRadius: 14, border: 'none', cursor: 'pointer', marginTop: 8 }}
           >
             Back to home
           </button>
@@ -240,23 +268,23 @@ export default function CheckInPage() {
 
   if (existingCheckIn && !editing) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-24">
-        <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900">Today&apos;s check-in</h1>
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+        <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: 'white' }}>Today&apos;s check-in</h1>
             <button
               onClick={() => { populateFormFromCheckIn(existingCheckIn); setEditing(true) }}
-              className="min-h-[44px] px-4 text-sm font-medium text-indigo-600 hover:text-indigo-700"
+              style={{ minHeight: 44, padding: '0 16px', fontSize: 14, fontWeight: 500, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer' }}
             >
               Edit
             </button>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <p className="text-gray-500 text-sm">You already checked in today. Tap Edit to update it.</p>
+          <div style={cardStyle}>
+            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>You already checked in today. Tap Edit to update it.</p>
           </div>
           <button
             onClick={() => router.push('/')}
-            className="min-h-[48px] bg-gray-100 text-gray-700 font-semibold rounded-xl px-4 py-3 hover:bg-gray-200 transition-all"
+            style={{ minHeight: 52, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 15, borderRadius: 14, border: 'none', cursor: 'pointer' }}
           >
             Back to home
           </button>
@@ -267,21 +295,21 @@ export default function CheckInPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-6">
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+      <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>
             {editing ? 'Update your check-in' : 'How are you today?'}
           </h1>
-          <p className="text-gray-500 mt-1 text-sm">
+          <p style={{ color: 'rgba(255,255,255,0.4)', marginTop: 4, fontSize: 14 }}>
             Be honest. This is a safe space.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Spiritual life */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Spiritual life</h2>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>Spiritual life</h2>
             <OptionGrid
               options={[
                 { value: 'strong', label: 'Strong', emoji: '🔥' },
@@ -294,8 +322,8 @@ export default function CheckInPage() {
           </div>
 
           {/* Word time */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Time in the Word</h2>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>Time in the Word</h2>
             <OptionGrid
               options={[
                 { value: 'yes', label: 'Yes', emoji: '📖' },
@@ -308,8 +336,8 @@ export default function CheckInPage() {
           </div>
 
           {/* Prayer life */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Prayer life</h2>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>Prayer life</h2>
             <OptionGrid
               options={[
                 { value: 'strong', label: 'Strong', emoji: '🙏' },
@@ -322,8 +350,8 @@ export default function CheckInPage() {
           </div>
 
           {/* Emotional state */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Emotionally</h2>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>Emotionally</h2>
             <OptionGrid
               options={[
                 { value: 'joyful', label: 'Joyful', emoji: '😄' },
@@ -339,8 +367,8 @@ export default function CheckInPage() {
           </div>
 
           {/* Physical state */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Physically</h2>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>Physically</h2>
             <OptionGrid
               options={[
                 { value: 'good', label: 'Good', emoji: '💪' },
@@ -354,37 +382,37 @@ export default function CheckInPage() {
           </div>
 
           {/* Text fields */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
-            <h2 className="font-semibold text-gray-900">A little more (optional)</h2>
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>A little more (optional)</h2>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Anything you're struggling with?
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+                Anything you&apos;re struggling with?
               </label>
               <textarea
                 value={struggles}
                 onChange={(e) => setStruggles(e.target.value)}
                 placeholder="Share as much or as little as you like…"
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
+                style={{ width: '100%', resize: 'none' }}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Something you're grateful for?
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+                Something you&apos;re grateful for?
               </label>
               <textarea
                 value={gratitude}
                 onChange={(e) => setGratitude(e.target.value)}
                 placeholder="Big or small, it counts…"
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
+                style={{ width: '100%', resize: 'none' }}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
                 Anything else on your mind?
               </label>
               <textarea
@@ -392,38 +420,54 @@ export default function CheckInPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Whatever you want to share…"
                 rows={3}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base resize-none"
+                style={{ width: '100%', resize: 'none' }}
               />
             </div>
           </div>
 
           {/* Support toggle */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <label className="flex items-center justify-between gap-4 cursor-pointer min-h-[44px]">
+          <div style={{ ...cardStyle, gap: 0 }}>
+            <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, cursor: 'pointer', minHeight: 44 }}>
               <div>
-                <p className="font-semibold text-gray-900">I'd like someone to reach out</p>
-                <p className="text-sm text-gray-500">Let your group know you could use support.</p>
+                <p style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>I&apos;d like someone to reach out</p>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Let your group know you could use support.</p>
               </div>
               <button
                 type="button"
                 onClick={() => setSupportRequested(!supportRequested)}
-                className={`relative flex-shrink-0 w-12 h-6 rounded-full transition-colors ${
-                  supportRequested ? 'bg-indigo-600' : 'bg-gray-200'
-                }`}
+                style={{
+                  position: 'relative',
+                  flexShrink: 0,
+                  width: 48,
+                  height: 24,
+                  borderRadius: 12,
+                  backgroundColor: supportRequested ? '#6C63FF' : '#2A2A2A',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s',
+                }}
               >
                 <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    supportRequested ? 'translate-x-6' : 'translate-x-0'
-                  }`}
+                  style={{
+                    position: 'absolute',
+                    top: 2,
+                    left: supportRequested ? 26 : 2,
+                    width: 20,
+                    height: 20,
+                    borderRadius: '50%',
+                    backgroundColor: 'white',
+                    transition: 'left 0.2s',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                  }}
                 />
               </button>
             </label>
           </div>
 
           {/* Visibility */}
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-3">
-            <h2 className="font-semibold text-gray-900">Who can see this?</h2>
-            <div className="flex flex-col gap-2">
+          <div style={cardStyle}>
+            <h2 style={sectionTitleStyle}>Who can see this?</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {([
                 { value: 'everyone', label: 'Everyone in the group', emoji: '👥' },
                 { value: 'specific', label: 'Specific people', emoji: '👤' },
@@ -433,11 +477,22 @@ export default function CheckInPage() {
                   key={opt.value}
                   type="button"
                   onClick={() => setVisibility(opt.value)}
-                  className={`min-h-[48px] px-4 py-3 rounded-xl border text-left text-sm font-medium transition-all flex items-center gap-3 ${
-                    visibility === opt.value
-                      ? 'bg-indigo-50 border-indigo-300 text-indigo-700'
-                      : 'bg-white border-gray-200 text-gray-700 hover:border-indigo-200'
-                  }`}
+                  style={{
+                    minHeight: 48,
+                    padding: '12px 16px',
+                    borderRadius: 14,
+                    border: visibility === opt.value ? '1px solid #6C63FF' : '1px solid #2A2A2A',
+                    backgroundColor: visibility === opt.value ? 'rgba(108,99,255,0.15)' : '#111111',
+                    color: visibility === opt.value ? '#A09AF8' : 'rgba(255,255,255,0.6)',
+                    fontSize: 14,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    transition: 'all 0.15s',
+                  }}
                 >
                   <span>{opt.emoji}</span>
                   {opt.label}
@@ -446,14 +501,14 @@ export default function CheckInPage() {
             </div>
 
             {(visibility === 'specific' || visibility === 'one_person') && (
-              <div className="flex flex-col gap-2 mt-1">
-                <p className="text-sm text-gray-500">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>
                   {visibility === 'one_person' ? 'Choose one person' : 'Choose people'}:
                 </p>
                 {members.map((m) => (
                   <label
                     key={m.id}
-                    className="flex items-center gap-3 min-h-[44px] cursor-pointer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 44, cursor: 'pointer' }}
                   >
                     <input
                       type={visibility === 'one_person' ? 'radio' : 'checkbox'}
@@ -470,9 +525,9 @@ export default function CheckInPage() {
                           )
                         }
                       }}
-                      className="w-4 h-4 accent-indigo-600"
+                      style={{ width: 16, height: 16, accentColor: '#6C63FF', padding: 0, borderRadius: 4 }}
                     />
-                    <span className="text-sm text-gray-900">
+                    <span style={{ fontSize: 14, color: 'white' }}>
                       {m.display_name ?? m.full_name}
                     </span>
                   </label>
@@ -482,21 +537,43 @@ export default function CheckInPage() {
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{error}</p>
           )}
 
-          <div className="flex flex-col gap-3 pb-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
             <button
               type="submit"
               disabled={saving}
-              className="w-full min-h-[52px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-base"
+              style={{
+                width: '100%',
+                minHeight: 56,
+                backgroundColor: '#6C63FF',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: 16,
+                borderRadius: 16,
+                border: 'none',
+                cursor: saving ? 'not-allowed' : 'pointer',
+                opacity: saving ? 0.5 : 1,
+                transition: 'opacity 0.2s',
+              }}
             >
               {saving ? 'Saving…' : editing ? 'Update check-in' : 'Submit check-in'}
             </button>
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="w-full min-h-[48px] bg-gray-100 text-gray-600 font-medium rounded-xl px-4 py-3 hover:bg-gray-200 transition-all"
+              style={{
+                width: '100%',
+                minHeight: 52,
+                backgroundColor: '#2A2A2A',
+                color: 'rgba(255,255,255,0.6)',
+                fontWeight: 500,
+                fontSize: 15,
+                borderRadius: 16,
+                border: 'none',
+                cursor: 'pointer',
+              }}
             >
               Cancel
             </button>

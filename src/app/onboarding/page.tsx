@@ -52,24 +52,30 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Welcome to Gather</h1>
-          <p className="text-gray-500 leading-relaxed mb-1">
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+      <div style={{ width: '100%', maxWidth: 448 }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+              <rect x="15" y="2" width="6" height="32" rx="3" fill="#6C63FF"/>
+              <rect x="2" y="13" width="32" height="6" rx="3" fill="#6C63FF"/>
+            </svg>
+          </div>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'white', marginBottom: 12 }}>Welcome to Gather</h1>
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, lineHeight: 1.6, marginBottom: 8 }}>
             Gather is a quiet daily check-in for your fellowship group — a simple way
-            to share how you're really doing spiritually, emotionally, and physically.
+            to share how you&apos;re really doing spiritually, emotionally, and physically.
           </p>
-          <p className="text-gray-500 leading-relaxed">
-            Your group shows up for each other here. Let's get you set up.
+          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, lineHeight: 1.6 }}>
+            Your group shows up for each other here. Let&apos;s get you set up.
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <div style={{ backgroundColor: '#1A1A1A', borderRadius: 24, border: '1px solid #2A2A2A', padding: 32 }}>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1.5">
-                What's your full name? <span className="text-indigo-600">*</span>
+              <label htmlFor="fullName" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>
+                What&apos;s your full name? <span style={{ color: '#6C63FF' }}>*</span>
               </label>
               <input
                 id="fullName"
@@ -78,14 +84,14 @@ export default function OnboardingPage() {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Your name"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
+                style={{ width: '100%' }}
               />
             </div>
 
             <div>
-              <label htmlFor="displayName" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label htmlFor="displayName" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>
                 Nickname or display name{' '}
-                <span className="text-gray-400 font-normal">(optional)</span>
+                <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>(optional)</span>
               </label>
               <input
                 id="displayName"
@@ -93,18 +99,31 @@ export default function OnboardingPage() {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 placeholder="How your group sees you"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-base"
+                style={{ width: '100%' }}
               />
             </div>
 
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+              <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{error}</p>
             )}
 
             <button
               type="submit"
               disabled={loading || !fullName.trim()}
-              className="w-full min-h-[48px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl px-4 py-3 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-1"
+              style={{
+                width: '100%',
+                minHeight: 52,
+                backgroundColor: '#6C63FF',
+                color: 'white',
+                fontWeight: 700,
+                fontSize: 16,
+                borderRadius: 14,
+                border: 'none',
+                cursor: loading || !fullName.trim() ? 'not-allowed' : 'pointer',
+                opacity: loading || !fullName.trim() ? 0.5 : 1,
+                transition: 'opacity 0.2s',
+                marginTop: 4,
+              }}
             >
               {loading ? 'Setting up…' : 'Join Gather'}
             </button>

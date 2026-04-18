@@ -23,7 +23,7 @@ const physicalLabels = {
 
 function Chip({ label }: { label: string }) {
   return (
-    <span className="inline-flex items-center px-3 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 text-sm font-medium">
+    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 14px', borderRadius: 10, backgroundColor: 'rgba(108,99,255,0.15)', color: '#A09AF8', fontSize: 13, fontWeight: 500 }}>
       {label}
     </span>
   )
@@ -76,12 +76,12 @@ export default async function CheckInDetailPage({
 
   if (!canView) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-2xl border border-gray-100 p-8 text-center shadow-sm">
-          <p className="text-4xl mb-3">🔒</p>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">This check-in is private</h2>
-          <p className="text-gray-500 text-sm">Only certain people can see it.</p>
-          <Link href="/" className="mt-5 inline-block text-indigo-600 font-medium text-sm hover:text-indigo-700">
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+        <div style={{ width: '100%', maxWidth: 448, backgroundColor: '#1A1A1A', borderRadius: 24, border: '1px solid #2A2A2A', padding: 32, textAlign: 'center' }}>
+          <p style={{ fontSize: 40, marginBottom: 12 }}>🔒</p>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 8 }}>This check-in is private</h2>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Only certain people can see it.</p>
+          <Link href="/" style={{ marginTop: 20, display: 'inline-block', color: '#6C63FF', fontWeight: 500, fontSize: 14, textDecoration: 'none' }}>
             ← Back to home
           </Link>
         </div>
@@ -118,31 +118,41 @@ export default async function CheckInDetailPage({
     responderName: r.is_anonymous ? null : (responderMap[r.responder_id] ?? 'A member'),
   }))
 
+  const cardStyle = {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 20,
+    border: '1px solid #2A2A2A',
+    padding: 20,
+    display: 'flex' as const,
+    flexDirection: 'column' as const,
+    gap: 16,
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-5">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="text-gray-400 hover:text-gray-600 min-h-[44px] flex items-center text-sm">
+    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A' }}>
+      <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div>
+          <Link href="/" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, minHeight: 44, display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
             ← Home
           </Link>
         </div>
 
         {/* Header */}
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'white' }}>
             {profile?.display_name ?? profile?.full_name ?? 'Member'}
             {checkIn.user_id === user.id && (
-              <span className="ml-2 text-base font-normal text-gray-400">(you)</span>
+              <span style={{ marginLeft: 8, fontSize: 16, fontWeight: 400, color: 'rgba(255,255,255,0.3)' }}>(you)</span>
             )}
           </h1>
-          <p className="text-gray-500 text-sm mt-0.5">{formatDate(checkIn.check_in_date)}</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginTop: 4 }}>{formatDate(checkIn.check_in_date)}</p>
         </div>
 
         {/* Support banner */}
         {checkIn.support_requested && (
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 flex items-center gap-3">
-            <span className="text-amber-500 text-lg">🙏</span>
-            <p className="text-sm font-medium text-amber-800">
+          <div style={{ backgroundColor: 'rgba(255,153,0,0.1)', border: '1px solid rgba(255,153,0,0.3)', borderRadius: 16, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 18 }}>🙏</span>
+            <p style={{ fontSize: 14, fontWeight: 500, color: '#FF9500' }}>
               {checkIn.user_id === user.id
                 ? 'You asked for support today.'
                 : `${profile?.display_name ?? profile?.full_name} asked for support.`}
@@ -151,34 +161,34 @@ export default async function CheckInDetailPage({
         )}
 
         {/* Check-in chips */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col gap-4">
+        <div style={cardStyle}>
           {checkIn.spiritual_life && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Spiritual life</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Spiritual life</p>
               <Chip label={spiritualLabels[checkIn.spiritual_life as keyof typeof spiritualLabels]} />
             </div>
           )}
           {checkIn.word_time && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Time in the Word</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Time in the Word</p>
               <Chip label={wordTimeLabels[checkIn.word_time as keyof typeof wordTimeLabels]} />
             </div>
           )}
           {checkIn.prayer_life && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Prayer life</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Prayer life</p>
               <Chip label={prayerLabels[checkIn.prayer_life as keyof typeof prayerLabels]} />
             </div>
           )}
           {checkIn.emotional_state && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Emotionally</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Emotionally</p>
               <Chip label={emotionalLabels[checkIn.emotional_state as keyof typeof emotionalLabels]} />
             </div>
           )}
           {checkIn.physical_state && (
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Physically</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Physically</p>
               <Chip label={physicalLabels[checkIn.physical_state as keyof typeof physicalLabels]} />
             </div>
           )}
@@ -186,39 +196,39 @@ export default async function CheckInDetailPage({
 
         {/* Text sections */}
         {checkIn.struggles && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Struggles</p>
-            <p className="text-gray-900 text-sm leading-relaxed">{checkIn.struggles}</p>
+          <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Struggles</p>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.struggles}</p>
           </div>
         )}
         {checkIn.gratitude && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Grateful for</p>
-            <p className="text-gray-900 text-sm leading-relaxed">{checkIn.gratitude}</p>
+          <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Grateful for</p>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.gratitude}</p>
           </div>
         )}
         {checkIn.notes && (
-          <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Notes</p>
-            <p className="text-gray-900 text-sm leading-relaxed">{checkIn.notes}</p>
+          <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Notes</p>
+            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.notes}</p>
           </div>
         )}
 
         {/* Responses */}
         <div>
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+          <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
             Responses {responses.length > 0 && `(${responses.length})`}
           </h2>
           {responses.length === 0 && (
-            <p className="text-sm text-gray-400 px-1">No responses yet. Be the first to encourage.</p>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', paddingLeft: 4 }}>No responses yet. Be the first to encourage.</p>
           )}
-          <div className="flex flex-col gap-3">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {responses.map((r) => (
-              <div key={r.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
-                <p className="text-xs font-medium text-gray-400 mb-1.5">
+              <div key={r.id} style={{ backgroundColor: '#1A1A1A', borderRadius: 16, border: '1px solid #2A2A2A', padding: 16 }}>
+                <p style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.3)', marginBottom: 6 }}>
                   {r.responderName ?? 'A member of your group'}
                 </p>
-                <p className="text-gray-900 text-sm leading-relaxed">{r.body}</p>
+                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{r.body}</p>
               </div>
             ))}
           </div>
