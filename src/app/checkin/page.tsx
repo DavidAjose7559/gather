@@ -340,9 +340,9 @@ export default function CheckInPage() {
             <h2 style={sectionTitleStyle}>Prayer life</h2>
             <OptionGrid
               options={[
-                { value: 'strong', label: 'Strong', emoji: '🙏' },
-                { value: 'somewhat', label: 'Somewhat', emoji: '🤲' },
-                { value: 'weak', label: 'Weak', emoji: '😶' },
+                { value: 'yes', label: 'Yes', emoji: '🙏' },
+                { value: 'a_little', label: 'A little', emoji: '🤲' },
+                { value: 'not_today', label: 'Not today', emoji: '😶' },
               ]}
               value={prayerLife}
               onChange={setPrayerLife}

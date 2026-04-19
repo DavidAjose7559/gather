@@ -16,7 +16,7 @@ export type CheckIn = {
   check_in_date: string
   spiritual_life: 'strong' | 'okay' | 'struggling' | null
   word_time: 'yes' | 'a_little' | 'no' | null
-  prayer_life: 'strong' | 'somewhat' | 'weak' | null
+  prayer_life: 'yes' | 'a_little' | 'not_today' | null
   emotional_state: 'peaceful' | 'okay' | 'anxious' | 'overwhelmed' | 'low' | 'joyful' | null
   physical_state: 'good' | 'tired' | 'sick' | 'low_energy' | null
   struggles: string | null

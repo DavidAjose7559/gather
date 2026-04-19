@@ -60,6 +60,15 @@ const spiritualLabels: Record<string, string> = {
   struggling: 'Struggling a bit',
 }
 
+function formatCheckInTime(createdAt: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Toronto',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(new Date(createdAt))
+}
+
 export default async function HomePage() {
   const supabase = await createClient()
 
@@ -373,15 +382,15 @@ export default async function HomePage() {
                           <span style={{ fontSize: 12, color: '#FF9500', fontWeight: 700 }}>🔥 {memberStreak}</span>
                         )}
                       </p>
-                      {isCheckedIn && (
+                      {isCheckedIn && checkIn && (
                         <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
-                          {isVisible && checkIn
-                            ? checkIn.emotional_state
-                              ? emotionalLabels[checkIn.emotional_state]
-                              : checkIn.spiritual_life
-                              ? spiritualLabels[checkIn.spiritual_life]
-                              : 'Checked in'
-                            : 'Details private'}
+                          {isVisible
+                            ? (checkIn.emotional_state
+                                ? emotionalLabels[checkIn.emotional_state]
+                                : checkIn.spiritual_life
+                                ? spiritualLabels[checkIn.spiritual_life]
+                                : 'Checked in') + ` · ${formatCheckInTime(checkIn.created_at)}`
+                            : `Details private · ${formatCheckInTime(checkIn.created_at)}`}
                         </p>
                       )}
                     </div>

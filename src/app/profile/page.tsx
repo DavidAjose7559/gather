@@ -260,6 +260,15 @@ export default function ProfilePage() {
                       {new Date(c.check_in_date + 'T00:00:00').toLocaleDateString('en-US', {
                         weekday: 'short', month: 'short', day: 'numeric',
                       })}
+                      {' · '}
+                      <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.4)' }}>
+                        {new Intl.DateTimeFormat('en-US', {
+                          timeZone: 'America/Toronto',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          hour12: true,
+                        }).format(new Date(c.created_at))}
+                      </span>
                       {c.check_in_date === today && (
                         <span style={{ marginLeft: 6, fontSize: 12, color: '#6C63FF', fontWeight: 700 }}>today</span>
                       )}

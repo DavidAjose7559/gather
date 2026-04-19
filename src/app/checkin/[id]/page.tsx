@@ -5,7 +5,7 @@ import ResponseForm from './ResponseForm'
 
 const spiritualLabels = { strong: '🔥 Strong', okay: '🙂 Okay', struggling: '😔 Struggling' }
 const wordTimeLabels = { yes: '📖 Yes', a_little: '✏️ A little', no: '😬 Not today' }
-const prayerLabels = { strong: '🙏 Strong', somewhat: '🤲 Somewhat', weak: '😶 Weak' }
+const prayerLabels = { yes: '🙏 Yes', a_little: '🤲 A little', not_today: '😶 Not today' }
 const emotionalLabels = {
   peaceful: '😌 Peaceful',
   okay: '🙂 Okay',
@@ -35,6 +35,15 @@ function formatDate(dateStr: string) {
     month: 'long',
     day: 'numeric',
   })
+}
+
+function formatCheckInTime(createdAt: string): string {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Toronto',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  }).format(new Date(createdAt))
 }
 
 export default async function CheckInDetailPage({
@@ -145,7 +154,9 @@ export default async function CheckInDetailPage({
               <span style={{ marginLeft: 8, fontSize: 16, fontWeight: 400, color: 'rgba(255,255,255,0.3)' }}>(you)</span>
             )}
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginTop: 4 }}>{formatDate(checkIn.check_in_date)}</p>
+          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginTop: 4 }}>
+            {formatDate(checkIn.check_in_date)} · {formatCheckInTime(checkIn.created_at)}
+          </p>
         </div>
 
         {/* Support banner */}
