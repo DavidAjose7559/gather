@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import ResponseForm from './ResponseForm'
+import AdminActions from './AdminActions'
 
 const spiritualLabels = { strong: '🔥 Strong', okay: '🙂 Okay', struggling: '😔 Struggling' }
 const wordTimeLabels = { yes: '📖 Yes', a_little: '✏️ A little', no: '😬 Not today' }
@@ -98,17 +99,28 @@ export default async function CheckInDetailPage({
     )
   }
 
-  const [profileRes, responsesRes] = await Promise.all([
+  const [profileRes, responsesRes, currentProfileRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', checkIn.user_id).single(),
     supabase
       .from('responses')
       .select('*')
       .eq('check_in_id', id)
       .order('created_at', { ascending: true }),
+    supabase.from('profiles').select('role').eq('id', user.id).single(),
   ])
 
   const profile = profileRes.data
   const rawResponses = responsesRes.data ?? []
+  const isAdmin = currentProfileRes.data?.role === 'admin'
+  const isOwn = checkIn.user_id === user.id
+
+  // Mark all responses as seen if the current user is the check-in owner
+  if (isOwn && rawResponses.length > 0) {
+    await supabase.from('response_seen').upsert(
+      rawResponses.map((r) => ({ response_id: r.id, user_id: user.id })),
+      { onConflict: 'response_id,user_id' }
+    )
+  }
 
   // Load responder profiles for non-anonymous responses
   const responderIds = [...new Set(
@@ -245,8 +257,11 @@ export default async function CheckInDetailPage({
           </div>
         </div>
 
+        {/* Admin actions */}
+        {isAdmin && !isOwn && <AdminActions checkInId={id} />}
+
         {/* Response form */}
-        <ResponseForm checkInId={id} currentUserId={user.id} />
+        {!isOwn && <ResponseForm checkInId={id} currentUserId={user.id} />}
       </div>
     </div>
   )

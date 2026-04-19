@@ -4,6 +4,7 @@ import Link from 'next/link'
 import RoleToggle from './RoleToggle'
 import CopyButton from './CopyButton'
 import BroadcastForm from './BroadcastForm'
+import ReminderForm from './ReminderForm'
 
 const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
 const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
@@ -74,6 +75,17 @@ export default async function AdminPage() {
             </p>
           </div>
           <BroadcastForm memberCount={members?.length ?? 0} />
+        </div>
+
+        {/* Manual reminder */}
+        <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Send check-in reminder</h2>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+              Send a nudge to members who haven&apos;t checked in yet today.
+            </p>
+          </div>
+          <ReminderForm memberCount={members?.length ?? 0} />
         </div>
 
         {/* Member list */}

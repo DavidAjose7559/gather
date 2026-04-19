@@ -180,6 +180,14 @@ export default function CalendarPage() {
   const [saving, setSaving] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
 
+  // Admin add birthday form
+  const [showAddBdForm, setShowAddBdForm] = useState(false)
+  const [newBdName, setNewBdName] = useState('')
+  const [newBdMonth, setNewBdMonth] = useState('')
+  const [newBdDay, setNewBdDay] = useState('')
+  const [savingBd, setSavingBd] = useState(false)
+  const [bdError, setBdError] = useState<string | null>(null)
+
   useEffect(() => {
     const todayStr = todayToronto()
     setToday(todayStr)
@@ -296,6 +304,33 @@ export default function CalendarPage() {
   async function deleteEvent(eventId: string) {
     const res = await fetch(`/api/events?id=${eventId}`, { method: 'DELETE' })
     if (res.ok) setEvents(prev => prev.filter(e => e.id !== eventId))
+  }
+
+  async function addBirthday() {
+    if (!newBdName.trim() || !newBdMonth || !newBdDay) return
+    setSavingBd(true)
+    setBdError(null)
+    const res = await fetch('/api/birthdays', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newBdName.trim(), month: Number(newBdMonth), day: Number(newBdDay) }),
+    })
+    const data = await res.json()
+    if (data.error) {
+      setBdError(data.error)
+    } else {
+      setBirthdays(prev => [...prev, data].sort((a, b) => a.month - b.month || a.day - b.day))
+      setNewBdName('')
+      setNewBdMonth('')
+      setNewBdDay('')
+      setShowAddBdForm(false)
+    }
+    setSavingBd(false)
+  }
+
+  async function deleteBirthday(id: string) {
+    const res = await fetch(`/api/birthdays?id=${id}`, { method: 'DELETE' })
+    if (res.ok) setBirthdays(prev => prev.filter(b => b.id !== id))
   }
 
   function toggleMonth(month: number) {
@@ -593,9 +628,76 @@ export default function CalendarPage() {
 
         {/* ─── SECTION 2: BIRTHDAY CALENDAR ─── */}
         <div>
-          <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-            Birthday calendar
-          </h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+              Birthday calendar
+            </h2>
+            {isAdmin && (
+              <button
+                onClick={() => setShowAddBdForm(v => !v)}
+                style={{ fontSize: 13, fontWeight: 600, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36 }}
+              >
+                {showAddBdForm ? 'Cancel' : '+ Add birthday'}
+              </button>
+            )}
+          </div>
+
+          {/* Admin add birthday form */}
+          {isAdmin && showAddBdForm && (
+            <div style={{ ...cardStyle, padding: 20, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12, borderColor: 'rgba(108,99,255,0.3)' }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: '#A09AF8' }}>New birthday</h3>
+              <input
+                type="text"
+                value={newBdName}
+                onChange={e => setNewBdName(e.target.value)}
+                placeholder="Name *"
+                style={{ width: '100%' }}
+              />
+              <div style={{ display: 'flex', gap: 8 }}>
+                <select
+                  value={newBdMonth}
+                  onChange={e => setNewBdMonth(e.target.value)}
+                  style={{ flex: 1 }}
+                >
+                  <option value="">Month *</option>
+                  {MONTH_NAMES.map((m, i) => (
+                    <option key={i} value={i + 1}>{m}</option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  value={newBdDay}
+                  onChange={e => setNewBdDay(e.target.value)}
+                  placeholder="Day *"
+                  min={1}
+                  max={31}
+                  style={{ width: 80 }}
+                />
+              </div>
+              {bdError && (
+                <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{bdError}</p>
+              )}
+              <button
+                onClick={addBirthday}
+                disabled={savingBd || !newBdName.trim() || !newBdMonth || !newBdDay}
+                style={{
+                  width: '100%',
+                  minHeight: 48,
+                  backgroundColor: '#6C63FF',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  borderRadius: 12,
+                  border: 'none',
+                  cursor: savingBd || !newBdName.trim() || !newBdMonth || !newBdDay ? 'not-allowed' : 'pointer',
+                  opacity: savingBd || !newBdName.trim() || !newBdMonth || !newBdDay ? 0.5 : 1,
+                }}
+              >
+                {savingBd ? 'Saving…' : 'Save birthday'}
+              </button>
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {MONTH_NAMES.map((monthName, idx) => {
               const month = idx + 1
@@ -650,9 +752,18 @@ export default function CalendarPage() {
                               {isToday && ' 🎉'}
                             </p>
                             {days !== null && days <= 14 && days > 0 && (
-                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginRight: isAdmin ? 8 : 0 }}>
                                 {daysLabel(days)}
                               </span>
+                            )}
+                            {isAdmin && (
+                              <button
+                                onClick={() => deleteBirthday(b.id)}
+                                style={{ fontSize: 12, color: 'rgba(255,77,77,0.6)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36, padding: '0 4px', flexShrink: 0 }}
+                                title="Remove birthday"
+                              >
+                                ✕
+                              </button>
                             )}
                           </div>
                         )

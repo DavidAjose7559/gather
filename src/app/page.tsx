@@ -147,6 +147,26 @@ export default async function HomePage() {
   const myStreak = streakMap.get(user.id) ?? 0
 
   const myCheckIn = checkIns.find((c) => c.user_id === user.id)
+
+  // Check for unseen responses on today's check-in
+  let hasUnseenResponses = false
+  if (myCheckIn) {
+    const { data: responseIds } = await supabase
+      .from('responses')
+      .select('id')
+      .eq('check_in_id', myCheckIn.id)
+    if (responseIds && responseIds.length > 0) {
+      const ids = responseIds.map((r) => r.id)
+      const { data: seen } = await supabase
+        .from('response_seen')
+        .select('response_id')
+        .in('response_id', ids)
+        .eq('user_id', user.id)
+      const seenSet = new Set((seen ?? []).map((s) => s.response_id))
+      hasUnseenResponses = ids.some((id) => !seenSet.has(id))
+    }
+  }
+
   const checkedInIds = new Set(checkIns.map((c) => c.user_id))
   const checkedInCount = checkedInIds.size
   const notYetCount = profiles.length - checkedInCount
@@ -397,8 +417,11 @@ export default async function HomePage() {
                     {isCheckedIn && checkIn && isVisible && (
                       <Link
                         href={`/checkin/${checkIn.id}`}
-                        style={{ fontSize: 13, color: '#6C63FF', fontWeight: 500, minHeight: 44, display: 'flex', alignItems: 'center', flexShrink: 0, textDecoration: 'none' }}
+                        style={{ fontSize: 13, color: '#6C63FF', fontWeight: 500, minHeight: 44, display: 'flex', alignItems: 'center', flexShrink: 0, textDecoration: 'none', gap: 6 }}
                       >
+                        {profile.id === user.id && hasUnseenResponses && (
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#6C63FF', display: 'inline-block', flexShrink: 0 }} />
+                        )}
                         View
                       </Link>
                     )}
