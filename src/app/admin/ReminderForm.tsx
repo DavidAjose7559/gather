@@ -2,7 +2,10 @@
 
 import { useState } from 'react'
 
+const DEFAULT_MESSAGE = `Hey everyone 🙏🏾\n\nJust a reminder to check in on Gather today. It only takes a minute and it means a lot to the group to know how you're doing.\n\n→ gatherdaily.app`
+
 export default function ReminderForm({ memberCount }: { memberCount: number }) {
+  const [message, setMessage] = useState(DEFAULT_MESSAGE)
   const [sending, setSending] = useState(false)
   const [result, setResult] = useState<{ sent: number } | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -11,7 +14,11 @@ export default function ReminderForm({ memberCount }: { memberCount: number }) {
     setSending(true)
     setError(null)
     setResult(null)
-    const res = await fetch('/api/admin/remind', { method: 'POST' })
+    const res = await fetch('/api/admin/remind', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    })
     const data = await res.json()
     if (!res.ok) {
       setError(data.error ?? 'Failed to send')
@@ -23,6 +30,27 @@ export default function ReminderForm({ memberCount }: { memberCount: number }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <textarea
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        disabled={!!result}
+        rows={6}
+        style={{
+          width: '100%',
+          resize: 'vertical',
+          minHeight: 120,
+          backgroundColor: '#111111',
+          color: 'rgba(255,255,255,0.8)',
+          border: '1px solid #2A2A2A',
+          borderRadius: 12,
+          padding: '12px 14px',
+          fontSize: 14,
+          lineHeight: 1.6,
+          fontFamily: 'system-ui, sans-serif',
+          outline: 'none',
+          opacity: result ? 0.5 : 1,
+        }}
+      />
       {result ? (
         <div style={{ backgroundColor: 'rgba(76,175,80,0.1)', border: '1px solid rgba(76,175,80,0.3)', borderRadius: 12, padding: '10px 14px' }}>
           <p style={{ fontSize: 14, color: '#4CAF50', fontWeight: 500 }}>
@@ -37,7 +65,7 @@ export default function ReminderForm({ memberCount }: { memberCount: number }) {
       )}
       <button
         onClick={sendReminders}
-        disabled={sending || !!result}
+        disabled={sending || !!result || !message.trim()}
         style={{
           width: '100%',
           minHeight: 48,
@@ -47,10 +75,10 @@ export default function ReminderForm({ memberCount }: { memberCount: number }) {
           fontSize: 15,
           borderRadius: 12,
           border: '1px solid rgba(108,99,255,0.2)',
-          cursor: sending || result ? 'not-allowed' : 'pointer',
+          cursor: sending || result || !message.trim() ? 'not-allowed' : 'pointer',
         }}
       >
-        {sending ? 'Sending…' : result ? 'Sent ✓' : `Send check-in reminder`}
+        {sending ? 'Sending…' : result ? 'Sent ✓' : 'Send check-in reminder'}
       </button>
       <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
         Only members who haven&apos;t checked in today and have reminders enabled will receive this.

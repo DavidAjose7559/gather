@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import ResponseForm from './ResponseForm'
+import ResponseThread from './ResponseThread'
 import AdminActions from './AdminActions'
 
 const spiritualLabels = { strong: '🔥 Strong', okay: '🙂 Okay', struggling: '😔 Struggling' }
@@ -240,21 +241,20 @@ export default async function CheckInDetailPage({
         {/* Responses */}
         <div>
           <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
-            Responses {responses.length > 0 && `(${responses.length})`}
+            Responses {responses.filter((r) => !r.parent_id).length > 0 && `(${responses.filter((r) => !r.parent_id).length})`}
           </h2>
-          {responses.length === 0 && (
-            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', paddingLeft: 4 }}>No responses yet. Be the first to encourage.</p>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {responses.map((r) => (
-              <div key={r.id} style={{ backgroundColor: '#1A1A1A', borderRadius: 16, border: '1px solid #2A2A2A', padding: 16 }}>
-                <p style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.3)', marginBottom: 6 }}>
-                  {r.responderName ?? 'A member of your group'}
-                </p>
-                <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{r.body}</p>
-              </div>
-            ))}
-          </div>
+          <ResponseThread
+            initialResponses={responses.map((r) => ({
+              id: r.id,
+              body: r.body,
+              is_anonymous: r.is_anonymous,
+              created_at: r.created_at,
+              responderName: r.responderName,
+              parent_id: r.parent_id ?? null,
+            }))}
+            checkInId={id}
+            currentUserId={user.id}
+          />
         </div>
 
         {/* Admin actions */}
