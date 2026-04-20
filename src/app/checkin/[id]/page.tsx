@@ -107,12 +107,13 @@ export default async function CheckInDetailPage({
       .select('*')
       .eq('check_in_id', id)
       .order('created_at', { ascending: true }),
-    supabase.from('profiles').select('role').eq('id', user.id).single(),
+    supabase.from('profiles').select('role, is_demo').eq('id', user.id).single(),
   ])
 
   const profile = profileRes.data
   const rawResponses = responsesRes.data ?? []
   const isAdmin = currentProfileRes.data?.role === 'admin'
+  const isCurrentUserDemo = currentProfileRes.data?.is_demo === true
   const isOwn = checkIn.user_id === user.id
 
   // Mark this check-in as seen for non-owners
@@ -136,14 +137,22 @@ export default async function CheckInDetailPage({
     rawResponses.filter((r) => !r.is_anonymous).map((r) => r.responder_id)
   )]
   const { data: responderProfiles } = responderIds.length
-    ? await supabase.from('profiles').select('id, full_name, display_name').in('id', responderIds)
+    ? await supabase.from('profiles').select('id, full_name, display_name, is_demo').in('id', responderIds)
     : { data: [] }
+
+  const demoResponderIds = new Set(
+    (responderProfiles ?? []).filter((p) => p.is_demo).map((p) => p.id)
+  )
+
+  const filteredResponses = isCurrentUserDemo
+    ? rawResponses
+    : rawResponses.filter((r) => !demoResponderIds.has(r.responder_id))
 
   const responderMap = Object.fromEntries(
     (responderProfiles ?? []).map((p) => [p.id, p.display_name ?? p.full_name])
   )
 
-  const responses = rawResponses.map((r) => ({
+  const responses = filteredResponses.map((r) => ({
     ...r,
     responderName: r.is_anonymous ? null : (responderMap[r.responder_id] ?? 'A member'),
   }))

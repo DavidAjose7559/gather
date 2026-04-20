@@ -8,6 +8,7 @@ export type Profile = {
   reminder_enabled: boolean
   default_visibility: 'everyone' | 'specific' | 'one_person'
   created_at: string
+  is_demo?: boolean | null
 }
 
 export type CheckIn = {

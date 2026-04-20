@@ -27,7 +27,8 @@ export async function GET() {
 
   const { data: members, error: membersError } = await supabase
     .from('profiles')
-    .select('full_name, display_name, email')
+    .select('full_name, display_name, email, is_demo')
+    .not('is_demo', 'eq', true)
 
   if (membersError || !members) {
     return NextResponse.json({ error: 'Failed to load members' }, { status: 500 })

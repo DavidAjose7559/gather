@@ -9,7 +9,7 @@ import BottomNav from '@/components/BottomNav'
 const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
 const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
 
-type PrayerProfile = { full_name: string; display_name: string | null }
+type PrayerProfile = { full_name: string; display_name: string | null; is_demo?: boolean | null }
 
 type Comment = {
   id: string
@@ -51,6 +51,7 @@ export default function PrayerPage() {
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isDemo, setIsDemo] = useState(false)
   const [active, setActive] = useState<PrayerItem[]>([])
   const [answered, setAnswered] = useState<PrayerItem[]>([])
   const [myPrayingIds, setMyPrayingIds] = useState<Set<string>>(new Set())
@@ -81,15 +82,15 @@ export default function PrayerPage() {
       setCurrentUserId(user.id)
 
       const [profileRes, activeRes, answeredRes, prayingRes] = await Promise.all([
-        supabase.from('profiles').select('role').eq('id', user.id).single(),
+        supabase.from('profiles').select('role, is_demo').eq('id', user.id).single(),
         supabase
           .from('prayer_requests')
-          .select('*, profile:profiles(full_name, display_name), comments:prayer_comments(id, body, user_id, created_at, profile:profiles(full_name, display_name))')
+          .select('*, profile:profiles(full_name, display_name, is_demo), comments:prayer_comments(id, body, user_id, created_at, profile:profiles(full_name, display_name))')
           .eq('is_answered', false)
           .order('created_at', { ascending: false }),
         supabase
           .from('prayer_requests')
-          .select('*, profile:profiles(full_name, display_name), comments:prayer_comments(id, body, user_id, created_at, profile:profiles(full_name, display_name))')
+          .select('*, profile:profiles(full_name, display_name, is_demo), comments:prayer_comments(id, body, user_id, created_at, profile:profiles(full_name, display_name))')
           .eq('is_answered', true)
           .order('answered_at', { ascending: false }),
         supabase
@@ -98,9 +99,13 @@ export default function PrayerPage() {
           .eq('user_id', user.id),
       ])
 
-      if (profileRes.data) setIsAdmin(profileRes.data.role === 'admin')
-      setActive((activeRes.data ?? []) as PrayerItem[])
-      setAnswered((answeredRes.data ?? []) as PrayerItem[])
+      const currentIsDemo = profileRes.data?.is_demo === true
+      if (profileRes.data) {
+        setIsAdmin(profileRes.data.role === 'admin')
+        setIsDemo(currentIsDemo)
+      }
+      setActive(((activeRes.data ?? []) as PrayerItem[]).filter(p => currentIsDemo || !p.profile?.is_demo))
+      setAnswered(((answeredRes.data ?? []) as PrayerItem[]).filter(p => currentIsDemo || !p.profile?.is_demo))
       setMyPrayingIds(new Set((prayingRes.data ?? []).map((p) => p.prayer_id)))
       setLoading(false)
     }

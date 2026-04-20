@@ -111,10 +111,20 @@ export default async function HomePage() {
     supabase.from('checkin_seen').select('check_in_id').eq('user_id', user.id),
   ])
 
-  const profiles: Profile[] = profilesRes.data ?? []
-  const checkIns: CheckIn[] = checkInsRes.data ?? []
+  const isCurrentUserDemo = currentProfile.is_demo === true
+  const allProfiles: Profile[] = profilesRes.data ?? []
+  const demoProfileIds = new Set(allProfiles.filter((p) => p.is_demo).map((p) => p.id))
+
+  const profiles: Profile[] = isCurrentUserDemo
+    ? allProfiles
+    : allProfiles.filter((p) => !p.is_demo)
+  const checkIns: CheckIn[] = (checkInsRes.data ?? []).filter(
+    (c) => isCurrentUserDemo || !demoProfileIds.has(c.user_id)
+  )
   const grants = grantsRes.data ?? []
-  const recentCheckIns = recentCheckInsRes.data ?? []
+  const recentCheckIns = (recentCheckInsRes.data ?? []).filter(
+    (c) => isCurrentUserDemo || !demoProfileIds.has(c.user_id)
+  )
   const todaySermon: SermonSchedule | null = sermonRes.data ?? null
   const seenCheckInIds = new Set((seenCheckInsRes.data ?? []).map((s) => s.check_in_id))
 

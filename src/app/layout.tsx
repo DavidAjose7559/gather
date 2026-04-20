@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import DemoBanner from '@/components/DemoBanner'
 
 export const metadata: Metadata = {
   title: 'Gather',
@@ -22,7 +23,7 @@ export default function RootLayout({
           } catch(e) {}
         ` }} />
       </head>
-      <body className="min-h-full font-sans antialiased">{children}</body>
+      <body className="min-h-full font-sans antialiased"><DemoBanner />{children}</body>
     </html>
   )
 }

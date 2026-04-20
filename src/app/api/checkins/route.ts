@@ -12,12 +12,25 @@ export async function GET() {
 
   const today = todayToronto()
 
-  const [checkInsRes, grantsRes] = await Promise.all([
+  const [checkInsRes, grantsRes, currentProfileRes] = await Promise.all([
     supabase.from('check_ins').select('*').eq('check_in_date', today),
     supabase.from('visibility_grants').select('check_in_id, granted_to'),
+    supabase.from('profiles').select('is_demo').eq('id', user.id).single(),
   ])
 
-  const checkIns = checkInsRes.data ?? []
+  const isCurrentUserDemo = currentProfileRes.data?.is_demo === true
+
+  // Get demo user IDs to exclude their check-ins for non-demo viewers
+  let demoUserIds: Set<string> = new Set()
+  if (!isCurrentUserDemo) {
+    const { data: demoProfiles } = await supabase.from('profiles').select('id').eq('is_demo', true)
+    demoUserIds = new Set((demoProfiles ?? []).map((p) => p.id))
+  }
+
+  const rawCheckIns = checkInsRes.data ?? []
+  const checkIns = isCurrentUserDemo
+    ? rawCheckIns
+    : rawCheckIns.filter((c) => !demoUserIds.has(c.user_id))
   const grants = grantsRes.data ?? []
 
   // Apply visibility filtering

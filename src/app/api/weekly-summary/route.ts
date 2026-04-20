@@ -21,7 +21,7 @@ export async function GET() {
   const ninetyDaysAgoStr = formatDateToronto(ninetyDaysAgoCursor)
 
   const [profilesRes, weekCheckInsRes, recentCheckInsRes, adminsRes] = await Promise.all([
-    supabase.from('profiles').select('id, full_name, display_name'),
+    supabase.from('profiles').select('id, full_name, display_name, is_demo').not('is_demo', 'eq', true),
     supabase.from('check_ins').select('user_id, check_in_date').gte('check_in_date', sevenDaysAgoStr).lte('check_in_date', today),
     supabase.from('check_ins').select('user_id, check_in_date').gte('check_in_date', ninetyDaysAgoStr).order('check_in_date', { ascending: false }),
     supabase.from('profiles').select('full_name, display_name, email').eq('role', 'admin'),

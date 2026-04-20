@@ -4,6 +4,8 @@ import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+const DEMO_EMAIL = 'demo@gatherdaily.app'
+
 function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -11,6 +13,10 @@ function LoginForm() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [demoExpanded, setDemoExpanded] = useState(false)
+  const [demoPassword, setDemoPassword] = useState('')
+  const [demoLoading, setDemoLoading] = useState(false)
+  const [demoError, setDemoError] = useState<string | null>(null)
 
   // Fallback: if Supabase sends the magic link to /login?code=... instead of
   // /auth/callback?code=..., forward the code to the real callback route.
@@ -42,6 +48,26 @@ function LoginForm() {
 
     setSubmitted(true)
     setLoading(false)
+  }
+
+  async function handleDemoLogin(e: React.FormEvent) {
+    e.preventDefault()
+    setDemoLoading(true)
+    setDemoError(null)
+
+    const supabase = createClient()
+    const { error } = await supabase.auth.signInWithPassword({
+      email: DEMO_EMAIL,
+      password: process.env.NEXT_PUBLIC_DEMO_PASSWORD ?? '',
+    })
+
+    if (error) {
+      setDemoError('Invalid demo credentials')
+      setDemoLoading(false)
+      return
+    }
+
+    router.push('/')
   }
 
   if (submitted) {
@@ -120,7 +146,87 @@ function LoginForm() {
           </form>
         </div>
 
-        <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 24 }}>
+        {/* Divider */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 24 }}>
+          <div style={{ flex: 1, height: 1, backgroundColor: '#2A2A2A' }} />
+          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)' }}>or</span>
+          <div style={{ flex: 1, height: 1, backgroundColor: '#2A2A2A' }} />
+        </div>
+
+        {/* Demo access */}
+        <div style={{ marginTop: 12 }}>
+          <button
+            onClick={() => setDemoExpanded((v) => !v)}
+            style={{ width: '100%', minHeight: 44, background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          >
+            <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>
+              Recruiter / Demo Access
+            </span>
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.2)' }}>{demoExpanded ? '▲' : '▼'}</span>
+          </button>
+
+          {demoExpanded && (
+            <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 24, marginTop: 4 }}>
+              <form onSubmit={handleDemoLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={DEMO_EMAIL}
+                    readOnly
+                    style={{ width: '100%', opacity: 0.5, cursor: 'default' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={demoPassword}
+                    onChange={(e) => setDemoPassword(e.target.value)}
+                    placeholder="Demo password"
+                    style={{ width: '100%' }}
+                    autoComplete="current-password"
+                  />
+                </div>
+
+                {demoError && (
+                  <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>
+                    {demoError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={demoLoading || !demoPassword}
+                  style={{
+                    width: '100%',
+                    minHeight: 48,
+                    backgroundColor: '#FF9500',
+                    color: 'white',
+                    fontWeight: 700,
+                    fontSize: 15,
+                    borderRadius: 12,
+                    border: 'none',
+                    cursor: demoLoading || !demoPassword ? 'not-allowed' : 'pointer',
+                    opacity: demoLoading || !demoPassword ? 0.5 : 1,
+                    transition: 'opacity 0.2s',
+                  }}
+                >
+                  {demoLoading ? 'Signing in…' : 'Enter Gather'}
+                </button>
+              </form>
+              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', marginTop: 14, lineHeight: 1.6, textAlign: 'center' }}>
+                Demo credentials are provided separately. Activity in demo mode is hidden from real members.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <p style={{ textAlign: 'center', fontSize: 13, color: 'rgba(255,255,255,0.3)', marginTop: 20 }}>
           No account yet? Just enter your email — we&apos;ll get you set up.
         </p>
       </div>

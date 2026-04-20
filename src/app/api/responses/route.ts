@@ -28,15 +28,27 @@ export async function GET(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const sanitized = (data ?? []).map((r) => ({
-    id: r.id,
-    check_in_id: r.check_in_id,
-    body: r.body,
-    is_anonymous: r.is_anonymous,
-    created_at: r.created_at,
-    responder_id: r.is_anonymous ? null : r.responder_id,
-    parent_id: r.parent_id ?? null,
-  }))
+  // Filter out responses from demo accounts for non-demo viewers
+  const { data: currentProfile } = await supabase.from('profiles').select('is_demo').eq('id', user.id).single()
+  const isCurrentUserDemo = currentProfile?.is_demo === true
+
+  let demoUserIds: Set<string> = new Set()
+  if (!isCurrentUserDemo) {
+    const { data: demoProfiles } = await supabase.from('profiles').select('id').eq('is_demo', true)
+    demoUserIds = new Set((demoProfiles ?? []).map((p) => p.id))
+  }
+
+  const sanitized = (data ?? [])
+    .filter((r) => isCurrentUserDemo || !demoUserIds.has(r.responder_id))
+    .map((r) => ({
+      id: r.id,
+      check_in_id: r.check_in_id,
+      body: r.body,
+      is_anonymous: r.is_anonymous,
+      created_at: r.created_at,
+      responder_id: r.is_anonymous ? null : r.responder_id,
+      parent_id: r.parent_id ?? null,
+    }))
 
   return NextResponse.json(sanitized)
 }

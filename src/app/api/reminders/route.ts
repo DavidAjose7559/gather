@@ -67,8 +67,9 @@ export async function GET(request: NextRequest) {
 
   const { data: members, error: membersError } = await supabase
     .from('profiles')
-    .select('id, full_name, display_name, email, reminder_enabled')
+    .select('id, full_name, display_name, email, reminder_enabled, is_demo')
     .eq('reminder_enabled', true)
+    .not('is_demo', 'eq', true)
 
   if (membersError || !members) {
     return NextResponse.json({ error: 'Failed to load members' }, { status: 500 })
