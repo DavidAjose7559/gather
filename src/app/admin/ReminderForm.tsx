@@ -39,9 +39,9 @@ export default function ReminderForm({ memberCount }: { memberCount: number }) {
           width: '100%',
           resize: 'vertical',
           minHeight: 120,
-          backgroundColor: '#111111',
-          color: 'rgba(255,255,255,0.8)',
-          border: '1px solid #2A2A2A',
+          backgroundColor: 'var(--bg-card-2)',
+          color: 'var(--text-primary)',
+          border: '1px solid var(--border)',
           borderRadius: 12,
           padding: '12px 14px',
           fontSize: 14,
@@ -80,7 +80,7 @@ export default function ReminderForm({ memberCount }: { memberCount: number }) {
       >
         {sending ? 'Sending…' : result ? 'Sent ✓' : 'Send check-in reminder'}
       </button>
-      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+      <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
         Only members who haven&apos;t checked in today and have reminders enabled will receive this.
       </p>
     </div>

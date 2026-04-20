@@ -222,7 +222,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', marginBottom: 6 }}>
-                  Display name <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>(optional)</span>
+                  Display name <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>(optional)</span>
                 </label>
                 <input
                   type="text"
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                       </span>
                     )}
                     {c.spiritual_life && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: 8, backgroundColor: 'var(--bg-input)', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: 8, backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', fontSize: 12, fontWeight: 500 }}>
                         {spiritualLabels[c.spiritual_life]}
                       </span>
                     )}
@@ -422,9 +422,9 @@ export default function ProfilePage() {
                     minHeight: 44,
                     padding: '10px 16px',
                     borderRadius: 12,
-                    border: defaultVisibility === opt.value ? '1px solid #6C63FF' : '1px solid #2A2A2A',
-                    backgroundColor: defaultVisibility === opt.value ? 'rgba(108,99,255,0.15)' : '#111111',
-                    color: defaultVisibility === opt.value ? '#A09AF8' : 'rgba(255,255,255,0.5)',
+                    border: defaultVisibility === opt.value ? '1px solid #6C63FF' : '1px solid var(--border)',
+                    backgroundColor: defaultVisibility === opt.value ? 'rgba(108,99,255,0.15)' : 'var(--bg-base)',
+                    color: defaultVisibility === opt.value ? '#A09AF8' : 'var(--text-secondary)',
                     fontSize: 14,
                     fontWeight: 500,
                     cursor: 'pointer',
@@ -458,7 +458,7 @@ export default function ProfilePage() {
 
         {/* Sign out */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', paddingLeft: 4 }}>
+          <p style={{ fontSize: 13, color: 'var(--text-tertiary)', paddingLeft: 4 }}>
             Signed in as {email}
           </p>
           <button

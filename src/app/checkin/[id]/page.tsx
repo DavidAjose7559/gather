@@ -90,8 +90,8 @@ export default async function CheckInDetailPage({
       <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
         <div style={{ width: '100%', maxWidth: 448, backgroundColor: 'var(--bg-card)', borderRadius: 24, border: '1px solid var(--border)', padding: 32, textAlign: 'center' }}>
           <p style={{ fontSize: 40, marginBottom: 12 }}>🔒</p>
-          <h2 style={{ fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 8 }}>This check-in is private</h2>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Only certain people can see it.</p>
+          <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>This check-in is private</h2>
+          <p style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>Only certain people can see it.</p>
           <Link href="/" style={{ marginTop: 20, display: 'inline-block', color: '#6C63FF', fontWeight: 500, fontSize: 14, textDecoration: 'none' }}>
             ← Back to home
           </Link>
@@ -171,20 +171,20 @@ export default async function CheckInDetailPage({
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)' }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
-          <Link href="/" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, minHeight: 44, display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
+          <Link href="/" style={{ color: 'var(--text-tertiary)', fontSize: 14, minHeight: 44, display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
             ← Home
           </Link>
         </div>
 
         {/* Header */}
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'white' }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>
             {profile?.display_name ?? profile?.full_name ?? 'Member'}
             {checkIn.user_id === user.id && (
-              <span style={{ marginLeft: 8, fontSize: 16, fontWeight: 400, color: 'rgba(255,255,255,0.3)' }}>(you)</span>
+              <span style={{ marginLeft: 8, fontSize: 16, fontWeight: 400, color: 'var(--text-tertiary)' }}>(you)</span>
             )}
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, marginTop: 4 }}>
+          <p style={{ color: 'var(--text-tertiary)', fontSize: 14, marginTop: 4 }}>
             {formatDate(checkIn.check_in_date)} · {formatCheckInTime(checkIn.created_at)}
           </p>
         </div>
@@ -205,31 +205,31 @@ export default async function CheckInDetailPage({
         <div style={cardStyle}>
           {checkIn.spiritual_life && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Spiritual life</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Spiritual life</p>
               <Chip label={spiritualLabels[checkIn.spiritual_life as keyof typeof spiritualLabels]} />
             </div>
           )}
           {checkIn.word_time && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Time in the Word</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Time in the Word</p>
               <Chip label={wordTimeLabels[checkIn.word_time as keyof typeof wordTimeLabels]} />
             </div>
           )}
           {checkIn.prayer_life && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Prayer life</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Prayer life</p>
               <Chip label={prayerLabels[checkIn.prayer_life as keyof typeof prayerLabels]} />
             </div>
           )}
           {checkIn.emotional_state && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Emotionally</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Emotionally</p>
               <Chip label={emotionalLabels[checkIn.emotional_state as keyof typeof emotionalLabels]} />
             </div>
           )}
           {checkIn.physical_state && (
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Physically</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Physically</p>
               <Chip label={physicalLabels[checkIn.physical_state as keyof typeof physicalLabels]} />
             </div>
           )}
@@ -238,26 +238,26 @@ export default async function CheckInDetailPage({
         {/* Text sections */}
         {checkIn.struggles && (
           <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Struggles</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.struggles}</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Struggles</p>
+            <p style={{ color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.struggles}</p>
           </div>
         )}
         {checkIn.gratitude && (
           <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Grateful for</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.gratitude}</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Grateful for</p>
+            <p style={{ color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.gratitude}</p>
           </div>
         )}
         {checkIn.notes && (
           <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20 }}>
-            <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Notes</p>
-            <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.notes}</p>
+            <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Notes</p>
+            <p style={{ color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.notes}</p>
           </div>
         )}
 
         {/* Responses */}
         <div>
-          <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+          <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
             Responses {responses.filter((r) => !r.parent_id).length > 0 && `(${responses.filter((r) => !r.parent_id).length})`}
           </h2>
           <ResponseThread

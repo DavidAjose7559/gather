@@ -207,11 +207,11 @@ export default async function HomePage() {
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '0 16px' }}>
         {/* Top bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 8 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>Gather</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>Gather</h1>
           {currentProfile.role === 'admin' && (
             <Link
               href="/admin"
-              style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.4)', textDecoration: 'none', minHeight: 44, display: 'flex', alignItems: 'center' }}
+              style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-tertiary)', textDecoration: 'none', minHeight: 44, display: 'flex', alignItems: 'center' }}
             >
               Manage
             </Link>
@@ -224,7 +224,7 @@ export default async function HomePage() {
             <p style={{ fontSize: 13, fontWeight: 500, color: '#6C63FF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
               {formatDate(new Date())}
             </p>
-            <h2 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>
+            <h2 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}>
               Good to see you, {currentProfile.full_name.split(' ')[0]}.
             </h2>
           </div>
@@ -277,8 +277,8 @@ export default async function HomePage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontSize: 24 }}>✅</span>
                 <div>
-                  <p style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>You&apos;ve checked in</p>
-                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', marginTop: 2 }}>
+                  <p style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 15 }}>You&apos;ve checked in</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 2 }}>
                     {myStreak >= 3
                       ? `${myStreak} days in a row 🔥`
                       : myCheckIn.emotional_state
@@ -300,11 +300,11 @@ export default async function HomePage() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20, textAlign: 'center' }}>
               <p style={{ fontSize: 36, fontWeight: 700, color: '#6C63FF' }}>{checkedInCount}</p>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>checked in</p>
+              <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>checked in</p>
             </div>
             <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20, textAlign: 'center' }}>
-              <p style={{ fontSize: 36, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>{notYetCount}</p>
-              <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>not yet</p>
+              <p style={{ fontSize: 36, fontWeight: 700, color: 'var(--text-tertiary)' }}>{notYetCount}</p>
+              <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>not yet</p>
             </div>
           </div>
 
@@ -326,7 +326,7 @@ export default async function HomePage() {
             }
             return (
               <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', borderLeft: `3px solid ${accentColor}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{text}</p>
+                <p style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{text}</p>
                 <Link href="/calendar" style={{ fontSize: 13, color: accentColor, fontWeight: 600, flexShrink: 0, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                   View calendar →
                 </Link>
@@ -357,19 +357,19 @@ export default async function HomePage() {
                   <p style={{ fontSize: 11, fontWeight: 700, color: '#6C63FF', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }}>
                     Sermon of the Day
                   </p>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{todaySermon.episode_title}</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{todaySermon.episode_title}</p>
                   {todaySermon.theme && (
-                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{todaySermon.theme}</p>
+                    <p style={{ fontSize: 12, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{todaySermon.theme}</p>
                   )}
                 </div>
-                <span style={{ color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>›</span>
+                <span style={{ color: 'var(--text-tertiary)', flexShrink: 0 }}>›</span>
               </div>
             </Link>
           )}
 
           {/* Member list */}
           <div>
-            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
               Your group
               {visibleSupportRequests.length > 0 && (
                 <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#FF9500', display: 'inline-block' }} />
@@ -401,21 +401,21 @@ export default async function HomePage() {
                       opacity: isCheckedIn ? 1 : 0.5,
                     }}
                   >
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'white', flexShrink: 0, textTransform: 'uppercase' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', flexShrink: 0, textTransform: 'uppercase' }}>
                       {initials}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontWeight: 500, color: 'white', fontSize: 15, display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <p style={{ fontWeight: 500, color: 'var(--text-primary)', fontSize: 15, display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {name}
                         {profile.id === user.id && (
-                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>you</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-tertiary)', fontWeight: 400 }}>you</span>
                         )}
                         {memberStreak >= 2 && (
                           <span style={{ fontSize: 12, color: '#FF9500', fontWeight: 700 }}>🔥 {memberStreak}</span>
                         )}
                       </p>
                       {isCheckedIn && checkIn && (
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
+                        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: 2 }}>
                           {isVisible
                             ? (checkIn.emotional_state
                                 ? emotionalLabels[checkIn.emotional_state]
@@ -441,7 +441,7 @@ export default async function HomePage() {
                       </Link>
                     )}
                     {isCheckedIn && checkIn && !isVisible && (
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>🔒</span>
+                      <span style={{ fontSize: 13, color: 'var(--text-tertiary)', flexShrink: 0 }}>🔒</span>
                     )}
                   </div>
                 )

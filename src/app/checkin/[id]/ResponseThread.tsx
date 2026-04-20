@@ -80,7 +80,7 @@ export default function ResponseThread({
 
   if (topLevel.length === 0) {
     return (
-      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', paddingLeft: 4 }}>
+      <p style={{ fontSize: 14, color: 'var(--text-tertiary)', paddingLeft: 4 }}>
         No responses yet. Be the first to encourage.
       </p>
     )
@@ -95,14 +95,14 @@ export default function ResponseThread({
         return (
           <div key={r.id}>
             {/* Response card */}
-            <div style={{ backgroundColor: '#1A1A1A', borderRadius: 16, border: '1px solid #2A2A2A', padding: 16 }}>
-              <p style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.3)', marginBottom: 6 }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', padding: 16 }}>
+              <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', marginBottom: 6 }}>
                 {r.responderName ?? 'A member of your group'} · {formatTime(r.created_at)}
               </p>
-              <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{r.body}</p>
+              <p style={{ color: 'var(--text-primary)', fontSize: 14, lineHeight: 1.6 }}>{r.body}</p>
               <button
                 onClick={() => isReplying ? setReplyingTo(null) : openReply(r.id)}
-                style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0 0', minHeight: 32, display: 'block' }}
+                style={{ fontSize: 12, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', padding: '8px 0 0', minHeight: 32, display: 'block' }}
               >
                 {isReplying ? 'Cancel' : 'Reply'}
               </button>
@@ -110,13 +110,13 @@ export default function ResponseThread({
 
             {/* Existing replies */}
             {replies.length > 0 && (
-              <div style={{ marginLeft: 16, paddingLeft: 12, borderLeft: '2px solid #2A2A2A', marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ marginLeft: 16, paddingLeft: 12, borderLeft: '2px solid var(--border)', marginTop: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {replies.map((reply) => (
-                  <div key={reply.id} style={{ backgroundColor: '#141414', borderRadius: 12, border: '1px solid #222222', padding: 14 }}>
-                    <p style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.3)', marginBottom: 6 }}>
+                  <div key={reply.id} style={{ backgroundColor: 'var(--bg-card-2)', borderRadius: 12, border: '1px solid var(--border)', padding: 14 }}>
+                    <p style={{ fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', marginBottom: 6 }}>
                       {reply.responderName ?? 'A member'} · {formatTime(reply.created_at)}
                     </p>
-                    <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: 14, lineHeight: 1.6 }}>{reply.body}</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.6 }}>{reply.body}</p>
                   </div>
                 ))}
               </div>
@@ -140,7 +140,7 @@ export default function ResponseThread({
                     onChange={(e) => setReplyAnon(e.target.checked)}
                     style={{ accentColor: '#6C63FF', width: 14, height: 14 }}
                   />
-                  <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>Reply anonymously</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Reply anonymously</span>
                 </label>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button

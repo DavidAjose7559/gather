@@ -40,7 +40,7 @@ export default function BroadcastForm({ memberCount }: { memberCount: number }) 
         </p>
         <button
           onClick={() => setResult(null)}
-          style={{ marginLeft: 'auto', fontSize: 13, color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}
+          style={{ marginLeft: 'auto', fontSize: 13, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer' }}
         >
           Send another
         </button>
@@ -51,7 +51,7 @@ export default function BroadcastForm({ memberCount }: { memberCount: number }) 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', marginBottom: 6 }}>
           Subject
         </label>
         <input
@@ -64,7 +64,7 @@ export default function BroadcastForm({ memberCount }: { memberCount: number }) 
       </div>
 
       <div>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', marginBottom: 6 }}>
           Message
         </label>
         <textarea
@@ -74,7 +74,7 @@ export default function BroadcastForm({ memberCount }: { memberCount: number }) 
           rows={5}
           style={{ width: '100%', resize: 'none', minHeight: 120 }}
         />
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4, textAlign: 'right' }}>
+        <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 4, textAlign: 'right' }}>
           {message.length} characters
         </p>
       </div>
@@ -104,7 +104,7 @@ export default function BroadcastForm({ memberCount }: { memberCount: number }) 
         </button>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', backgroundColor: '#111111', borderRadius: 12, padding: '12px 16px', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card-2)', borderRadius: 12, padding: '12px 16px', lineHeight: 1.5 }}>
             This will send an email to all {memberCount} members. Are you sure?
           </p>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -118,7 +118,7 @@ export default function BroadcastForm({ memberCount }: { memberCount: number }) 
             <button
               onClick={() => setConfirming(false)}
               disabled={sending}
-              style={{ minHeight: 48, padding: '0 20px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', fontWeight: 500, fontSize: 14, borderRadius: 12, border: 'none', cursor: 'pointer' }}
+              style={{ minHeight: 48, padding: '0 20px', backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', fontWeight: 500, fontSize: 14, borderRadius: 12, border: 'none', cursor: 'pointer' }}
             >
               Cancel
             </button>

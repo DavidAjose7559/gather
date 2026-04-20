@@ -134,13 +134,13 @@ function RsvpButtons({
               transition: 'all 0.15s',
               border: isActive
                 ? isGoing ? '1px solid #4CAF50' : '1px solid #6C63FF'
-                : '1px solid #2A2A2A',
+                : '1px solid var(--border)',
               backgroundColor: isActive
                 ? isGoing ? 'rgba(76,175,80,0.15)' : 'rgba(108,99,255,0.15)'
-                : '#111111',
+                : 'var(--bg-base)',
               color: isActive
                 ? isGoing ? '#4CAF50' : '#A09AF8'
-                : 'rgba(255,255,255,0.5)',
+                : 'var(--text-secondary)',
             }}
           >
             {isActive && isGoing ? '✓ ' : ''}{label}
@@ -346,16 +346,16 @@ export default function CalendarPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--text-tertiary)' }}>Loading…</p>
       </div>
     )
   }
 
   const cardStyle = {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'var(--bg-card)',
     borderRadius: 20,
-    border: '1px solid #2A2A2A',
+    border: '1px solid var(--border)',
   }
 
   // Build grid
@@ -403,27 +403,27 @@ export default function CalendarPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', paddingBottom: 96 }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
         {/* ─── HEADER ─── */}
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>Calendar</h1>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}>Calendar</h1>
 
         {/* ─── MONTH GRID ─── */}
         {viewedYear > 0 && viewedMonth > 0 && (
           <div>
             {/* Grid card */}
-            <div style={{ backgroundColor: '#111111', borderRadius: 20, border: '1px solid #2A2A2A', overflow: 'hidden' }}>
+            <div style={{ backgroundColor: 'var(--bg-card-2)', borderRadius: 20, border: '1px solid var(--border)', overflow: 'hidden' }}>
               {/* Month navigation header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 12px 12px' }}>
                 <button
                   onClick={prevMonth}
-                  style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', fontSize: 20, borderRadius: 10 }}
+                  style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 20, borderRadius: 10 }}
                 >
                   ‹
                 </button>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
                     {MONTH_NAMES[viewedMonth - 1]} {viewedYear}
                   </p>
                   {(viewedYear !== parseInt(today.split('-')[0]) || viewedMonth !== parseInt(today.split('-')[1])) && (
@@ -442,7 +442,7 @@ export default function CalendarPage() {
                 </div>
                 <button
                   onClick={nextMonth}
-                  style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.6)', fontSize: 20, borderRadius: 10 }}
+                  style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 20, borderRadius: 10 }}
                 >
                   ›
                 </button>
@@ -451,7 +451,7 @@ export default function CalendarPage() {
               {/* Day labels */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', paddingBottom: 4 }}>
                 {DAY_LABELS.map(label => (
-                  <div key={label} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', paddingBottom: 6 }}>
+                  <div key={label} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', paddingBottom: 6 }}>
                     {label}
                   </div>
                 ))}
@@ -492,7 +492,7 @@ export default function CalendarPage() {
                         color: cell.isToday
                           ? 'white'
                           : cell.isCurrentMonth
-                          ? 'rgba(255,255,255,0.9)'
+                          ? 'var(--text-primary)'
                           : '#404040',
                       }}>
                         {cell.day}
@@ -515,42 +515,42 @@ export default function CalendarPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#FF9500' }} />
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Birthday</span>
+                <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>Birthday</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#A09AF8' }} />
-                <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>Event</span>
+                <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>Event</span>
               </div>
             </div>
 
             {/* Selected date panel */}
             {selectedDate && (
-              <div style={{ marginTop: 12, backgroundColor: '#1A1A1A', borderRadius: 16, border: '1px solid #2A2A2A', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ marginTop: 12, backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>{formatSelectedDate(selectedDate)}</p>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{formatSelectedDate(selectedDate)}</p>
                   <button
                     onClick={() => setSelectedDate(null)}
-                    style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', fontSize: 20, minHeight: 36, minWidth: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 20, minHeight: 36, minWidth: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}
                   >
                     ×
                   </button>
                 </div>
                 {selBirthdays.length === 0 && selEvents.length === 0 && (
-                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)' }}>Nothing scheduled</p>
+                  <p style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Nothing scheduled</p>
                 )}
                 {selBirthdays.map(b => (
                   <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#FF9500', flexShrink: 0 }} />
-                    <p style={{ fontSize: 14, color: 'white' }}>{b.name}&apos;s birthday 🎂</p>
+                    <p style={{ fontSize: 14, color: 'var(--text-primary)' }}>{b.name}&apos;s birthday 🎂</p>
                   </div>
                 ))}
                 {selEvents.map(e => (
                   <div key={e.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#A09AF8', flexShrink: 0, marginTop: 5 }} />
                     <div>
-                      <p style={{ fontSize: 14, color: 'white' }}>{e.title}</p>
+                      <p style={{ fontSize: 14, color: 'var(--text-primary)' }}>{e.title}</p>
                       {(e.event_time || e.location) && (
-                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                        <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                           {[e.event_time, e.location].filter(Boolean).join(' · ')}
                         </p>
                       )}
@@ -564,7 +564,7 @@ export default function CalendarPage() {
 
         {/* ─── SECTION 1: UPCOMING ─── */}
         <div>
-          <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
+          <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
             Upcoming — next 30 days
           </h2>
 
@@ -580,7 +580,7 @@ export default function CalendarPage() {
 
           {upcomingItems.length === 0 ? (
             <div style={{ ...cardStyle, padding: 24, textAlign: 'center' }}>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>Nothing in the next 30 days.</p>
+              <p style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>Nothing in the next 30 days.</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -590,8 +590,8 @@ export default function CalendarPage() {
                     <div key={`bd-${item.id}-${i}`} style={{ ...cardStyle, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, borderLeft: '3px solid #FF9500' }}>
                       <span style={{ fontSize: 20, flexShrink: 0 }}>🎂</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>{item.name}&apos;s birthday</p>
-                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                        <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{item.name}&apos;s birthday</p>
+                        <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                           {MONTH_SHORT[item.month - 1]} {item.day}
                         </p>
                       </div>
@@ -609,8 +609,8 @@ export default function CalendarPage() {
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
                         <span style={{ fontSize: 20, flexShrink: 0, marginTop: 1 }}>📅</span>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: 14, fontWeight: 600, color: 'white' }}>{ev.title}</p>
-                          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{ev.title}</p>
+                          <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
                             {MONTH_SHORT[em - 1]} {ed}
                             {ev.event_time && ` · ${ev.event_time}`}
                             {ev.location && ` · ${ev.location}`}
@@ -632,7 +632,7 @@ export default function CalendarPage() {
         {/* ─── SECTION 2: BIRTHDAY CALENDAR ─── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Birthday calendar
             </h2>
             {isAdmin && (
@@ -727,15 +727,15 @@ export default function CalendarPage() {
                   >
                     <span style={{ fontSize: 15, fontWeight: 600, color: month === currentMonth ? '#6C63FF' : 'white' }}>
                       {monthName}
-                      <span style={{ fontSize: 12, fontWeight: 400, color: 'rgba(255,255,255,0.3)', marginLeft: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>
                         {monthBirthdays.length} {monthBirthdays.length === 1 ? 'birthday' : 'birthdays'}
                       </span>
                     </span>
-                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 12 }}>{isExpanded ? '▲' : '▼'}</span>
+                    <span style={{ color: 'var(--text-tertiary)', fontSize: 12 }}>{isExpanded ? '▲' : '▼'}</span>
                   </button>
 
                   {isExpanded && (
-                    <div style={{ borderTop: '1px solid #2A2A2A' }}>
+                    <div style={{ borderTop: '1px solid var(--border)' }}>
                       {monthBirthdays.map((b, bi) => {
                         const days = today ? daysUntilBirthday(b.month, b.day, today) : null
                         const isToday = days === 0
@@ -746,7 +746,7 @@ export default function CalendarPage() {
                               display: 'flex',
                               alignItems: 'center',
                               padding: '11px 16px',
-                              borderBottom: bi < monthBirthdays.length - 1 ? '1px solid #222' : 'none',
+                              borderBottom: bi < monthBirthdays.length - 1 ? '1px solid var(--border)' : 'none',
                               backgroundColor: isToday ? 'rgba(76,175,80,0.05)' : 'transparent',
                             }}
                           >
@@ -755,7 +755,7 @@ export default function CalendarPage() {
                               {isToday && ' 🎉'}
                             </p>
                             {days !== null && days <= 14 && days > 0 && (
-                              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginRight: isAdmin ? 8 : 0 }}>
+                              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginRight: isAdmin ? 8 : 0 }}>
                                 {daysLabel(days)}
                               </span>
                             )}
@@ -782,7 +782,7 @@ export default function CalendarPage() {
         {/* ─── SECTION 3: EVENTS ─── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
               Events
             </h2>
             {isAdmin && (
@@ -859,7 +859,7 @@ export default function CalendarPage() {
 
           {futureEvents.length === 0 && !showAddForm ? (
             <div style={{ ...cardStyle, padding: 24, textAlign: 'center' }}>
-              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
+              <p style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>
                 {isAdmin ? 'No upcoming events. Add one above.' : 'No upcoming events yet.'}
               </p>
             </div>
@@ -873,16 +873,16 @@ export default function CalendarPage() {
                   <div key={event.id} style={{ ...cardStyle, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ fontSize: 16, fontWeight: 700, color: 'white' }}>{event.title}</p>
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
+                        <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{event.title}</p>
+                        <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>
                           {MONTH_SHORT[em - 1]} {ed}
                           {event.event_time && ` · ${event.event_time}`}
                         </p>
                         {event.location && (
-                          <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>📍 {event.location}</p>
+                          <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 2 }}>📍 {event.location}</p>
                         )}
                         {event.description && (
-                          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 8, lineHeight: 1.5 }}>{event.description}</p>
+                          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8, lineHeight: 1.5 }}>{event.description}</p>
                         )}
                       </div>
                       <div style={{ flexShrink: 0, textAlign: 'right' }}>
@@ -893,7 +893,7 @@ export default function CalendarPage() {
                     </div>
 
                     {summary && (
-                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{summary}</p>
+                      <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{summary}</p>
                     )}
 
                     <RsvpButtons event={event} onRsvp={toggleRsvp} />
@@ -908,8 +908,8 @@ export default function CalendarPage() {
                     )}
 
                     {isAdmin && confirmDeleteEventId === event.id && (
-                      <div style={{ paddingTop: 8, borderTop: '1px solid #2A2A2A', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Delete this event?</p>
+                      <div style={{ paddingTop: 8, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Delete this event?</p>
                         <div style={{ display: 'flex', gap: 8 }}>
                           <button
                             onClick={() => { deleteEvent(event.id); setConfirmDeleteEventId(null) }}
@@ -919,7 +919,7 @@ export default function CalendarPage() {
                           </button>
                           <button
                             onClick={() => setConfirmDeleteEventId(null)}
-                            style={{ minHeight: 36, padding: '0 14px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
+                            style={{ minHeight: 36, padding: '0 14px', backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
                           >
                             Cancel
                           </button>

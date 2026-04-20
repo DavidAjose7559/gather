@@ -54,78 +54,6 @@ input::placeholder, textarea::placeholder {
   color: var(--text-tertiary);
 }
 
-/* ── Light mode overrides ───────────────────────────────────────────────── */
-
-html.light body {
-  background-color: #F5F5F5 !important;
-  color: #0A0A0A !important;
-}
-
-html.light [style*="background-color: #0A0A0A"],
-html.light [style*="background-color:#0A0A0A"],
-html.light [style*="background: #0A0A0A"],
-html.light [style*="background:#0A0A0A"] {
-  background-color: #F5F5F5 !important;
-}
-
-html.light [style*="background-color: #1A1A1A"],
-html.light [style*="background-color:#1A1A1A"],
-html.light [style*="background: #1A1A1A"],
-html.light [style*="background:#1A1A1A"] {
-  background-color: #FFFFFF !important;
-}
-
-html.light [style*="background-color: #2A2A2A"],
-html.light [style*="background-color:#2A2A2A"],
-html.light [style*="background: #2A2A2A"],
-html.light [style*="background:#2A2A2A"] {
-  background-color: #E8E8E8 !important;
-}
-
-html.light [style*="background-color: #222222"],
-html.light [style*="background-color:#222222"] {
-  background-color: #F0F0F0 !important;
-}
-
-html.light [style*="background-color: #111111"],
-html.light [style*="background-color:#111111"] {
-  background-color: #EBEBEB !important;
-}
-
-html.light [style*="color: #ffffff"],
-html.light [style*="color:#ffffff"],
-html.light [style*="color: white"],
-html.light [style*="color:white"] {
-  color: #0A0A0A !important;
-}
-
-html.light [style*="color: #A0A0A0"],
-html.light [style*="color:#A0A0A0"] {
-  color: #555555 !important;
-}
-
-html.light [style*="color: #606060"],
-html.light [style*="color:#606060"] {
-  color: #888888 !important;
-}
-
-html.light [style*="border-color: #333333"],
-html.light [style*="border: 1px solid #333333"],
-html.light [style*="border:1px solid #333333"] {
-  border-color: #DDDDDD !important;
-}
-
-html.light [style*="border-color: #2A2A2A"],
-html.light [style*="border: 1px solid #2A2A2A"] {
-  border-color: #E0E0E0 !important;
-}
-
-/* Bottom nav */
-html.light nav {
-  background-color: #FFFFFF !important;
-  border-top-color: #DDDDDD !important;
-}
-
 /* Input fields */
 html.light input,
 html.light textarea,
@@ -133,10 +61,4 @@ html.light select {
   background-color: #E8E8E8 !important;
   color: #0A0A0A !important;
   border-color: #DDDDDD !important;
-}
-
-/* Tailwind rounded cards */
-html.light .rounded-2xl,
-html.light .rounded-xl {
-  border-color: #E0E0E0 !important;
 }

@@ -46,9 +46,9 @@ export default function ResponseForm({
   }
 
   const cardStyle = {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'var(--bg-card)',
     borderRadius: 20,
-    border: '1px solid #2A2A2A',
+    border: '1px solid var(--border)',
     padding: 20,
     display: 'flex' as const,
     flexDirection: 'column' as const,
@@ -59,8 +59,8 @@ export default function ResponseForm({
   if (mode === null) {
     return (
       <div style={cardStyle}>
-        <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Respond</h2>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)' }}>Offer a word of encouragement or support.</p>
+        <h2 style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 15 }}>Respond</h2>
+        <p style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>Offer a word of encouragement or support.</p>
         <div style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={() => setMode('named')}
@@ -70,7 +70,7 @@ export default function ResponseForm({
           </button>
           <button
             onClick={() => setMode('anonymous')}
-            style={{ flex: 1, minHeight: 48, border: '1px solid #2A2A2A', color: 'rgba(255,255,255,0.5)', fontWeight: 500, borderRadius: 14, fontSize: 14, cursor: 'pointer', backgroundColor: '#111111' }}
+            style={{ flex: 1, minHeight: 48, border: '1px solid var(--border)', color: 'var(--text-secondary)', fontWeight: 500, borderRadius: 14, fontSize: 14, cursor: 'pointer', backgroundColor: 'var(--bg-base)' }}
           >
             Reply anonymously
           </button>
@@ -81,11 +81,11 @@ export default function ResponseForm({
 
   return (
     <div style={cardStyle}>
-      <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>
+      <h2 style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 15 }}>
         {mode === 'anonymous' ? 'Anonymous reply' : 'Your response'}
       </h2>
       {mode === 'anonymous' && (
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Your name won&apos;t be shown.</p>
+        <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Your name won&apos;t be shown.</p>
       )}
       <textarea
         value={body}
@@ -105,7 +105,7 @@ export default function ResponseForm({
             flex: 1,
             minHeight: 48,
             backgroundColor: '#6C63FF',
-            color: 'white',
+            color: 'var(--text-primary)',
             fontWeight: 700,
             borderRadius: 14,
             fontSize: 14,
@@ -118,7 +118,7 @@ export default function ResponseForm({
         </button>
         <button
           onClick={() => { setMode(null); setBody('') }}
-          style={{ minHeight: 48, padding: '0 16px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', fontWeight: 500, borderRadius: 14, fontSize: 14, border: 'none', cursor: 'pointer' }}
+          style={{ minHeight: 48, padding: '0 16px', backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', fontWeight: 500, borderRadius: 14, fontSize: 14, border: 'none', cursor: 'pointer' }}
         >
           Cancel
         </button>

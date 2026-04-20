@@ -39,11 +39,11 @@ export default function AdminActions({ checkInId }: { checkInId: string }) {
         </button>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)' }}>Delete this check-in? This cannot be undone.</p>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Delete this check-in? This cannot be undone.</p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button
               onClick={() => setConfirming(false)}
-              style={{ fontSize: 14, fontWeight: 500, color: 'rgba(255,255,255,0.5)', background: 'none', border: '1px solid #2A2A2A', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', minHeight: 40 }}
+              style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-secondary)', background: 'none', border: '1px solid var(--border)', borderRadius: 10, padding: '8px 16px', cursor: 'pointer', minHeight: 40 }}
             >
               Cancel
             </button>

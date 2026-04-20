@@ -30,9 +30,9 @@ function OptionGrid<T extends string>({
             minHeight: 52,
             padding: '10px 8px',
             borderRadius: 14,
-            border: value === opt.value ? '1px solid #6C63FF' : '1px solid #2A2A2A',
-            backgroundColor: value === opt.value ? 'rgba(108,99,255,0.15)' : '#1A1A1A',
-            color: value === opt.value ? '#A09AF8' : 'rgba(255,255,255,0.6)',
+            border: value === opt.value ? '1px solid #6C63FF' : '1px solid var(--border)',
+            backgroundColor: value === opt.value ? 'rgba(108,99,255,0.15)' : 'var(--bg-card)',
+            color: value === opt.value ? '#A09AF8' : 'var(--text-secondary)',
             fontSize: 13,
             fontWeight: 500,
             cursor: 'pointer',
@@ -225,9 +225,9 @@ export default function CheckInPage() {
   }
 
   const cardStyle = {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'var(--bg-card)',
     borderRadius: 20,
-    border: '1px solid #2A2A2A',
+    border: '1px solid var(--border)',
     padding: 20,
     display: 'flex' as const,
     flexDirection: 'column' as const,
@@ -236,25 +236,25 @@ export default function CheckInPage() {
 
   const sectionTitleStyle = {
     fontWeight: 600,
-    color: 'white',
+    color: 'var(--text-primary)',
     fontSize: 15,
   }
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--text-tertiary)' }}>Loading…</p>
       </div>
     )
   }
 
   if (milestone) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
-        <div style={{ width: '100%', maxWidth: 448, backgroundColor: '#1A1A1A', borderRadius: 24, border: '1px solid #2A2A2A', padding: 32, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+        <div style={{ width: '100%', maxWidth: 448, backgroundColor: 'var(--bg-card)', borderRadius: 24, border: '1px solid var(--border)', padding: 32, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontSize: 48 }}>🎉</div>
-          <h2 style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>Milestone reached!</h2>
-          <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>{milestone}</p>
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--text-primary)' }}>Milestone reached!</h2>
+          <p style={{ color: 'var(--text-secondary)', lineHeight: 1.6 }}>{milestone}</p>
           <button
             onClick={() => router.push('/')}
             style={{ width: '100%', minHeight: 52, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, fontSize: 16, borderRadius: 14, border: 'none', cursor: 'pointer', marginTop: 8 }}
@@ -268,10 +268,10 @@ export default function CheckInPage() {
 
   if (existingCheckIn && !editing) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', paddingBottom: 96 }}>
         <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: 'white' }}>Today&apos;s check-in</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>Today&apos;s check-in</h1>
             <button
               onClick={() => { populateFormFromCheckIn(existingCheckIn); setEditing(true) }}
               style={{ minHeight: 44, padding: '0 16px', fontSize: 14, fontWeight: 500, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer' }}
@@ -280,11 +280,11 @@ export default function CheckInPage() {
             </button>
           </div>
           <div style={cardStyle}>
-            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 14 }}>You already checked in today. Tap Edit to update it.</p>
+            <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>You already checked in today. Tap Edit to update it.</p>
           </div>
           <button
             onClick={() => router.push('/')}
-            style={{ minHeight: 52, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.7)', fontWeight: 600, fontSize: 15, borderRadius: 14, border: 'none', cursor: 'pointer' }}
+            style={{ minHeight: 52, backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', fontWeight: 600, fontSize: 15, borderRadius: 14, border: 'none', cursor: 'pointer' }}
           >
             Back to home
           </button>
@@ -295,13 +295,13 @@ export default function CheckInPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', paddingBottom: 96 }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}>
             {editing ? 'Update your check-in' : 'How are you today?'}
           </h1>
-          <p style={{ color: 'rgba(255,255,255,0.4)', marginTop: 4, fontSize: 14 }}>
+          <p style={{ color: 'var(--text-tertiary)', marginTop: 4, fontSize: 14 }}>
             Be honest. This is a safe space.
           </p>
         </div>
@@ -386,7 +386,7 @@ export default function CheckInPage() {
             <h2 style={sectionTitleStyle}>A little more (optional)</h2>
 
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8 }}>
                 Anything you&apos;re struggling with?
               </label>
               <textarea
@@ -399,7 +399,7 @@ export default function CheckInPage() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8 }}>
                 Something you&apos;re grateful for?
               </label>
               <textarea
@@ -412,7 +412,7 @@ export default function CheckInPage() {
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8 }}>
                 Anything else on your mind?
               </label>
               <textarea
@@ -429,8 +429,8 @@ export default function CheckInPage() {
           <div style={{ ...cardStyle, gap: 0 }}>
             <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, cursor: 'pointer', minHeight: 44 }}>
               <div>
-                <p style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>I&apos;d like someone to reach out</p>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Let your group know you could use support.</p>
+                <p style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: 15 }}>I&apos;d like someone to reach out</p>
+                <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 2 }}>Let your group know you could use support.</p>
               </div>
               <button
                 type="button"
@@ -441,7 +441,7 @@ export default function CheckInPage() {
                   width: 48,
                   height: 24,
                   borderRadius: 12,
-                  backgroundColor: supportRequested ? '#6C63FF' : '#2A2A2A',
+                  backgroundColor: supportRequested ? '#6C63FF' : 'var(--bg-input)',
                   border: 'none',
                   cursor: 'pointer',
                   transition: 'background-color 0.2s',
@@ -481,9 +481,9 @@ export default function CheckInPage() {
                     minHeight: 48,
                     padding: '12px 16px',
                     borderRadius: 14,
-                    border: visibility === opt.value ? '1px solid #6C63FF' : '1px solid #2A2A2A',
-                    backgroundColor: visibility === opt.value ? 'rgba(108,99,255,0.15)' : '#111111',
-                    color: visibility === opt.value ? '#A09AF8' : 'rgba(255,255,255,0.6)',
+                    border: visibility === opt.value ? '1px solid #6C63FF' : '1px solid var(--border)',
+                    backgroundColor: visibility === opt.value ? 'rgba(108,99,255,0.15)' : 'var(--bg-base)',
+                    color: visibility === opt.value ? '#A09AF8' : 'var(--text-secondary)',
                     fontSize: 14,
                     fontWeight: 500,
                     cursor: 'pointer',
@@ -502,7 +502,7 @@ export default function CheckInPage() {
 
             {(visibility === 'specific' || visibility === 'one_person') && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)' }}>
+                <p style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>
                   {visibility === 'one_person' ? 'Choose one person' : 'Choose people'}:
                 </p>
                 {members.map((m) => (
@@ -527,7 +527,7 @@ export default function CheckInPage() {
                       }}
                       style={{ width: 16, height: 16, accentColor: '#6C63FF', padding: 0, borderRadius: 4 }}
                     />
-                    <span style={{ fontSize: 14, color: 'white' }}>
+                    <span style={{ fontSize: 14, color: 'var(--text-primary)' }}>
                       {m.display_name ?? m.full_name}
                     </span>
                   </label>
@@ -566,8 +566,8 @@ export default function CheckInPage() {
               style={{
                 width: '100%',
                 minHeight: 52,
-                backgroundColor: '#2A2A2A',
-                color: 'rgba(255,255,255,0.6)',
+                backgroundColor: 'var(--bg-input)',
+                color: 'var(--text-secondary)',
                 fontWeight: 500,
                 fontSize: 15,
                 borderRadius: 16,

@@ -84,7 +84,7 @@ export default function OnboardingPage() {
         <div style={{ position: 'fixed', top: 20, right: 20 }}>
           <button
             onClick={() => router.push('/')}
-            style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 44, padding: '0 8px' }}
+            style={{ fontSize: 14, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 44, padding: '0 8px' }}
           >
             Skip
           </button>
@@ -93,8 +93,8 @@ export default function OnboardingPage() {
         <div style={{ width: '100%', maxWidth: 400, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'center' }}>
           <div style={{ fontSize: 64 }}>{step.emoji}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <h2 style={{ fontSize: 28, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>{step.title}</h2>
-            <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>{step.body}</p>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.2 }}>{step.title}</h2>
+            <p style={{ fontSize: 17, color: 'var(--text-secondary)', lineHeight: 1.7 }}>{step.body}</p>
           </div>
 
           <button
@@ -138,12 +138,12 @@ export default function OnboardingPage() {
               <rect x="2" y="13" width="32" height="6" rx="3" fill="#6C63FF"/>
             </svg>
           </div>
-          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'white', marginBottom: 12 }}>Welcome to Gather</h1>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, lineHeight: 1.6, marginBottom: 8 }}>
+          <h1 style={{ fontSize: 32, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 12 }}>Welcome to Gather</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.6, marginBottom: 8 }}>
             Gather is a quiet daily check-in for your fellowship group — a simple way
             to share how you&apos;re really doing spiritually, emotionally, and physically.
           </p>
-          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 15, lineHeight: 1.6 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 15, lineHeight: 1.6 }}>
             Your group shows up for each other here. Let&apos;s get you set up.
           </p>
         </div>
@@ -151,7 +151,7 @@ export default function OnboardingPage() {
         <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 24, border: '1px solid var(--border)', padding: 32 }}>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
-              <label htmlFor="fullName" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>
+              <label htmlFor="fullName" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8 }}>
                 What&apos;s your full name? <span style={{ color: '#6C63FF' }}>*</span>
               </label>
               <input
@@ -166,9 +166,9 @@ export default function OnboardingPage() {
             </div>
 
             <div>
-              <label htmlFor="displayName" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.6)', marginBottom: 8 }}>
+              <label htmlFor="displayName" style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 8 }}>
                 Nickname or display name{' '}
-                <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>(optional)</span>
+                <span style={{ color: 'var(--text-tertiary)', fontWeight: 400 }}>(optional)</span>
               </label>
               <input
                 id="displayName"

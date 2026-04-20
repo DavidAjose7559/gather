@@ -48,7 +48,7 @@ function SermonCard({
 }) {
   const imageUrl = sermon.episode_image_url
   return (
-    <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', overflow: 'hidden' }}>
+    <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', overflow: 'hidden' }}>
       {imageUrl && (
         <div style={{ position: 'relative', width: '100%', height: 192 }}>
           <Image
@@ -66,9 +66,9 @@ function SermonCard({
             {sermon.theme}
           </span>
         )}
-        <h2 style={{ fontWeight: 700, color: 'white', fontSize: 18, lineHeight: 1.3 }}>{sermon.episode_title}</h2>
+        <h2 style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: 18, lineHeight: 1.3 }}>{sermon.episode_title}</h2>
         {sermon.episode_description && (
-          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {sermon.episode_description}
           </p>
         )}
@@ -151,9 +151,9 @@ function DiscussionSection({ sermon, userId, userDisplayName }: {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <h3 style={{ fontSize: 13, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>Discussion</h3>
+      <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>Discussion</h3>
       {posts.length === 0 && (
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }}>No replies yet. Be the first to share a thought.</p>
+        <p style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>No replies yet. Be the first to share a thought.</p>
       )}
       {posts.map(post => {
         const name = post.profiles?.display_name ?? post.profiles?.full_name ?? 'Member'
@@ -165,14 +165,14 @@ function DiscussionSection({ sermon, userId, userDisplayName }: {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                <span style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>{name}</span>
-                <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{timeAgo(post.created_at)}</span>
+                <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text-primary)' }}>{name}</span>
+                <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{timeAgo(post.created_at)}</span>
               </div>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 2, lineHeight: 1.5 }}>{post.body}</p>
+              <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 2, lineHeight: 1.5 }}>{post.body}</p>
               {isOwn && (
                 <button
                   onClick={() => deletePost(post.id)}
-                  style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 2 }}
+                  style={{ fontSize: 12, color: 'var(--text-tertiary)', background: 'none', border: 'none', cursor: 'pointer', marginTop: 2 }}
                 >
                   Delete
                 </button>
@@ -312,13 +312,13 @@ function AdminSchedulePanel({
       <h3 style={{ fontWeight: 600, color: '#A09AF8', fontSize: 14 }}>Schedule a sermon</h3>
 
       <div>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Date</label>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>Date</label>
         <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} />
       </div>
 
       {/* Curriculum */}
       <div>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Series / curriculum <span style={{ color: 'rgba(255,255,255,0.3)' }}>(optional)</span></label>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>Series / curriculum <span style={{ color: 'var(--text-tertiary)' }}>(optional)</span></label>
         <select value={curriculumId} onChange={e => setCurriculumId(e.target.value)} style={inputStyle}>
           <option value="">None</option>
           {currList.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -343,7 +343,7 @@ function AdminSchedulePanel({
 
       {/* Source toggle */}
       <div>
-        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Source</label>
+        <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-secondary)', marginBottom: 6 }}>Source</label>
         <div style={{ display: 'flex', gap: 8 }}>
           {(['spotify', 'manual'] as const).map(s => (
             <button
@@ -355,9 +355,9 @@ function AdminSchedulePanel({
                 borderRadius: 12,
                 fontSize: 14,
                 fontWeight: 500,
-                border: source === s ? '1px solid #6C63FF' : '1px solid #2A2A2A',
-                backgroundColor: source === s ? 'rgba(108,99,255,0.2)' : '#1A1A1A',
-                color: source === s ? '#A09AF8' : 'rgba(255,255,255,0.5)',
+                border: source === s ? '1px solid #6C63FF' : '1px solid var(--border)',
+                backgroundColor: source === s ? 'rgba(108,99,255,0.2)' : 'var(--bg-card)',
+                color: source === s ? '#A09AF8' : 'var(--text-secondary)',
                 cursor: 'pointer',
                 transition: 'all 0.15s',
               }}
@@ -400,8 +400,8 @@ function AdminSchedulePanel({
                     padding: 8,
                     borderRadius: 12,
                     textAlign: 'left',
-                    border: selectedEpisode?.id === ep.id ? '1px solid #6C63FF' : '1px solid #2A2A2A',
-                    backgroundColor: selectedEpisode?.id === ep.id ? 'rgba(108,99,255,0.15)' : '#111111',
+                    border: selectedEpisode?.id === ep.id ? '1px solid #6C63FF' : '1px solid var(--border)',
+                    backgroundColor: selectedEpisode?.id === ep.id ? 'rgba(108,99,255,0.15)' : 'var(--bg-base)',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
                   }}
@@ -416,8 +416,8 @@ function AdminSchedulePanel({
                     />
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ep.name}</p>
-                    <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{ep.release_date}</p>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ep.name}</p>
+                    <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{ep.release_date}</p>
                   </div>
                   {selectedEpisode?.id === ep.id && (
                     <span style={{ color: '#6C63FF', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>✓</span>
@@ -444,7 +444,7 @@ function AdminSchedulePanel({
 
       {/* Shared fields */}
       <input type="url" value={youtubeUrl} onChange={e => setYoutubeUrl(e.target.value)} placeholder="YouTube URL (optional)" style={inputStyle} />
-      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: -8 }}>Paste the full URL including https://</p>
+      <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: -8 }}>Paste the full URL including https://</p>
       <input type="text" value={theme} onChange={e => setTheme(e.target.value)} placeholder="Theme / tag (e.g. Faith, Romans 8)" style={inputStyle} />
       <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes for the group (optional)" rows={2} style={{ ...inputStyle, resize: 'none' }} />
 
@@ -524,18 +524,18 @@ export default function SermonsPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--text-tertiary)' }}>Loading…</p>
       </div>
     )
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', paddingBottom: 96 }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>Sermons</h1>
+          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}>Sermons</h1>
           {isAdmin && (
             <button
               onClick={() => { setShowAdminPanel(p => !p); setTab('schedule') }}
@@ -547,7 +547,7 @@ export default function SermonsPage() {
         </div>
 
         {/* Tabs */}
-        <div style={{ display: 'flex', backgroundColor: '#1A1A1A', borderRadius: 14, padding: 4, gap: 4 }}>
+        <div style={{ display: 'flex', backgroundColor: 'var(--bg-card)', borderRadius: 14, padding: 4, gap: 4 }}>
           {(['today', 'schedule'] as const).map(t => (
             <button
               key={t}
@@ -561,7 +561,7 @@ export default function SermonsPage() {
                 border: 'none',
                 cursor: 'pointer',
                 backgroundColor: tab === t ? 'white' : 'transparent',
-                color: tab === t ? '#111111' : 'rgba(255,255,255,0.4)',
+                color: tab === t ? '#111111' : 'var(--text-tertiary)',
                 transition: 'all 0.2s',
               }}
             >
@@ -579,10 +579,10 @@ export default function SermonsPage() {
         {tab === 'today' && (
           <>
             {!todaySermon ? (
-              <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 32, textAlign: 'center' }}>
+              <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 32, textAlign: 'center' }}>
                 <p style={{ fontSize: 40, marginBottom: 12 }}>🎙️</p>
-                <p style={{ fontWeight: 600, color: 'white', marginBottom: 8 }}>No sermon scheduled today</p>
-                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }}>
+                <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>No sermon scheduled today</p>
+                <p style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>
                   {isAdmin ? 'Use the Schedule tab to add one.' : 'Check back soon.'}
                 </p>
               </div>
@@ -599,7 +599,7 @@ export default function SermonsPage() {
                   onDeleted={() => deleteSermon(todaySermon.id)}
                 />
                 {userId && (
-                  <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20 }}>
+                  <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20 }}>
                     <DiscussionSection
                       sermon={todaySermon}
                       userId={userId}
@@ -616,17 +616,17 @@ export default function SermonsPage() {
         {tab === 'schedule' && (
           <>
             {scheduleSermons.length === 0 && !showAdminPanel && (
-              <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 32, textAlign: 'center' }}>
+              <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 32, textAlign: 'center' }}>
                 <p style={{ fontSize: 40, marginBottom: 12 }}>📅</p>
-                <p style={{ fontWeight: 600, color: 'white', marginBottom: 8 }}>No sermons scheduled yet</p>
+                <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>No sermons scheduled yet</p>
                 {isAdmin && (
-                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }}>Click &quot;+ Schedule&quot; to add one.</p>
+                  <p style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>Click &quot;+ Schedule&quot; to add one.</p>
                 )}
               </div>
             )}
             {scheduleSermons.map(sermon => (
               <div key={sermon.id} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: sermon.schedule_date === today ? '#6C63FF' : 'rgba(255,255,255,0.3)' }}>
+                <p style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: sermon.schedule_date === today ? '#6C63FF' : 'var(--text-tertiary)' }}>
                   {formatSermonDate(sermon.schedule_date)}
                   {sermon.schedule_date === today && (
                     <span style={{ marginLeft: 6, color: '#6C63FF' }}>· Today</span>
