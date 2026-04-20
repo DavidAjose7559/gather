@@ -50,11 +50,13 @@ export default function PrayerPage() {
   const supabase = createClient()
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [active, setActive] = useState<PrayerItem[]>([])
   const [answered, setAnswered] = useState<PrayerItem[]>([])
   const [myPrayingIds, setMyPrayingIds] = useState<Set<string>>(new Set())
   const [showTestimonies, setShowTestimonies] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   // Add request form
   const [showAddForm, setShowAddForm] = useState(false)
@@ -78,7 +80,8 @@ export default function PrayerPage() {
       if (!user) { router.push('/login'); return }
       setCurrentUserId(user.id)
 
-      const [activeRes, answeredRes, prayingRes] = await Promise.all([
+      const [profileRes, activeRes, answeredRes, prayingRes] = await Promise.all([
+        supabase.from('profiles').select('role').eq('id', user.id).single(),
         supabase
           .from('prayer_requests')
           .select('*, profile:profiles(full_name, display_name), comments:prayer_comments(id, body, user_id, created_at, profile:profiles(full_name, display_name))')
@@ -95,6 +98,7 @@ export default function PrayerPage() {
           .eq('user_id', user.id),
       ])
 
+      if (profileRes.data) setIsAdmin(profileRes.data.role === 'admin')
       setActive((activeRes.data ?? []) as PrayerItem[])
       setAnswered((answeredRes.data ?? []) as PrayerItem[])
       setMyPrayingIds(new Set((prayingRes.data ?? []).map((p) => p.prayer_id)))
@@ -254,19 +258,54 @@ export default function PrayerPage() {
           </div>
         )}
 
+        {/* Search */}
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search prayer requests..."
+            style={{ width: '100%', paddingRight: search ? 40 : 16 }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 16, color: 'rgba(255,255,255,0.4)', background: 'none', border: 'none', cursor: 'pointer', lineHeight: 1, padding: 4 }}
+            >
+              ×
+            </button>
+          )}
+        </div>
+
         {/* Active requests */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {active.length === 0 && (
+        {(() => {
+          const q = search.trim().toLowerCase()
+          const displayList = q
+            ? active.filter(p =>
+                p.body.toLowerCase().includes(q) ||
+                (p.profile?.display_name ?? p.profile?.full_name ?? '').toLowerCase().includes(q)
+              )
+            : active
+
+          if (q && displayList.length === 0) return (
+            <div style={{ ...cardStyle, textAlign: 'center' }}>
+              <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No prayer requests match your search.</p>
+            </div>
+          )
+          if (!q && active.length === 0) return (
             <div style={{ ...cardStyle, textAlign: 'center' }}>
               <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No prayer requests yet. Be the first to share one.</p>
             </div>
-          )}
+          )
 
-          {active.map((prayer) => {
+          return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {displayList.map((prayer) => {
             const name = prayer.profile?.display_name ?? prayer.profile?.full_name ?? 'A member'
             const fullName = prayer.profile?.full_name ?? 'M'
             const isOwn = prayer.user_id === currentUserId
             const isPraying = myPrayingIds.has(prayer.id)
+            const canAdminDelete = isAdmin && !isOwn
 
             return (
               <div key={prayer.id} style={cardStyle}>
@@ -334,6 +373,16 @@ export default function PrayerPage() {
                         </button>
                       )}
                     </>
+                  )}
+
+                  {canAdminDelete && confirmRemoveId !== prayer.id && (
+                    <button
+                      onClick={() => setConfirmRemoveId(prayer.id)}
+                      style={{ minHeight: 36, padding: '0 10px', borderRadius: 10, fontSize: 16, backgroundColor: 'transparent', color: 'rgba(255,77,77,0.5)', border: 'none', cursor: 'pointer', marginLeft: 'auto' }}
+                      title="Delete prayer request"
+                    >
+                      🗑
+                    </button>
                   )}
                 </div>
 
@@ -441,7 +490,9 @@ export default function PrayerPage() {
               </div>
             )
           })}
-        </div>
+          </div>
+          )
+        })()}
 
         {/* Testimonies section */}
         <div>

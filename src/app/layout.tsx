@@ -13,7 +13,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-full bg-gray-50 font-sans antialiased">{children}</body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            if (localStorage.getItem('gather-theme') === 'light') {
+              document.documentElement.classList.add('light');
+            }
+          } catch(e) {}
+        ` }} />
+      </head>
+      <body className="min-h-full font-sans antialiased">{children}</body>
     </html>
   )
 }

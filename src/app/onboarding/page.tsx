@@ -4,12 +4,34 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
+const STEPS = [
+  {
+    emoji: '🙏🏾',
+    title: 'Welcome to Gather',
+    body: 'Every day, take less than a minute to check in and let your group know how you\'re doing — spiritually, emotionally, physically.',
+    cta: 'Next →',
+  },
+  {
+    emoji: '🤝',
+    title: 'You choose what to share',
+    body: 'Your check-in is yours. Share with everyone, just a few people, or just one person. Nobody is forced to be open — but the option is always there.',
+    cta: 'Next →',
+  },
+  {
+    emoji: '💜',
+    title: 'Show up for each other',
+    body: 'Respond to your group\'s check-ins. Leave encouragement, pray for someone, or just let them know you see them.',
+    cta: 'Let\'s go →',
+  },
+]
+
 export default function OnboardingPage() {
   const router = useRouter()
   const [fullName, setFullName] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [tutorialStep, setTutorialStep] = useState<0 | 1 | 2 | 3>(0)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -19,9 +41,7 @@ export default function OnboardingPage() {
     setError(null)
 
     const supabase = createClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
       router.push('/login')
@@ -48,9 +68,66 @@ export default function OnboardingPage() {
       return
     }
 
-    router.push('/')
+    setLoading(false)
+    setTutorialStep(1)
   }
 
+  // Tutorial screen
+  if (tutorialStep >= 1) {
+    const idx = tutorialStep - 1
+    const step = STEPS[idx]
+    const isLast = tutorialStep === 3
+
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+        {/* Skip */}
+        <div style={{ position: 'fixed', top: 20, right: 20 }}>
+          <button
+            onClick={() => router.push('/')}
+            style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 44, padding: '0 8px' }}
+          >
+            Skip
+          </button>
+        </div>
+
+        <div style={{ width: '100%', maxWidth: 400, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 24, alignItems: 'center' }}>
+          <div style={{ fontSize: 64 }}>{step.emoji}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: 'white', lineHeight: 1.2 }}>{step.title}</h2>
+            <p style={{ fontSize: 17, color: 'rgba(255,255,255,0.6)', lineHeight: 1.7 }}>{step.body}</p>
+          </div>
+
+          <button
+            onClick={() => {
+              if (isLast) router.push('/')
+              else setTutorialStep((s) => (s + 1) as 1 | 2 | 3)
+            }}
+            style={{ width: '100%', minHeight: 56, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, fontSize: 17, borderRadius: 16, border: 'none', cursor: 'pointer', marginTop: 8 }}
+          >
+            {step.cta}
+          </button>
+
+          {/* Progress dots */}
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {STEPS.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: i === idx ? 24 : 8,
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: i === idx ? '#6C63FF' : 'rgba(255,255,255,0.15)',
+                  transition: 'all 0.3s',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Profile setup form
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
       <div style={{ width: '100%', maxWidth: 448 }}>

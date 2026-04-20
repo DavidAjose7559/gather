@@ -180,6 +180,9 @@ export default function CalendarPage() {
   const [saving, setSaving] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
 
+  // Event delete confirmation
+  const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<string | null>(null)
+
   // Admin add birthday form
   const [showAddBdForm, setShowAddBdForm] = useState(false)
   const [newBdName, setNewBdName] = useState('')
@@ -895,13 +898,33 @@ export default function CalendarPage() {
 
                     <RsvpButtons event={event} onRsvp={toggleRsvp} />
 
-                    {isAdmin && (
+                    {isAdmin && confirmDeleteEventId !== event.id && (
                       <button
-                        onClick={() => deleteEvent(event.id)}
+                        onClick={() => setConfirmDeleteEventId(event.id)}
                         style={{ fontSize: 12, color: 'rgba(255,77,77,0.6)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', marginTop: 4 }}
                       >
-                        Remove event
+                        Delete event
                       </button>
+                    )}
+
+                    {isAdmin && confirmDeleteEventId === event.id && (
+                      <div style={{ paddingTop: 8, borderTop: '1px solid #2A2A2A', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>Delete this event?</p>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            onClick={() => { deleteEvent(event.id); setConfirmDeleteEventId(null) }}
+                            style={{ minHeight: 36, padding: '0 14px', backgroundColor: 'rgba(255,77,77,0.15)', color: '#FF4D4D', fontWeight: 700, borderRadius: 10, fontSize: 13, border: '1px solid rgba(255,77,77,0.3)', cursor: 'pointer' }}
+                          >
+                            Delete
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteEventId(null)}
+                            style={{ minHeight: 36, padding: '0 14px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
                     )}
                   </div>
                 )

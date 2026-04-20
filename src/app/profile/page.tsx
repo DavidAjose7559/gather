@@ -43,6 +43,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('')
   const [reminderEnabled, setReminderEnabled] = useState(true)
   const [defaultVisibility, setDefaultVisibility] = useState<'everyone' | 'specific' | 'one_person'>('everyone')
+  const [isDark, setIsDark] = useState(true)
   const [checkIns, setCheckIns] = useState<CheckIn[]>([])
   const [streak, setStreak] = useState(0)
   const [saveError, setSaveError] = useState<string | null>(null)
@@ -89,10 +90,26 @@ export default function ProfilePage() {
       const history = historyRes.data ?? []
       setStreak(calculateStreak(history))
       setCheckIns((checkInListRes.data ?? []) as CheckIn[])
+      try { setIsDark(localStorage.getItem('gather-theme') !== 'light') } catch { /* ignore */ }
+
       setLoading(false)
     }
     load()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function toggleTheme() {
+    const newDark = !isDark
+    setIsDark(newDark)
+    try {
+      if (newDark) {
+        document.documentElement.classList.remove('light')
+        localStorage.setItem('gather-theme', 'dark')
+      } else {
+        document.documentElement.classList.add('light')
+        localStorage.setItem('gather-theme', 'light')
+      }
+    } catch { /* ignore */ }
+  }
 
   async function saveProfile() {
     if (!userId || !fullName.trim()) return
@@ -297,6 +314,48 @@ export default function ProfilePage() {
           {/* Section header */}
           <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
             <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Settings</h2>
+          </div>
+
+          {/* Appearance toggle */}
+          <div style={rowStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(108,99,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
+                {isDark ? '🌙' : '☀️'}
+              </div>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>Appearance</p>
+                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{isDark ? 'Dark mode' : 'Light mode'}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              style={{
+                position: 'relative',
+                flexShrink: 0,
+                width: 48,
+                height: 26,
+                borderRadius: 13,
+                backgroundColor: isDark ? '#6C63FF' : '#2A2A2A',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s',
+              }}
+            >
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 3,
+                  left: isDark ? 25 : 3,
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  backgroundColor: 'white',
+                  transition: 'left 0.2s',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                }}
+              />
+            </button>
           </div>
 
           {/* Daily reminder toggle */}

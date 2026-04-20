@@ -27,12 +27,13 @@ export async function DELETE(request: NextRequest) {
   const { id } = await request.json()
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
-  const { error } = await supabase
-    .from('prayer_requests')
-    .delete()
-    .eq('id', id)
-    .eq('user_id', user.id)
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const isAdmin = profile?.role === 'admin'
 
+  let query = supabase.from('prayer_requests').delete().eq('id', id)
+  if (!isAdmin) query = query.eq('user_id', user.id)
+
+  const { error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true })
 }

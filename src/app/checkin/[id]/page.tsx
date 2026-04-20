@@ -115,6 +115,14 @@ export default async function CheckInDetailPage({
   const isAdmin = currentProfileRes.data?.role === 'admin'
   const isOwn = checkIn.user_id === user.id
 
+  // Mark this check-in as seen for non-owners
+  if (!isOwn) {
+    await supabase.from('checkin_seen').upsert(
+      { check_in_id: id, user_id: user.id },
+      { onConflict: 'check_in_id,user_id' }
+    )
+  }
+
   // Mark all responses as seen if the current user is the check-in owner
   if (isOwn && rawResponses.length > 0) {
     await supabase.from('response_seen').upsert(

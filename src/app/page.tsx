@@ -94,8 +94,8 @@ export default async function HomePage() {
 
   const sevenDaysFromNow = offsetTorontoDay(7)
 
-  // Load all profiles, today's check-ins, visibility grants, recent history, sermon, birthdays, events
-  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes, sermonRes, birthdaysRes, upcomingEventsRes] = await Promise.all([
+  // Load all profiles, today's check-ins, visibility grants, recent history, sermon, birthdays, events, seen check-ins
+  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes, sermonRes, birthdaysRes, upcomingEventsRes, seenCheckInsRes] = await Promise.all([
     supabase.from('profiles').select('*').order('full_name'),
     supabase.from('check_ins').select('*').eq('check_in_date', today),
     supabase.from('visibility_grants').select('check_in_id, granted_to'),
@@ -108,6 +108,7 @@ export default async function HomePage() {
     supabase.from('birthdays').select('name, month, day'),
     supabase.from('events').select('id, title, event_date')
       .gte('event_date', today).lte('event_date', sevenDaysFromNow).order('event_date'),
+    supabase.from('checkin_seen').select('check_in_id').eq('user_id', user.id),
   ])
 
   const profiles: Profile[] = profilesRes.data ?? []
@@ -115,6 +116,7 @@ export default async function HomePage() {
   const grants = grantsRes.data ?? []
   const recentCheckIns = recentCheckInsRes.data ?? []
   const todaySermon: SermonSchedule | null = sermonRes.data ?? null
+  const seenCheckInIds = new Set((seenCheckInsRes.data ?? []).map((s) => s.check_in_id))
 
   // Compute the soonest upcoming birthday or event within 7 days
   const allBirthdays = birthdaysRes.data ?? []
@@ -421,6 +423,9 @@ export default async function HomePage() {
                       >
                         {profile.id === user.id && hasUnseenResponses && (
                           <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#6C63FF', display: 'inline-block', flexShrink: 0 }} />
+                        )}
+                        {profile.id !== user.id && !seenCheckInIds.has(checkIn.id) && (
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: 'white', display: 'inline-block', flexShrink: 0 }} />
                         )}
                         View
                       </Link>
