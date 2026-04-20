@@ -3,11 +3,11 @@
 :root {
   --bg-base: #0A0A0A;
   --bg-card: #1A1A1A;
-  --bg-card-2: #111111;
+  --bg-card-2: #222222;
   --bg-input: #2A2A2A;
   --text-primary: #FFFFFF;
-  --text-secondary: rgba(255,255,255,0.6);
-  --text-tertiary: rgba(255,255,255,0.3);
+  --text-secondary: #A0A0A0;
+  --text-tertiary: #606060;
   --border: #2A2A2A;
   --border-light: #333333;
 }

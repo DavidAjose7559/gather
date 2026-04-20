@@ -201,16 +201,16 @@ export default function PrayerPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
       </div>
     )
   }
 
   const cardStyle = {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'var(--bg-card)',
     borderRadius: 20,
-    border: '1px solid #2A2A2A',
+    border: '1px solid var(--border)',
     padding: 20,
     display: 'flex' as const,
     flexDirection: 'column' as const,
@@ -218,7 +218,7 @@ export default function PrayerPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', paddingBottom: 96 }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -353,7 +353,7 @@ export default function PrayerPage() {
                   {!isOwn && (
                     <button
                       onClick={() => { setCommentingId(commentingId === prayer.id ? null : prayer.id); setCommentBody('') }}
-                      style={{ minHeight: 36, padding: '0 12px', borderRadius: 10, fontSize: 13, fontWeight: 500, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', border: '1px solid #2A2A2A', cursor: 'pointer' }}
+                      style={{ minHeight: 36, padding: '0 12px', borderRadius: 10, fontSize: 13, fontWeight: 500, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', border: '1px solid var(--border)', cursor: 'pointer' }}
                     >
                       Encourage
                     </button>
@@ -372,7 +372,7 @@ export default function PrayerPage() {
                       {confirmRemoveId === prayer.id ? null : (
                         <button
                           onClick={() => setConfirmRemoveId(prayer.id)}
-                          style={{ minHeight: 36, padding: '0 12px', borderRadius: 10, fontSize: 13, fontWeight: 500, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.3)', border: '1px solid #2A2A2A', cursor: 'pointer' }}
+                          style={{ minHeight: 36, padding: '0 12px', borderRadius: 10, fontSize: 13, fontWeight: 500, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.3)', border: '1px solid var(--border)', cursor: 'pointer' }}
                         >
                           Remove
                         </button>

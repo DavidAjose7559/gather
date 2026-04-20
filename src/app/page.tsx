@@ -203,7 +203,7 @@ export default async function HomePage() {
   })
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', paddingBottom: 96 }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '0 16px' }}>
         {/* Top bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 8 }}>
@@ -273,7 +273,7 @@ export default async function HomePage() {
               </div>
             </Link>
           ) : (
-            <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{ fontSize: 24 }}>✅</span>
                 <div>
@@ -298,11 +298,11 @@ export default async function HomePage() {
 
           {/* Stats */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20, textAlign: 'center' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20, textAlign: 'center' }}>
               <p style={{ fontSize: 36, fontWeight: 700, color: '#6C63FF' }}>{checkedInCount}</p>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>checked in</p>
             </div>
-            <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20, textAlign: 'center' }}>
+            <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20, textAlign: 'center' }}>
               <p style={{ fontSize: 36, fontWeight: 700, color: 'rgba(255,255,255,0.3)' }}>{notYetCount}</p>
               <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>not yet</p>
             </div>
@@ -325,7 +325,7 @@ export default async function HomePage() {
               else text = `📅 ${r.title} is in ${r.days} days`
             }
             return (
-              <div style={{ backgroundColor: '#1A1A1A', borderRadius: 16, border: '1px solid #2A2A2A', borderLeft: `3px solid ${accentColor}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', borderLeft: `3px solid ${accentColor}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{text}</p>
                 <Link href="/calendar" style={{ fontSize: 13, color: accentColor, fontWeight: 600, flexShrink: 0, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                   View calendar →
@@ -337,7 +337,7 @@ export default async function HomePage() {
           {/* Sermon of the Day */}
           {todaySermon && (
             <Link href="/sermons" style={{ textDecoration: 'none' }}>
-              <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
                 {todaySermon.episode_image_url ? (
                   <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
                     <Image
@@ -391,9 +391,9 @@ export default async function HomePage() {
                   <div
                     key={profile.id}
                     style={{
-                      backgroundColor: '#1A1A1A',
+                      backgroundColor: 'var(--bg-card)',
                       borderRadius: 16,
-                      border: '1px solid #2A2A2A',
+                      border: '1px solid var(--border)',
                       padding: '12px 16px',
                       display: 'flex',
                       alignItems: 'center',

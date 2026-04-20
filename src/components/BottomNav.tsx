@@ -71,7 +71,7 @@ export default function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: '#111111', borderTop: '1px solid #2A2A2A', zIndex: 50, height: 80 }}>
+    <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, backgroundColor: 'var(--bg-card-2)', borderTop: '1px solid var(--border)', zIndex: 50, height: 80 }}>
       <div style={{ maxWidth: 448, margin: '0 auto', display: 'flex', alignItems: 'stretch', height: '100%' }}>
         {NAV_ITEMS.map((item) => {
           const isActive = item.href === '/'

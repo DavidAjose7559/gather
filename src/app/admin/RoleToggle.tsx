@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
 export default function RoleToggle({
   memberId,
@@ -12,49 +12,75 @@ export default function RoleToggle({
   currentRole: 'member' | 'admin'
   isSelf: boolean
 }) {
+  const router = useRouter()
   const [role, setRole] = useState(currentRole)
   const [saving, setSaving] = useState(false)
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null)
 
   async function toggle() {
-    if (isSelf) return
+    if (isSelf || saving) return
     setSaving(true)
-    const newRole = role === 'admin' ? 'member' : 'admin'
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('profiles')
-      .update({ role: newRole })
-      .eq('id', memberId)
-    if (!error) setRole(newRole)
+    setToast(null)
+    const newRole: 'member' | 'admin' = role === 'admin' ? 'member' : 'admin'
+
+    const res = await fetch('/api/admin/role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ memberId, newRole }),
+    })
+
+    const data = await res.json()
+
+    if (res.ok) {
+      setRole(newRole)
+      setToast({ type: 'success', msg: `Changed to ${newRole}` })
+      router.refresh()
+    } else {
+      setToast({ type: 'error', msg: data.error || 'Failed to update role' })
+    }
+
     setSaving(false)
+    setTimeout(() => setToast(null), 3000)
   }
 
   if (isSelf) {
     return (
-      <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', padding: '4px 10px', backgroundColor: '#2A2A2A', borderRadius: 8 }}>
+      <span style={{ fontSize: 12, color: 'var(--text-tertiary)', padding: '4px 10px', backgroundColor: 'var(--bg-input)', borderRadius: 8 }}>
         {role}
       </span>
     )
   }
 
   return (
-    <button
-      onClick={toggle}
-      disabled={saving}
-      style={{
-        fontSize: 12,
-        fontWeight: 600,
-        padding: '6px 14px',
-        borderRadius: 10,
-        minHeight: 36,
-        border: 'none',
-        cursor: saving ? 'not-allowed' : 'pointer',
-        opacity: saving ? 0.5 : 1,
-        backgroundColor: role === 'admin' ? 'rgba(108,99,255,0.15)' : '#2A2A2A',
-        color: role === 'admin' ? '#A09AF8' : 'rgba(255,255,255,0.5)',
-        transition: 'all 0.15s',
-      }}
-    >
-      {saving ? '…' : role === 'admin' ? 'Admin' : 'Member'}
-    </button>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+      <button
+        onClick={toggle}
+        disabled={saving}
+        style={{
+          fontSize: 12,
+          fontWeight: 600,
+          padding: '6px 14px',
+          borderRadius: 10,
+          minHeight: 36,
+          border: 'none',
+          cursor: saving ? 'not-allowed' : 'pointer',
+          opacity: saving ? 0.5 : 1,
+          backgroundColor: role === 'admin' ? 'rgba(108,99,255,0.15)' : 'var(--bg-input)',
+          color: role === 'admin' ? '#A09AF8' : 'var(--text-secondary)',
+          transition: 'all 0.15s',
+        }}
+      >
+        {saving ? '…' : role === 'admin' ? 'Admin' : 'Member'}
+      </button>
+      {toast && (
+        <span style={{
+          fontSize: 11,
+          color: toast.type === 'success' ? '#4CAF50' : '#FF4D4D',
+          whiteSpace: 'nowrap',
+        }}>
+          {toast.msg}
+        </span>
+      )}
+    </div>
   )
 }

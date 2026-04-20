@@ -33,7 +33,7 @@ export default async function AdminPage() {
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gatherdaily.app'
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)' }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 32px', display: 'flex', flexDirection: 'column', gap: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
@@ -51,13 +51,13 @@ export default async function AdminPage() {
         </div>
 
         {/* Invite section */}
-        <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Invite someone</h2>
           <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
             Share this link with anyone you&apos;d like to invite. They can sign up
             with their email address and join the group.
           </p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#111111', borderRadius: 12, border: '1px solid #2A2A2A', padding: '10px 14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, backgroundColor: '#111111', borderRadius: 12, border: '1px solid var(--border)', padding: '10px 14px' }}>
             <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'monospace' }}>{appUrl}</span>
             <CopyButton text={appUrl} />
           </div>
@@ -67,7 +67,7 @@ export default async function AdminPage() {
         </div>
 
         {/* Broadcast message */}
-        <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Send a message to everyone</h2>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
@@ -78,7 +78,7 @@ export default async function AdminPage() {
         </div>
 
         {/* Manual reminder */}
-        <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Send check-in reminder</h2>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>
@@ -104,7 +104,7 @@ export default async function AdminPage() {
               return (
                 <div
                   key={member.id}
-                  style={{ backgroundColor: '#1A1A1A', borderRadius: 16, border: '1px solid #2A2A2A', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}
+                  style={{ backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}
                 >
                   <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: avatarColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'white', flexShrink: 0, textTransform: 'uppercase' }}>
                     {initials}

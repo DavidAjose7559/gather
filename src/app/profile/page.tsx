@@ -153,8 +153,8 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <p style={{ color: 'rgba(255,255,255,0.4)' }}>Loading…</p>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: 'var(--text-tertiary)' }}>Loading…</p>
       </div>
     )
   }
@@ -165,9 +165,9 @@ export default function ProfilePage() {
     : fullName.slice(0, 2)
 
   const cardStyle = {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'var(--bg-card)',
     borderRadius: 20,
-    border: '1px solid #2A2A2A',
+    border: '1px solid var(--border)',
     overflow: 'hidden' as const,
   }
 
@@ -176,13 +176,13 @@ export default function ProfilePage() {
     alignItems: 'center' as const,
     justifyContent: 'space-between' as const,
     padding: '16px 20px',
-    borderBottom: '1px solid #2A2A2A',
+    borderBottom: '1px solid var(--border)',
     minHeight: 60,
     gap: 12,
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', paddingBottom: 96 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', paddingBottom: 96 }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
         {/* Header */}
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'white' }}>Account</h1>
@@ -197,7 +197,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p style={{ fontWeight: 600, color: 'white', fontSize: 16 }}>{displayName || fullName}</p>
-                <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{email}</p>
+                <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 2 }}>{email}</p>
               </div>
             </div>
             <button
@@ -212,7 +212,7 @@ export default function ProfilePage() {
           {editingName && (
             <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>Full name</label>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', marginBottom: 6 }}>Full name</label>
                 <input
                   type="text"
                   value={fullName}
@@ -221,7 +221,7 @@ export default function ProfilePage() {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 500, color: 'var(--text-tertiary)', marginBottom: 6 }}>
                   Display name <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>(optional)</span>
                 </label>
                 <input
@@ -256,13 +256,13 @@ export default function ProfilePage() {
             {streak > 0 ? (
               <span style={{ fontSize: 14, fontWeight: 700, color: '#FF9500' }}>🔥 {streak} day streak</span>
             ) : (
-              <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>Start a streak today</span>
+              <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Start a streak today</span>
             )}
           </div>
 
           {checkIns.length === 0 ? (
             <div style={{ padding: '16px 20px' }}>
-              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.3)' }}>No check-ins in the last 30 days.</p>
+              <p style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>No check-ins in the last 30 days.</p>
             </div>
           ) : (
             <div>
@@ -270,7 +270,7 @@ export default function ProfilePage() {
                 <Link
                   key={c.id}
                   href={`/checkin/${c.id}`}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid #222222', textDecoration: 'none' }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px', borderBottom: '1px solid var(--border)', textDecoration: 'none' }}
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>
@@ -278,7 +278,7 @@ export default function ProfilePage() {
                         weekday: 'short', month: 'short', day: 'numeric',
                       })}
                       {' · '}
-                      <span style={{ fontWeight: 400, color: 'rgba(255,255,255,0.4)' }}>
+                      <span style={{ fontWeight: 400, color: 'var(--text-tertiary)' }}>
                         {new Intl.DateTimeFormat('en-US', {
                           timeZone: 'America/Toronto',
                           hour: 'numeric',
@@ -298,7 +298,7 @@ export default function ProfilePage() {
                       </span>
                     )}
                     {c.spiritual_life && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: 8, backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500 }}>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: 8, backgroundColor: 'var(--bg-input)', color: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500 }}>
                         {spiritualLabels[c.spiritual_life]}
                       </span>
                     )}
@@ -312,7 +312,7 @@ export default function ProfilePage() {
         {/* Settings */}
         <div style={cardStyle}>
           {/* Section header */}
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
             <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Settings</h2>
           </div>
 
@@ -324,7 +324,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>Appearance</p>
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{isDark ? 'Dark mode' : 'Light mode'}</p>
+                <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{isDark ? 'Dark mode' : 'Light mode'}</p>
               </div>
             </div>
             <button
@@ -366,7 +366,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 500, color: 'white' }}>Daily reminders</p>
-                <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>Gentle nudge if you haven&apos;t checked in</p>
+                <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>Gentle nudge if you haven&apos;t checked in</p>
               </div>
             </div>
             <button
@@ -401,7 +401,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Default visibility */}
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: 'rgba(0,188,212,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>
                 👁
@@ -466,7 +466,7 @@ export default function ProfilePage() {
               await supabase.auth.signOut()
               router.push('/login')
             }}
-            style={{ width: '100%', minHeight: 52, backgroundColor: '#1A1A1A', color: 'white', fontWeight: 600, fontSize: 15, borderRadius: 14, border: '1px solid #333333', cursor: 'pointer' }}
+            style={{ width: '100%', minHeight: 52, backgroundColor: 'var(--bg-card)', color: 'white', fontWeight: 600, fontSize: 15, borderRadius: 14, border: '1px solid var(--border-light)', cursor: 'pointer' }}
           >
             Sign out
           </button>
@@ -474,7 +474,7 @@ export default function ProfilePage() {
 
         {/* Danger zone */}
         <div style={cardStyle}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #2A2A2A' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
             <h2 style={{ fontWeight: 600, color: 'white', fontSize: 15 }}>Leave group</h2>
           </div>
           <div style={{ padding: '16px 20px' }}>
@@ -487,7 +487,7 @@ export default function ProfilePage() {
               </button>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6 }}>
+                <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                   Are you sure? This will remove your profile and check-in history. It cannot be undone.
                 </p>
                 <div style={{ display: 'flex', gap: 8 }}>
@@ -500,7 +500,7 @@ export default function ProfilePage() {
                   </button>
                   <button
                     onClick={() => setConfirmLeave(false)}
-                    style={{ minHeight: 44, padding: '0 16px', backgroundColor: '#2A2A2A', color: 'rgba(255,255,255,0.6)', borderRadius: 12, fontSize: 14, border: 'none', cursor: 'pointer' }}
+                    style={{ minHeight: 44, padding: '0 16px', backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', borderRadius: 12, fontSize: 14, border: 'none', cursor: 'pointer' }}
                   >
                     Cancel
                   </button>

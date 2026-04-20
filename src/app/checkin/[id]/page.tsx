@@ -87,8 +87,8 @@ export default async function CheckInDetailPage({
 
   if (!canView) {
     return (
-      <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
-        <div style={{ width: '100%', maxWidth: 448, backgroundColor: '#1A1A1A', borderRadius: 24, border: '1px solid #2A2A2A', padding: 32, textAlign: 'center' }}>
+      <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 16px' }}>
+        <div style={{ width: '100%', maxWidth: 448, backgroundColor: 'var(--bg-card)', borderRadius: 24, border: '1px solid var(--border)', padding: 32, textAlign: 'center' }}>
           <p style={{ fontSize: 40, marginBottom: 12 }}>🔒</p>
           <h2 style={{ fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 8 }}>This check-in is private</h2>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Only certain people can see it.</p>
@@ -158,9 +158,9 @@ export default async function CheckInDetailPage({
   }))
 
   const cardStyle = {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: 'var(--bg-card)',
     borderRadius: 20,
-    border: '1px solid #2A2A2A',
+    border: '1px solid var(--border)',
     padding: 20,
     display: 'flex' as const,
     flexDirection: 'column' as const,
@@ -168,7 +168,7 @@ export default async function CheckInDetailPage({
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0A' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)' }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 32px', display: 'flex', flexDirection: 'column', gap: 16 }}>
         <div>
           <Link href="/" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14, minHeight: 44, display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -237,19 +237,19 @@ export default async function CheckInDetailPage({
 
         {/* Text sections */}
         {checkIn.struggles && (
-          <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20 }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20 }}>
             <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Struggles</p>
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.struggles}</p>
           </div>
         )}
         {checkIn.gratitude && (
-          <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20 }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20 }}>
             <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Grateful for</p>
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.gratitude}</p>
           </div>
         )}
         {checkIn.notes && (
-          <div style={{ backgroundColor: '#1A1A1A', borderRadius: 20, border: '1px solid #2A2A2A', padding: 20 }}>
+          <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20 }}>
             <p style={{ fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>Notes</p>
             <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, lineHeight: 1.6 }}>{checkIn.notes}</p>
           </div>
