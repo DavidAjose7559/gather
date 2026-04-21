@@ -19,11 +19,12 @@ function daysUntilBirthday(month: number, day: number, todayStr: string): number
 }
 
 function formatDate(date: Date) {
-  return date.toLocaleDateString('en-US', {
+  return new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Toronto',
     weekday: 'long',
     month: 'long',
     day: 'numeric',
-  })
+  }).format(date)
 }
 
 function getVisibleCheckIn(
