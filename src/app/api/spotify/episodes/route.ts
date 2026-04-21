@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   try {
     const episodes = query
       ? await searchPodcastEpisodes(podcastId, query)
-      : await getPodcastEpisodes(podcastId, 50)
+      : await getPodcastEpisodes(podcastId)
     return NextResponse.json({ episodes })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Spotify error'

@@ -40,19 +40,45 @@ async function getSpotifyAccessToken(): Promise<string> {
   return tokenCache.token
 }
 
-export async function getPodcastEpisodes(podcastId: string, limit = 50): Promise<SpotifyEpisode[]> {
+const MAX_EPISODES = 500
+
+export async function getPodcastEpisodes(podcastId: string): Promise<SpotifyEpisode[]> {
   const token = await getSpotifyAccessToken()
-  const res = await fetch(
-    `https://api.spotify.com/v1/shows/${podcastId}/episodes?limit=${limit}&market=US`,
+
+  const firstRes = await fetch(
+    `https://api.spotify.com/v1/shows/${podcastId}/episodes?limit=50&offset=0&market=US`,
     { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }
   )
-  if (!res.ok) throw new Error(`Spotify episodes error: ${res.status}`)
-  const data = await res.json()
-  return data.items ?? []
+  if (!firstRes.ok) throw new Error(`Spotify episodes error: ${firstRes.status}`)
+  const firstData = await firstRes.json()
+
+  const all: SpotifyEpisode[] = firstData.items ?? []
+  const total: number = Math.min(firstData.total ?? 0, MAX_EPISODES)
+
+  const offsets: number[] = []
+  for (let offset = 50; offset < total; offset += 50) {
+    offsets.push(offset)
+  }
+
+  if (offsets.length > 0) {
+    const pages = await Promise.all(
+      offsets.map((offset) =>
+        fetch(
+          `https://api.spotify.com/v1/shows/${podcastId}/episodes?limit=50&offset=${offset}&market=US`,
+          { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' }
+        ).then((r) => r.json())
+      )
+    )
+    for (const page of pages) {
+      all.push(...(page.items ?? []))
+    }
+  }
+
+  return all
 }
 
 export async function searchPodcastEpisodes(podcastId: string, query: string): Promise<SpotifyEpisode[]> {
-  const episodes = await getPodcastEpisodes(podcastId, 50)
+  const episodes = await getPodcastEpisodes(podcastId)
   const lower = query.toLowerCase()
   return episodes.filter(
     ep => ep.name.toLowerCase().includes(lower) || ep.description.toLowerCase().includes(lower)
