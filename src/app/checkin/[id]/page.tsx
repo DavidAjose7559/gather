@@ -39,6 +39,18 @@ function formatDate(dateStr: string) {
   })
 }
 
+function timeAgo(dateStr: string): string {
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000)
+  if (seconds < 60) return 'just now'
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}d ago`
+  return new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' }).format(new Date(dateStr))
+}
+
 function formatCheckInTime(createdAt: string): string {
   return new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Toronto',
@@ -100,6 +112,10 @@ export default async function CheckInDetailPage({
     )
   }
 
+  const OWNER_EMAIL = 'davidajose30@gmail.com'
+  const isAppOwner = user.email === OWNER_EMAIL
+  const isCheckInOwner = checkIn.user_id === user.id
+
   const [profileRes, responsesRes, currentProfileRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', checkIn.user_id).single(),
     supabase
@@ -156,6 +172,22 @@ export default async function CheckInDetailPage({
     ...r,
     responderName: r.is_anonymous ? null : (responderMap[r.responder_id] ?? 'A member'),
   }))
+
+  // Seen by — only fetched for the app owner viewing their own check-in
+  type Viewer = { name: string; seen_at: string }
+  let viewers: Viewer[] = []
+  if (isAppOwner && isCheckInOwner) {
+    const { data: seenRows } = await supabase
+      .from('checkin_seen')
+      .select('seen_at, profiles!inner(full_name, display_name)')
+      .eq('check_in_id', id)
+      .neq('user_id', user.id)
+      .order('seen_at', { ascending: false })
+    viewers = (seenRows ?? []).map((row) => {
+      const p = row.profiles as unknown as { full_name: string; display_name: string | null }
+      return { name: p.display_name ?? p.full_name, seen_at: row.seen_at }
+    })
+  }
 
   const cardStyle = {
     backgroundColor: 'var(--bg-card)',
@@ -279,6 +311,22 @@ export default async function CheckInDetailPage({
 
         {/* Response form */}
         {!isOwn && <ResponseForm checkInId={id} currentUserId={user.id} />}
+
+        {/* Seen by — only visible to app owner on their own check-ins */}
+        {isAppOwner && isCheckInOwner && (
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>Seen by</p>
+            {viewers.length === 0 ? (
+              <p style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Nobody has viewed this yet</p>
+            ) : (
+              viewers.map((v, i) => (
+                <p key={i} style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                  {v.name} · {timeAgo(v.seen_at)}
+                </p>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </div>
   )
