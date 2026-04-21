@@ -6,6 +6,7 @@ import type { CheckIn, Profile, SermonSchedule } from '@/lib/types'
 import { calculateStreak } from '@/lib/streaks'
 import { todayToronto, formatDateToronto, offsetTorontoDay } from '@/lib/date'
 import BottomNav from '@/components/BottomNav'
+import UpcomingEventsBanner from './UpcomingEventsBanner'
 
 const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
 const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
@@ -96,7 +97,7 @@ export default async function HomePage() {
   const sevenDaysFromNow = offsetTorontoDay(7)
 
   // Load all profiles, today's check-ins, visibility grants, recent history, sermon, birthdays, events, seen check-ins
-  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes, sermonRes, birthdaysRes, upcomingEventsRes, seenCheckInsRes] = await Promise.all([
+  const [profilesRes, checkInsRes, grantsRes, recentCheckInsRes, sermonRes, birthdaysRes, upcomingEventsRes, seenCheckInsRes, upcomingRsvpsRes] = await Promise.all([
     supabase.from('profiles').select('*').order('full_name'),
     supabase.from('check_ins').select('*').eq('check_in_date', today),
     supabase.from('visibility_grants').select('check_in_id, granted_to'),
@@ -107,9 +108,11 @@ export default async function HomePage() {
       .order('check_in_date', { ascending: false }),
     supabase.from('sermon_schedule').select('*').eq('schedule_date', today).maybeSingle(),
     supabase.from('birthdays').select('name, month, day'),
-    supabase.from('events').select('id, title, event_date')
+    supabase.from('events').select('id, title, event_date, event_time')
       .gte('event_date', today).lte('event_date', sevenDaysFromNow).order('event_date'),
     supabase.from('checkin_seen').select('check_in_id').eq('user_id', user.id),
+    supabase.from('event_rsvps').select('event_id, status, ride_status')
+      .eq('user_id', user.id),
   ])
 
   const isCurrentUserDemo = currentProfile.is_demo === true
@@ -128,6 +131,7 @@ export default async function HomePage() {
   )
   const todaySermon: SermonSchedule | null = sermonRes.data ?? null
   const seenCheckInIds = new Set((seenCheckInsRes.data ?? []).map((s) => s.check_in_id))
+  const myRsvpMap = new Map((upcomingRsvpsRes.data ?? []).map(r => [r.event_id, r]))
 
   // Compute the soonest upcoming birthday or event within 7 days
   const allBirthdays = birthdaysRes.data ?? []
@@ -150,6 +154,62 @@ export default async function HomePage() {
       soonestReminder = { type: 'event', title: ev.title, days }
     }
   }
+
+  // Build banner data for upcoming events (with my RSVP + match status)
+  let myMatchMap = new Map<string, { id: string; status: 'pending' | 'accepted' | 'declined'; role: 'driver' | 'rider' }>()
+  if (upcomingEvents.length > 0) {
+    const eventIds = upcomingEvents.map(e => e.id)
+    const myRsvpIds = (upcomingRsvpsRes.data ?? []).map(r => r.event_id)
+    const { data: allRsvpsForEvents } = await supabase
+      .from('event_rsvps')
+      .select('id, event_id, user_id')
+      .in('event_id', eventIds)
+      .eq('user_id', user.id)
+
+    const myRsvpIdsList = (allRsvpsForEvents ?? []).map(r => r.id)
+    if (myRsvpIdsList.length > 0) {
+      const [driverMatchesRes, riderMembershipsRes] = await Promise.all([
+        supabase.from('ride_matches').select('id, event_id, status').in('driver_rsvp_id', myRsvpIdsList),
+        supabase.from('ride_match_members').select('match_id, rsvp_id, status').in('rsvp_id', myRsvpIdsList),
+      ])
+
+      for (const m of driverMatchesRes.data ?? []) {
+        myMatchMap.set(m.event_id, { id: m.id, status: m.status, role: 'driver' })
+      }
+
+      const memberMatchIds = (riderMembershipsRes.data ?? []).map(m => m.match_id)
+      if (memberMatchIds.length > 0) {
+        const { data: memberMatches } = await supabase
+          .from('ride_matches')
+          .select('id, event_id')
+          .in('id', memberMatchIds)
+
+        for (const mm of riderMembershipsRes.data ?? []) {
+          const parentMatch = (memberMatches ?? []).find(m => m.id === mm.match_id)
+          if (parentMatch && !myMatchMap.has(parentMatch.event_id)) {
+            myMatchMap.set(parentMatch.event_id, { id: mm.match_id, status: mm.status, role: 'rider' })
+          }
+        }
+      }
+    }
+  }
+
+  const upcomingEventBanners = upcomingEvents.map(ev => {
+    const [ey, em, ed] = ev.event_date.split('-').map(Number)
+    const [ty, tm, td] = today.split('-').map(Number)
+    const days = Math.round((new Date(Date.UTC(ey, em - 1, ed)).getTime() - new Date(Date.UTC(ty, tm - 1, td)).getTime()) / 86400000)
+    const myRsvp = myRsvpMap.get(ev.id)
+    return {
+      id: ev.id,
+      title: ev.title,
+      event_date: ev.event_date,
+      event_time: ev.event_time ?? null,
+      days,
+      my_rsvp: (myRsvp?.status ?? null) as 'going' | 'maybe' | 'not_going' | null,
+      my_ride_status: (myRsvp?.ride_status ?? null) as 'driving' | 'need_ride' | 'own_way' | 'unsure' | null,
+      my_match: myMatchMap.get(ev.id) ?? null,
+    }
+  })
 
   // Build streak map: userId → streak count
   const streakMap = new Map<string, number>()
@@ -309,26 +369,23 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Upcoming reminder */}
-          {soonestReminder && (() => {
-            const r = soonestReminder
-            const isBirthday = r.type === 'birthday'
-            const accentColor = isBirthday ? '#FF9500' : '#6C63FF'
+          {/* Upcoming events banner with quick RSVP */}
+          {upcomingEventBanners.length > 0 && (
+            <UpcomingEventsBanner events={upcomingEventBanners} />
+          )}
+
+          {/* Upcoming birthday reminder */}
+          {soonestReminder && soonestReminder.type === 'birthday' && (() => {
+            const r = soonestReminder as { type: 'birthday'; name: string; days: number }
             let text = ''
-            if (r.type === 'birthday') {
-              if (r.days === 0) text = `🎂 Today is ${r.name}'s birthday! 🎉`
-              else if (r.days === 1) text = `🎂 ${r.name}'s birthday is tomorrow`
-              else if (r.days === 7) text = `🎂 ${r.name}'s birthday is in 1 week`
-              else text = `🎂 ${r.name}'s birthday is in ${r.days} days`
-            } else {
-              if (r.days === 0) text = `📅 ${r.title} is today`
-              else if (r.days === 1) text = `📅 ${r.title} is tomorrow`
-              else text = `📅 ${r.title} is in ${r.days} days`
-            }
+            if (r.days === 0) text = `🎂 Today is ${r.name}'s birthday! 🎉`
+            else if (r.days === 1) text = `🎂 ${r.name}'s birthday is tomorrow`
+            else if (r.days === 7) text = `🎂 ${r.name}'s birthday is in 1 week`
+            else text = `🎂 ${r.name}'s birthday is in ${r.days} days`
             return (
-              <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', borderLeft: `3px solid ${accentColor}`, padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', borderLeft: '3px solid #FF9500', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                 <p style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 500 }}>{text}</p>
-                <Link href="/calendar" style={{ fontSize: 13, color: accentColor, fontWeight: 600, flexShrink: 0, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                <Link href="/calendar" style={{ fontSize: 13, color: '#FF9500', fontWeight: 600, flexShrink: 0, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                   View calendar →
                 </Link>
               </div>

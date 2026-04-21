@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { todayToronto } from '@/lib/date'
 import BottomNav from '@/components/BottomNav'
 import type { Birthday, EventWithMeta } from '@/lib/types'
+import RsvpZone from './RsvpZone'
+import AdminRidePanel from './AdminRidePanel'
 
 const MONTH_NAMES = [
   'January','February','March','April','May','June',
@@ -102,55 +104,6 @@ function buildCalendarGrid(
   return cells
 }
 
-function RsvpButtons({
-  event,
-  onRsvp,
-}: {
-  event: EventWithMeta
-  onRsvp: (eventId: string, status: 'going' | 'maybe' | 'not_going') => void
-}) {
-  const buttons: { status: 'going' | 'maybe' | 'not_going'; label: string }[] = [
-    { status: 'going', label: 'Going' },
-    { status: 'maybe', label: 'Maybe' },
-    { status: 'not_going', label: "Can't make it" },
-  ]
-
-  return (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-      {buttons.map(({ status, label }) => {
-        const isActive = event.my_rsvp === status
-        const isGoing = status === 'going'
-        return (
-          <button
-            key={status}
-            onClick={() => onRsvp(event.id, status)}
-            style={{
-              minHeight: 36,
-              padding: '0 14px',
-              borderRadius: 10,
-              fontSize: 13,
-              fontWeight: 500,
-              cursor: 'pointer',
-              transition: 'all 0.15s',
-              border: isActive
-                ? isGoing ? '1px solid #4CAF50' : '1px solid #6C63FF'
-                : '1px solid var(--border)',
-              backgroundColor: isActive
-                ? isGoing ? 'rgba(76,175,80,0.15)' : 'rgba(108,99,255,0.15)'
-                : 'var(--bg-base)',
-              color: isActive
-                ? isGoing ? '#4CAF50' : '#A09AF8'
-                : 'var(--text-secondary)',
-            }}
-          >
-            {isActive && isGoing ? '✓ ' : ''}{label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
 export default function CalendarPage() {
   const router = useRouter()
   const supabase = createClient()
@@ -160,14 +113,10 @@ export default function CalendarPage() {
   const [birthdays, setBirthdays] = useState<Birthday[]>([])
   const [events, setEvents] = useState<EventWithMeta[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
-  const [userId, setUserId] = useState<string | null>(null)
 
-  // Month grid state
   const [viewedYear, setViewedYear] = useState(0)
   const [viewedMonth, setViewedMonth] = useState(0)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
-
-  // Month collapsible state — current month expanded by default
   const [expandedMonths, setExpandedMonths] = useState<Set<number>>(new Set())
 
   // Admin add event form
@@ -179,8 +128,6 @@ export default function CalendarPage() {
   const [newDesc, setNewDesc] = useState('')
   const [saving, setSaving] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
-
-  // Event delete confirmation
   const [confirmDeleteEventId, setConfirmDeleteEventId] = useState<string | null>(null)
 
   // Admin add birthday form
@@ -197,13 +144,11 @@ export default function CalendarPage() {
     const [ty, tm] = todayStr.split('-').map(Number)
     setViewedYear(ty)
     setViewedMonth(tm)
-    const currentMonth = parseInt(todayStr.split('-')[1])
-    setExpandedMonths(new Set([currentMonth]))
+    setExpandedMonths(new Set([parseInt(todayStr.split('-')[1])]))
 
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.push('/login'); return }
-      setUserId(user.id)
 
       const [profileRes, birthdaysRes, eventsRes] = await Promise.all([
         supabase.from('profiles').select('role').eq('id', user.id).single(),
@@ -219,15 +164,12 @@ export default function CalendarPage() {
     load()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-select today if it has a birthday or event
   useEffect(() => {
     if (!loading && today) {
       const [, tm, td] = today.split('-').map(Number)
       const todayHasBirthday = birthdays.some(b => b.month === tm && b.day === td)
       const todayHasEvent = events.some(e => e.event_date === today)
-      if (todayHasBirthday || todayHasEvent) {
-        setSelectedDate(today)
-      }
+      if (todayHasBirthday || todayHasEvent) setSelectedDate(today)
     }
   }, [loading]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -243,30 +185,51 @@ export default function CalendarPage() {
     setSelectedDate(null)
   }
 
-  async function toggleRsvp(eventId: string, status: 'going' | 'maybe' | 'not_going') {
+  async function handleRsvp(
+    eventId: string,
+    status: 'going' | 'maybe' | 'not_going' | null,
+    rideStatus?: 'driving' | 'need_ride' | 'own_way' | 'unsure' | null,
+    area?: string | null,
+    canTake?: number | null
+  ) {
     const event = events.find(e => e.id === eventId)
     if (!event) return
-
-    const newStatus = event.my_rsvp === status ? null : status
 
     // Optimistic update
     setEvents(prev => prev.map(e => {
       if (e.id !== eventId) return e
       const counts = { ...e.rsvp_counts }
       if (e.my_rsvp) counts[e.my_rsvp]--
-      if (newStatus) counts[newStatus]++
-      return { ...e, my_rsvp: newStatus, rsvp_counts: counts }
+      if (status) counts[status]++
+      const rideSummary = { ...e.ride_summary }
+      if (e.my_ride_status) (rideSummary as Record<string, number>)[e.my_ride_status]--
+      if (status === 'going' && rideStatus) (rideSummary as Record<string, number>)[rideStatus]++
+      return { ...e, my_rsvp: status, my_ride_status: rideStatus ?? null, my_area: area ?? null, my_can_take: canTake ?? null, rsvp_counts: counts, ride_summary: rideSummary }
     }))
 
     const res = await fetch('/api/events/rsvp', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event_id: eventId, status: newStatus }),
+      body: JSON.stringify({ event_id: eventId, status, ride_status: rideStatus ?? null, area: area ?? null, can_take: canTake ?? null }),
     })
     if (!res.ok) {
-      // Revert on failure
       setEvents(prev => prev.map(e => e.id === eventId ? event : e))
     }
+  }
+
+  async function toggleAttendance(eventId: string, show: boolean) {
+    setEvents(prev => prev.map(e => e.id === eventId ? { ...e, show_attendance: show } : e))
+    await fetch('/api/events', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: eventId, show_attendance: show }),
+    })
+  }
+
+  async function refreshEvents() {
+    const res = await fetch('/api/events')
+    const data = await res.json()
+    setEvents(data.events ?? [])
   }
 
   async function addEvent() {
@@ -276,13 +239,7 @@ export default function CalendarPage() {
     const res = await fetch('/api/events', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title: newTitle.trim(),
-        event_date: newDate,
-        event_time: newTime.trim() || null,
-        location: newLocation.trim() || null,
-        description: newDesc.trim() || null,
-      }),
+      body: JSON.stringify({ title: newTitle.trim(), event_date: newDate, event_time: newTime.trim() || null, location: newLocation.trim() || null, description: newDesc.trim() || null }),
     })
     const data = await res.json()
     if (data.error) {
@@ -291,14 +248,16 @@ export default function CalendarPage() {
       const newEvent: EventWithMeta = {
         ...data.event,
         rsvp_counts: { going: 0, maybe: 0, not_going: 0 },
+        ride_summary: { driving: 0, need_ride: 0, own_way: 0, unsure: 0 },
         my_rsvp: null,
+        my_ride_status: null,
+        my_area: null,
+        my_can_take: null,
+        my_match: null,
+        attendance: null,
       }
       setEvents(prev => [...prev, newEvent].sort((a, b) => a.event_date.localeCompare(b.event_date)))
-      setNewTitle('')
-      setNewDate('')
-      setNewTime('')
-      setNewLocation('')
-      setNewDesc('')
+      setNewTitle(''); setNewDate(''); setNewTime(''); setNewLocation(''); setNewDesc('')
       setShowAddForm(false)
     }
     setSaving(false)
@@ -323,9 +282,7 @@ export default function CalendarPage() {
       setBdError(data.error)
     } else {
       setBirthdays(prev => [...prev, data].sort((a, b) => a.month - b.month || a.day - b.day))
-      setNewBdName('')
-      setNewBdMonth('')
-      setNewBdDay('')
+      setNewBdName(''); setNewBdMonth(''); setNewBdDay('')
       setShowAddBdForm(false)
     }
     setSavingBd(false)
@@ -358,40 +315,30 @@ export default function CalendarPage() {
     border: '1px solid var(--border)',
   }
 
-  // Build grid
   const gridCells = viewedYear && viewedMonth
     ? buildCalendarGrid(viewedYear, viewedMonth, birthdays, events, today)
     : []
 
-  // Selected date content
   const selParts = selectedDate ? selectedDate.split('-').map(Number) : null
-  const selBirthdays = selParts
-    ? birthdays.filter(b => b.month === selParts[1] && b.day === selParts[2])
-    : []
+  const selBirthdays = selParts ? birthdays.filter(b => b.month === selParts[1] && b.day === selParts[2]) : []
   const selEvents = selectedDate ? events.filter(e => e.event_date === selectedDate) : []
 
-  // Upcoming items: birthdays within 30 days + events within 30 days, sorted by days
   const upcomingBirthdays = birthdays
     .map(b => ({ type: 'birthday' as const, ...b, days: daysUntilBirthday(b.month, b.day, today) }))
     .filter(b => b.days <= 30)
 
   const upcomingEvents = events
-    .filter(e => {
-      const days = daysUntilDate(e.event_date, today)
-      return days >= 0 && days <= 30
-    })
+    .filter(e => { const days = daysUntilDate(e.event_date, today); return days >= 0 && days <= 30 })
     .map(e => ({ type: 'event' as const, ...e, days: daysUntilDate(e.event_date, today) }))
 
   const upcomingItems = [...upcomingBirthdays, ...upcomingEvents].sort((a, b) => a.days - b.days)
   const todayBirthdays = upcomingBirthdays.filter(b => b.days === 0)
 
-  // Birthdays grouped by month
   const birthdaysByMonth: Record<number, Birthday[]> = {}
   for (let m = 1; m <= 12; m++) {
     birthdaysByMonth[m] = birthdays.filter(b => b.month === m).sort((a, b) => a.day - b.day)
   }
 
-  // Future events only
   const futureEvents = events.filter(e => daysUntilDate(e.event_date, today) >= 0)
 
   const rsvpSummary = (e: EventWithMeta) => {
@@ -406,104 +353,40 @@ export default function CalendarPage() {
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)', paddingBottom: 96 }}>
       <div style={{ maxWidth: 448, margin: '0 auto', padding: '56px 16px 16px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-        {/* ─── HEADER ─── */}
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}>Calendar</h1>
 
         {/* ─── MONTH GRID ─── */}
         {viewedYear > 0 && viewedMonth > 0 && (
           <div>
-            {/* Grid card */}
             <div style={{ backgroundColor: 'var(--bg-card-2)', borderRadius: 20, border: '1px solid var(--border)', overflow: 'hidden' }}>
-              {/* Month navigation header */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 12px 12px' }}>
-                <button
-                  onClick={prevMonth}
-                  style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 20, borderRadius: 10 }}
-                >
-                  ‹
-                </button>
+                <button onClick={prevMonth} style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 20, borderRadius: 10 }}>‹</button>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
-                    {MONTH_NAMES[viewedMonth - 1]} {viewedYear}
-                  </p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{MONTH_NAMES[viewedMonth - 1]} {viewedYear}</p>
                   {(viewedYear !== parseInt(today.split('-')[0]) || viewedMonth !== parseInt(today.split('-')[1])) && (
-                    <button
-                      onClick={() => {
-                        const [ty, tm] = today.split('-').map(Number)
-                        setViewedYear(ty)
-                        setViewedMonth(tm)
-                        setSelectedDate(null)
-                      }}
-                      style={{ fontSize: 11, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', marginTop: 2, fontWeight: 500 }}
-                    >
-                      today
-                    </button>
+                    <button onClick={() => { const [ty, tm] = today.split('-').map(Number); setViewedYear(ty); setViewedMonth(tm); setSelectedDate(null) }} style={{ fontSize: 11, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', marginTop: 2, fontWeight: 500 }}>today</button>
                   )}
                 </div>
-                <button
-                  onClick={nextMonth}
-                  style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 20, borderRadius: 10 }}
-                >
-                  ›
-                </button>
+                <button onClick={nextMonth} style={{ minWidth: 44, minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', fontSize: 20, borderRadius: 10 }}>›</button>
               </div>
 
-              {/* Day labels */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', paddingBottom: 4 }}>
                 {DAY_LABELS.map(label => (
-                  <div key={label} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', paddingBottom: 6 }}>
-                    {label}
-                  </div>
+                  <div key={label} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', paddingBottom: 6 }}>{label}</div>
                 ))}
               </div>
 
-              {/* Calendar grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', padding: '0 4px 8px' }}>
                 {gridCells.map((cell, i) => {
                   const isSelected = selectedDate === cell.date
                   return (
-                    <button
-                      key={i}
-                      onClick={() => setSelectedDate(isSelected ? null : cell.date)}
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        minHeight: 44,
-                        background: 'none',
-                        border: isSelected ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent',
-                        borderRadius: 10,
-                        cursor: 'pointer',
-                        padding: '4px 0',
-                        gap: 3,
-                      }}
-                    >
-                      <span style={{
-                        width: 30,
-                        height: 30,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderRadius: '50%',
-                        backgroundColor: cell.isToday ? '#6C63FF' : 'transparent',
-                        fontSize: 13,
-                        fontWeight: cell.isToday ? 700 : 400,
-                        color: cell.isToday
-                          ? 'white'
-                          : cell.isCurrentMonth
-                          ? 'var(--text-primary)'
-                          : '#404040',
-                      }}>
+                    <button key={i} onClick={() => setSelectedDate(isSelected ? null : cell.date)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 44, background: 'none', border: isSelected ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent', borderRadius: 10, cursor: 'pointer', padding: '4px 0', gap: 3 }}>
+                      <span style={{ width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', backgroundColor: cell.isToday ? '#6C63FF' : 'transparent', fontSize: 13, fontWeight: cell.isToday ? 700 : 400, color: cell.isToday ? 'white' : cell.isCurrentMonth ? 'var(--text-primary)' : '#404040' }}>
                         {cell.day}
                       </span>
                       <div style={{ display: 'flex', gap: 3, height: 5, alignItems: 'center' }}>
-                        {cell.hasBirthday && (
-                          <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#FF9500' }} />
-                        )}
-                        {cell.hasEvent && (
-                          <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#A09AF8' }} />
-                        )}
+                        {cell.hasBirthday && <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#FF9500' }} />}
+                        {cell.hasEvent && <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#A09AF8' }} />}
                       </div>
                     </button>
                   )
@@ -511,7 +394,6 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            {/* Legend */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, marginTop: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#FF9500' }} />
@@ -523,17 +405,11 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            {/* Selected date panel */}
             {selectedDate && (
               <div style={{ marginTop: 12, backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{formatSelectedDate(selectedDate)}</p>
-                  <button
-                    onClick={() => setSelectedDate(null)}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 20, minHeight: 36, minWidth: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => setSelectedDate(null)} style={{ background: 'none', border: 'none', color: 'var(--text-tertiary)', cursor: 'pointer', fontSize: 20, minHeight: 36, minWidth: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8 }}>×</button>
                 </div>
                 {selBirthdays.length === 0 && selEvents.length === 0 && (
                   <p style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Nothing scheduled</p>
@@ -550,9 +426,7 @@ export default function CalendarPage() {
                     <div>
                       <p style={{ fontSize: 14, color: 'var(--text-primary)' }}>{e.title}</p>
                       {(e.event_time || e.location) && (
-                        <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
-                          {[e.event_time, e.location].filter(Boolean).join(' · ')}
-                        </p>
+                        <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{[e.event_time, e.location].filter(Boolean).join(' · ')}</p>
                       )}
                     </div>
                   </div>
@@ -562,19 +436,16 @@ export default function CalendarPage() {
           </div>
         )}
 
-        {/* ─── SECTION 1: UPCOMING ─── */}
+        {/* ─── UPCOMING ─── */}
         <div>
           <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>
             Upcoming — next 30 days
           </h2>
 
-          {/* Today's birthday celebratory cards */}
           {todayBirthdays.map(b => (
             <div key={b.id} style={{ backgroundColor: 'rgba(76,175,80,0.12)', border: '1px solid rgba(76,175,80,0.3)', borderRadius: 16, padding: '14px 16px', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
               <span style={{ fontSize: 28 }}>🎉</span>
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#4CAF50' }}>
-                {b.name}&apos;s birthday is today! 🎂
-              </p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#4CAF50' }}>{b.name}&apos;s birthday is today! 🎂</p>
             </div>
           ))}
 
@@ -591,17 +462,12 @@ export default function CalendarPage() {
                       <span style={{ fontSize: 20, flexShrink: 0 }}>🎂</span>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{item.name}&apos;s birthday</p>
-                        <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
-                          {MONTH_SHORT[item.month - 1]} {item.day}
-                        </p>
+                        <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>{MONTH_SHORT[item.month - 1]} {item.day}</p>
                       </div>
-                      <span style={{ fontSize: 12, color: item.days === 0 ? '#4CAF50' : '#FF9500', fontWeight: 600, flexShrink: 0 }}>
-                        {daysLabel(item.days)}
-                      </span>
+                      <span style={{ fontSize: 12, color: item.days === 0 ? '#4CAF50' : '#FF9500', fontWeight: 600, flexShrink: 0 }}>{daysLabel(item.days)}</span>
                     </div>
                   )
                 } else {
-                  // Event item
                   const ev = item as typeof item & EventWithMeta
                   const [, em, ed] = ev.event_date.split('-').map(Number)
                   return (
@@ -611,16 +477,12 @@ export default function CalendarPage() {
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{ev.title}</p>
                           <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2 }}>
-                            {MONTH_SHORT[em - 1]} {ed}
-                            {ev.event_time && ` · ${ev.event_time}`}
-                            {ev.location && ` · ${ev.location}`}
+                            {MONTH_SHORT[em - 1]} {ed}{ev.event_time && ` · ${ev.event_time}`}{ev.location && ` · ${ev.location}`}
                           </p>
                         </div>
-                        <span style={{ fontSize: 12, color: '#6C63FF', fontWeight: 600, flexShrink: 0 }}>
-                          {daysLabel(ev.days)}
-                        </span>
+                        <span style={{ fontSize: 12, color: '#6C63FF', fontWeight: 600, flexShrink: 0 }}>{daysLabel(ev.days)}</span>
                       </div>
-                      <RsvpButtons event={ev} onRsvp={toggleRsvp} />
+                      <RsvpZone event={ev} onRsvp={handleRsvp} />
                     </div>
                   )
                 }
@@ -629,73 +491,30 @@ export default function CalendarPage() {
           )}
         </div>
 
-        {/* ─── SECTION 2: BIRTHDAY CALENDAR ─── */}
+        {/* ─── BIRTHDAY CALENDAR ─── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Birthday calendar
-            </h2>
+            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Birthday calendar</h2>
             {isAdmin && (
-              <button
-                onClick={() => setShowAddBdForm(v => !v)}
-                style={{ fontSize: 13, fontWeight: 600, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36 }}
-              >
+              <button onClick={() => setShowAddBdForm(v => !v)} style={{ fontSize: 13, fontWeight: 600, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36 }}>
                 {showAddBdForm ? 'Cancel' : '+ Add birthday'}
               </button>
             )}
           </div>
 
-          {/* Admin add birthday form */}
           {isAdmin && showAddBdForm && (
             <div style={{ ...cardStyle, padding: 20, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12, borderColor: 'rgba(108,99,255,0.3)' }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, color: '#A09AF8' }}>New birthday</h3>
-              <input
-                type="text"
-                value={newBdName}
-                onChange={e => setNewBdName(e.target.value)}
-                placeholder="Name *"
-                style={{ width: '100%' }}
-              />
+              <input type="text" value={newBdName} onChange={e => setNewBdName(e.target.value)} placeholder="Name *" style={{ width: '100%' }} />
               <div style={{ display: 'flex', gap: 8 }}>
-                <select
-                  value={newBdMonth}
-                  onChange={e => setNewBdMonth(e.target.value)}
-                  style={{ flex: 1 }}
-                >
+                <select value={newBdMonth} onChange={e => setNewBdMonth(e.target.value)} style={{ flex: 1 }}>
                   <option value="">Month *</option>
-                  {MONTH_NAMES.map((m, i) => (
-                    <option key={i} value={i + 1}>{m}</option>
-                  ))}
+                  {MONTH_NAMES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
                 </select>
-                <input
-                  type="number"
-                  value={newBdDay}
-                  onChange={e => setNewBdDay(e.target.value)}
-                  placeholder="Day *"
-                  min={1}
-                  max={31}
-                  style={{ width: 80 }}
-                />
+                <input type="number" value={newBdDay} onChange={e => setNewBdDay(e.target.value)} placeholder="Day *" min={1} max={31} style={{ width: 80 }} />
               </div>
-              {bdError && (
-                <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{bdError}</p>
-              )}
-              <button
-                onClick={addBirthday}
-                disabled={savingBd || !newBdName.trim() || !newBdMonth || !newBdDay}
-                style={{
-                  width: '100%',
-                  minHeight: 48,
-                  backgroundColor: '#6C63FF',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: 15,
-                  borderRadius: 12,
-                  border: 'none',
-                  cursor: savingBd || !newBdName.trim() || !newBdMonth || !newBdDay ? 'not-allowed' : 'pointer',
-                  opacity: savingBd || !newBdName.trim() || !newBdMonth || !newBdDay ? 0.5 : 1,
-                }}
-              >
+              {bdError && <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{bdError}</p>}
+              <button onClick={addBirthday} disabled={savingBd || !newBdName.trim() || !newBdMonth || !newBdDay} style={{ width: '100%', minHeight: 48, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, fontSize: 15, borderRadius: 12, border: 'none', cursor: savingBd || !newBdName.trim() || !newBdMonth || !newBdDay ? 'not-allowed' : 'pointer', opacity: savingBd || !newBdName.trim() || !newBdMonth || !newBdDay ? 0.5 : 1 }}>
                 {savingBd ? 'Saving…' : 'Save birthday'}
               </button>
             </div>
@@ -711,25 +530,10 @@ export default function CalendarPage() {
 
               return (
                 <div key={month} style={{ ...cardStyle, overflow: 'hidden' }}>
-                  <button
-                    onClick={() => toggleMonth(month)}
-                    style={{
-                      width: '100%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '14px 16px',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      minHeight: 48,
-                    }}
-                  >
-                    <span style={{ fontSize: 15, fontWeight: 600, color: month === currentMonth ? '#6C63FF' : 'white' }}>
+                  <button onClick={() => toggleMonth(month)} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', minHeight: 48 }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: month === currentMonth ? '#6C63FF' : 'var(--text-primary)' }}>
                       {monthName}
-                      <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>
-                        {monthBirthdays.length} {monthBirthdays.length === 1 ? 'birthday' : 'birthdays'}
-                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--text-tertiary)', marginLeft: 8 }}>{monthBirthdays.length} {monthBirthdays.length === 1 ? 'birthday' : 'birthdays'}</span>
                     </span>
                     <span style={{ color: 'var(--text-tertiary)', fontSize: 12 }}>{isExpanded ? '▲' : '▼'}</span>
                   </button>
@@ -740,33 +544,15 @@ export default function CalendarPage() {
                         const days = today ? daysUntilBirthday(b.month, b.day, today) : null
                         const isToday = days === 0
                         return (
-                          <div
-                            key={b.id}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              padding: '11px 16px',
-                              borderBottom: bi < monthBirthdays.length - 1 ? '1px solid var(--border)' : 'none',
-                              backgroundColor: isToday ? 'rgba(76,175,80,0.05)' : 'transparent',
-                            }}
-                          >
-                            <p style={{ flex: 1, fontSize: 14, color: isToday ? '#4CAF50' : 'white', fontWeight: isToday ? 600 : 400 }}>
-                              {MONTH_SHORT[b.month - 1]} {b.day} — {b.name}
-                              {isToday && ' 🎉'}
+                          <div key={b.id} style={{ display: 'flex', alignItems: 'center', padding: '11px 16px', borderBottom: bi < monthBirthdays.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: isToday ? 'rgba(76,175,80,0.05)' : 'transparent' }}>
+                            <p style={{ flex: 1, fontSize: 14, color: isToday ? '#4CAF50' : 'var(--text-primary)', fontWeight: isToday ? 600 : 400 }}>
+                              {MONTH_SHORT[b.month - 1]} {b.day} — {b.name}{isToday && ' 🎉'}
                             </p>
                             {days !== null && days <= 14 && days > 0 && (
-                              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginRight: isAdmin ? 8 : 0 }}>
-                                {daysLabel(days)}
-                              </span>
+                              <span style={{ fontSize: 12, color: 'var(--text-tertiary)', marginRight: isAdmin ? 8 : 0 }}>{daysLabel(days)}</span>
                             )}
                             {isAdmin && (
-                              <button
-                                onClick={() => deleteBirthday(b.id)}
-                                style={{ fontSize: 12, color: 'rgba(255,77,77,0.6)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36, padding: '0 4px', flexShrink: 0 }}
-                                title="Remove birthday"
-                              >
-                                ✕
-                              </button>
+                              <button onClick={() => deleteBirthday(b.id)} style={{ fontSize: 12, color: 'rgba(255,77,77,0.6)', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36, padding: '0 4px', flexShrink: 0 }} title="Remove birthday">✕</button>
                             )}
                           </div>
                         )
@@ -779,79 +565,27 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        {/* ─── SECTION 3: EVENTS ─── */}
+        {/* ─── EVENTS ─── */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Events
-            </h2>
+            <h2 style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Events</h2>
             {isAdmin && (
-              <button
-                onClick={() => setShowAddForm(v => !v)}
-                style={{ fontSize: 13, fontWeight: 600, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36 }}
-              >
+              <button onClick={() => setShowAddForm(v => !v)} style={{ fontSize: 13, fontWeight: 600, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', minHeight: 36 }}>
                 {showAddForm ? 'Cancel' : '+ Add event'}
               </button>
             )}
           </div>
 
-          {/* Admin add event form */}
           {isAdmin && showAddForm && (
             <div style={{ ...cardStyle, padding: 20, marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 12, borderColor: 'rgba(108,99,255,0.3)' }}>
               <h3 style={{ fontSize: 14, fontWeight: 600, color: '#A09AF8' }}>New event</h3>
-              <input
-                type="text"
-                value={newTitle}
-                onChange={e => setNewTitle(e.target.value)}
-                placeholder="Event title *"
-                style={{ width: '100%' }}
-              />
-              <input
-                type="date"
-                value={newDate}
-                onChange={e => setNewDate(e.target.value)}
-                style={{ width: '100%' }}
-              />
-              <input
-                type="text"
-                value={newTime}
-                onChange={e => setNewTime(e.target.value)}
-                placeholder="Time (e.g. 7:00 PM) — optional"
-                style={{ width: '100%' }}
-              />
-              <input
-                type="text"
-                value={newLocation}
-                onChange={e => setNewLocation(e.target.value)}
-                placeholder="Location — optional"
-                style={{ width: '100%' }}
-              />
-              <textarea
-                value={newDesc}
-                onChange={e => setNewDesc(e.target.value)}
-                placeholder="Description — optional"
-                rows={3}
-                style={{ width: '100%', resize: 'none' }}
-              />
-              {addError && (
-                <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{addError}</p>
-              )}
-              <button
-                onClick={addEvent}
-                disabled={saving || !newTitle.trim() || !newDate}
-                style={{
-                  width: '100%',
-                  minHeight: 48,
-                  backgroundColor: '#6C63FF',
-                  color: 'white',
-                  fontWeight: 700,
-                  fontSize: 15,
-                  borderRadius: 12,
-                  border: 'none',
-                  cursor: saving || !newTitle.trim() || !newDate ? 'not-allowed' : 'pointer',
-                  opacity: saving || !newTitle.trim() || !newDate ? 0.5 : 1,
-                }}
-              >
+              <input type="text" value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Event title *" style={{ width: '100%' }} />
+              <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} style={{ width: '100%' }} />
+              <input type="text" value={newTime} onChange={e => setNewTime(e.target.value)} placeholder="Time (e.g. 7:00 PM) — optional" style={{ width: '100%' }} />
+              <input type="text" value={newLocation} onChange={e => setNewLocation(e.target.value)} placeholder="Location — optional" style={{ width: '100%' }} />
+              <textarea value={newDesc} onChange={e => setNewDesc(e.target.value)} placeholder="Description — optional" rows={3} style={{ width: '100%', resize: 'none' }} />
+              {addError && <p style={{ fontSize: 13, color: '#FF4D4D', backgroundColor: 'rgba(255,77,77,0.1)', borderRadius: 10, padding: '8px 12px' }}>{addError}</p>}
+              <button onClick={addEvent} disabled={saving || !newTitle.trim() || !newDate} style={{ width: '100%', minHeight: 48, backgroundColor: '#6C63FF', color: 'white', fontWeight: 700, fontSize: 15, borderRadius: 12, border: 'none', cursor: saving || !newTitle.trim() || !newDate ? 'not-allowed' : 'pointer', opacity: saving || !newTitle.trim() || !newDate ? 0.5 : 1 }}>
                 {saving ? 'Saving…' : 'Save event'}
               </button>
             </div>
@@ -859,9 +593,7 @@ export default function CalendarPage() {
 
           {futureEvents.length === 0 && !showAddForm ? (
             <div style={{ ...cardStyle, padding: 24, textAlign: 'center' }}>
-              <p style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>
-                {isAdmin ? 'No upcoming events. Add one above.' : 'No upcoming events yet.'}
-              </p>
+              <p style={{ color: 'var(--text-tertiary)', fontSize: 14 }}>{isAdmin ? 'No upcoming events. Add one above.' : 'No upcoming events yet.'}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -875,34 +607,38 @@ export default function CalendarPage() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>{event.title}</p>
                         <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 4 }}>
-                          {MONTH_SHORT[em - 1]} {ed}
-                          {event.event_time && ` · ${event.event_time}`}
+                          {MONTH_SHORT[em - 1]} {ed}{event.event_time && ` · ${event.event_time}`}
                         </p>
-                        {event.location && (
-                          <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 2 }}>📍 {event.location}</p>
-                        )}
-                        {event.description && (
-                          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8, lineHeight: 1.5 }}>{event.description}</p>
-                        )}
+                        {event.location && <p style={{ fontSize: 13, color: 'var(--text-tertiary)', marginTop: 2 }}>📍 {event.location}</p>}
+                        {event.description && <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 8, lineHeight: 1.5 }}>{event.description}</p>}
                       </div>
-                      <div style={{ flexShrink: 0, textAlign: 'right' }}>
-                        <span style={{ fontSize: 12, color: '#6C63FF', fontWeight: 600 }}>
-                          {days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}
-                        </span>
-                      </div>
+                      <span style={{ fontSize: 12, color: '#6C63FF', fontWeight: 600, flexShrink: 0 }}>
+                        {days === 0 ? 'today' : days === 1 ? 'tomorrow' : `in ${days} days`}
+                      </span>
                     </div>
 
-                    {summary && (
-                      <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{summary}</p>
+                    {summary && <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{summary}</p>}
+
+                    {/* Attendance list (if show_attendance=true and non-admin, or always for admin) */}
+                    {event.attendance && !isAdmin && event.show_attendance && event.attendance.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Going ({event.attendance.length})</p>
+                        {event.attendance.map(a => (
+                          <p key={a.rsvp_id} style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                            {a.name}{a.ride_status === 'driving' ? ' 🚗' : a.ride_status === 'need_ride' ? ' 🙋' : ''}
+                          </p>
+                        ))}
+                      </div>
                     )}
 
-                    <RsvpButtons event={event} onRsvp={toggleRsvp} />
+                    <RsvpZone event={event} onRsvp={handleRsvp} />
+
+                    {isAdmin && (
+                      <AdminRidePanel event={event} onAttendanceToggle={toggleAttendance} onMatchCreated={refreshEvents} />
+                    )}
 
                     {isAdmin && confirmDeleteEventId !== event.id && (
-                      <button
-                        onClick={() => setConfirmDeleteEventId(event.id)}
-                        style={{ fontSize: 12, color: 'rgba(255,77,77,0.6)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', marginTop: 4 }}
-                      >
+                      <button onClick={() => setConfirmDeleteEventId(event.id)} style={{ fontSize: 12, color: 'rgba(255,77,77,0.6)', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', marginTop: 4 }}>
                         Delete event
                       </button>
                     )}
@@ -911,18 +647,8 @@ export default function CalendarPage() {
                       <div style={{ paddingTop: 8, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Delete this event?</p>
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button
-                            onClick={() => { deleteEvent(event.id); setConfirmDeleteEventId(null) }}
-                            style={{ minHeight: 36, padding: '0 14px', backgroundColor: 'rgba(255,77,77,0.15)', color: '#FF4D4D', fontWeight: 700, borderRadius: 10, fontSize: 13, border: '1px solid rgba(255,77,77,0.3)', cursor: 'pointer' }}
-                          >
-                            Delete
-                          </button>
-                          <button
-                            onClick={() => setConfirmDeleteEventId(null)}
-                            style={{ minHeight: 36, padding: '0 14px', backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}
-                          >
-                            Cancel
-                          </button>
+                          <button onClick={() => { deleteEvent(event.id); setConfirmDeleteEventId(null) }} style={{ minHeight: 36, padding: '0 14px', backgroundColor: 'rgba(255,77,77,0.15)', color: '#FF4D4D', fontWeight: 700, borderRadius: 10, fontSize: 13, border: '1px solid rgba(255,77,77,0.3)', cursor: 'pointer' }}>Delete</button>
+                          <button onClick={() => setConfirmDeleteEventId(null)} style={{ minHeight: 36, padding: '0 14px', backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', borderRadius: 10, fontSize: 13, border: 'none', cursor: 'pointer' }}>Cancel</button>
                         </div>
                       </div>
                     )}

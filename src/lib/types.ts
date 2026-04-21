@@ -116,6 +116,7 @@ export type CalendarEvent = {
   event_date: string
   event_time: string | null
   location: string | null
+  show_attendance: boolean
   created_by: string
   created_at: string
 }
@@ -125,9 +126,43 @@ export type EventRsvp = {
   event_id: string
   user_id: string
   status: 'going' | 'not_going' | 'maybe'
+  ride_status: 'driving' | 'need_ride' | 'own_way' | 'unsure' | null
+  area: string | null
+  can_take: number | null
+}
+
+export type RideMatch = {
+  id: string
+  event_id: string
+  driver_rsvp_id: string
+  status: 'pending' | 'accepted' | 'declined'
+  created_at: string
+}
+
+export type RideMatchMember = {
+  id: string
+  match_id: string
+  rsvp_id: string
+  status: 'pending' | 'accepted' | 'declined'
+  notified_at: string | null
+  created_at: string
+}
+
+export type AttendeeInfo = {
+  user_id: string
+  rsvp_id: string
+  name: string
+  area: string | null
+  ride_status: string | null
 }
 
 export type EventWithMeta = CalendarEvent & {
   rsvp_counts: { going: number; maybe: number; not_going: number }
+  ride_summary: { driving: number; need_ride: number; own_way: number; unsure: number }
   my_rsvp: 'going' | 'maybe' | 'not_going' | null
+  my_ride_status: 'driving' | 'need_ride' | 'own_way' | 'unsure' | null
+  my_area: string | null
+  my_can_take: number | null
+  my_match: { id: string; status: 'pending' | 'accepted' | 'declined'; role: 'driver' | 'rider' } | null
+  attendance: AttendeeInfo[] | null
 }
