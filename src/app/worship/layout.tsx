@@ -11,11 +11,14 @@ export default async function WorshipLayout({ children }: { children: React.Reac
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, is_worship_team')
+    .select('role, is_worship_team, is_worship_only')
     .eq('id', user.id)
     .single()
 
   if (!profile?.is_worship_team && profile?.role !== 'admin') redirect('/')
+
+  const isWorshipOnly = profile?.is_worship_only && profile?.role !== 'admin'
+  const isAdmin = profile?.role === 'admin'
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-base)' }}>
@@ -40,20 +43,24 @@ export default async function WorshipLayout({ children }: { children: React.Reac
               Time with Jesus
             </span>
           </Link>
-          <Link
-            href="/"
-            style={{
-              fontSize: 14,
-              color: 'var(--text-tertiary)',
-              textDecoration: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              minHeight: 44,
-            }}
-          >
-            ← Gather
-          </Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {isAdmin && (
+              <Link
+                href="/worship/admin"
+                style={{ fontSize: 14, color: 'var(--text-tertiary)', textDecoration: 'none', display: 'flex', alignItems: 'center', minHeight: 44 }}
+              >
+                Team
+              </Link>
+            )}
+            {!isWorshipOnly && (
+              <Link
+                href="/"
+                style={{ fontSize: 14, color: 'var(--text-tertiary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4, minHeight: 44 }}
+              >
+                ← Gather
+              </Link>
+            )}
+          </div>
         </div>
       </div>
       {children}

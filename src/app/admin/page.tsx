@@ -7,6 +7,7 @@ import WorshipOnlyToggle from './WorshipOnlyToggle'
 import CopyButton from './CopyButton'
 import BroadcastForm from './BroadcastForm'
 import ReminderForm from './ReminderForm'
+import PendingSection from './PendingSection'
 
 const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
 const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
@@ -27,10 +28,17 @@ export default async function AdminPage() {
 
   if (!currentProfile || currentProfile.role !== 'admin') redirect('/')
 
-  const { data: members } = await supabase
+  const { data: allProfiles } = await supabase
     .from('profiles')
-    .select('id, full_name, display_name, role, is_worship_team, is_worship_only')
+    .select('id, full_name, display_name, role, is_worship_team, is_worship_only, is_approved, email')
     .order('full_name')
+
+  const pendingUsers = (allProfiles ?? []).filter((p) => !p.is_approved)
+
+  // Exclusively worship-only members (approved, not admin) are managed in /worship/admin
+  const members = (allProfiles ?? []).filter(
+    (p) => p.is_approved && !(p.is_worship_only && p.role !== 'admin')
+  )
 
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gatherdaily.app'
 
@@ -41,7 +49,7 @@ export default async function AdminPage() {
           <div>
             <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text-primary)' }}>Manage members</h1>
             <p style={{ fontSize: 14, color: 'var(--text-tertiary)', marginTop: 4 }}>
-              {members?.length ?? 0} people in the group
+              {members.length} people in the group
             </p>
           </div>
           <Link
@@ -51,6 +59,9 @@ export default async function AdminPage() {
             ← Home
           </Link>
         </div>
+
+        {/* Pending approvals */}
+        <PendingSection initialPending={pendingUsers} />
 
         {/* Invite section */}
         <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 20, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>

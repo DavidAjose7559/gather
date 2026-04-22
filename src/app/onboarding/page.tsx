@@ -60,12 +60,18 @@ export default function OnboardingPage() {
       display_name: displayName.trim() || null,
       email: user.email ?? null,
       role: isFirstUser ? 'admin' : 'member',
+      is_approved: isFirstUser ? true : false,
     })
 
     if (error) {
       setError(error.message)
       setLoading(false)
       return
+    }
+
+    // Notify admin of new sign-up (not for the first/admin user)
+    if (!isFirstUser) {
+      fetch('/api/admin/notify-signup', { method: 'POST' }).catch(() => {})
     }
 
     setLoading(false)
