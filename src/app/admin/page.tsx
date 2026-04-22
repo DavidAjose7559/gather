@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import RoleToggle from './RoleToggle'
 import WorshipTeamToggle from './WorshipTeamToggle'
+import WorshipOnlyToggle from './WorshipOnlyToggle'
 import CopyButton from './CopyButton'
 import BroadcastForm from './BroadcastForm'
 import ReminderForm from './ReminderForm'
@@ -28,7 +29,7 @@ export default async function AdminPage() {
 
   const { data: members } = await supabase
     .from('profiles')
-    .select('id, full_name, display_name, role, is_worship_team')
+    .select('id, full_name, display_name, role, is_worship_team, is_worship_only')
     .order('full_name')
 
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gatherdaily.app'
@@ -131,6 +132,12 @@ export default async function AdminPage() {
                       <WorshipTeamToggle
                         memberId={member.id}
                         isWorshipTeam={member.is_worship_team ?? false}
+                      />
+                    )}
+                    {member.id !== user.id && (
+                      <WorshipOnlyToggle
+                        memberId={member.id}
+                        isWorshipOnly={member.is_worship_only ?? false}
                       />
                     )}
                   </div>

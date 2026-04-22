@@ -34,26 +34,6 @@ export async function proxy(request: NextRequest) {
   // API routes handle their own auth internally — never redirect them
   if (pathname.startsWith('/api/')) return supabaseResponse
 
-  // Worship section: requires is_worship_team or admin role
-  if (pathname.startsWith('/worship')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role, is_worship_team')
-      .eq('id', user.id)
-      .single()
-    if (!profile?.is_worship_team && profile?.role !== 'admin') {
-      const url = request.nextUrl.clone()
-      url.pathname = '/'
-      return NextResponse.redirect(url)
-    }
-    return supabaseResponse
-  }
-
   const publicPaths = ['/login', '/auth/callback']
   const isPublic = publicPaths.some((p) => pathname.startsWith(p))
 
@@ -67,6 +47,31 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/'
     return NextResponse.redirect(url)
+  }
+
+  // For authenticated users on non-public routes, check role-based access
+  if (user && !isPublic) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, is_worship_team, is_worship_only')
+      .eq('id', user.id)
+      .single()
+
+    // Worship-only users are confined to /worship
+    if (profile?.is_worship_only && !pathname.startsWith('/worship')) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/worship'
+      return NextResponse.redirect(url)
+    }
+
+    // Worship routes require worship_team, worship_only, or admin
+    if (pathname.startsWith('/worship')) {
+      if (!profile?.is_worship_team && !profile?.is_worship_only && profile?.role !== 'admin') {
+        const url = request.nextUrl.clone()
+        url.pathname = '/'
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   return supabaseResponse

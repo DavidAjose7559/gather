@@ -10,6 +10,7 @@ export type Profile = {
   created_at: string
   is_demo?: boolean | null
   is_worship_team?: boolean | null
+  is_worship_only?: boolean | null
 }
 
 export type WorshipEvent = {
