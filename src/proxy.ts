@@ -34,6 +34,26 @@ export async function proxy(request: NextRequest) {
   // API routes handle their own auth internally — never redirect them
   if (pathname.startsWith('/api/')) return supabaseResponse
 
+  // Worship section: requires is_worship_team or admin role
+  if (pathname.startsWith('/worship')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, is_worship_team')
+      .eq('id', user.id)
+      .single()
+    if (!profile?.is_worship_team && profile?.role !== 'admin') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
   const publicPaths = ['/login', '/auth/callback']
   const isPublic = publicPaths.some((p) => pathname.startsWith(p))
 

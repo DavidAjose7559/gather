@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import RoleToggle from './RoleToggle'
+import WorshipTeamToggle from './WorshipTeamToggle'
 import CopyButton from './CopyButton'
 import BroadcastForm from './BroadcastForm'
 import ReminderForm from './ReminderForm'
@@ -27,7 +28,7 @@ export default async function AdminPage() {
 
   const { data: members } = await supabase
     .from('profiles')
-    .select('id, full_name, display_name, role')
+    .select('id, full_name, display_name, role, is_worship_team')
     .order('full_name')
 
   const appUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://gatherdaily.app'
@@ -120,11 +121,19 @@ export default async function AdminPage() {
                       <p style={{ fontSize: 12, color: 'var(--text-tertiary)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.full_name}</p>
                     )}
                   </div>
-                  <RoleToggle
-                    memberId={member.id}
-                    currentRole={member.role as 'member' | 'admin'}
-                    isSelf={member.id === user.id}
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+                    <RoleToggle
+                      memberId={member.id}
+                      currentRole={member.role as 'member' | 'admin'}
+                      isSelf={member.id === user.id}
+                    />
+                    {member.id !== user.id && (
+                      <WorshipTeamToggle
+                        memberId={member.id}
+                        isWorshipTeam={member.is_worship_team ?? false}
+                      />
+                    )}
+                  </div>
                 </div>
               )
             })}

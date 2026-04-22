@@ -9,7 +9,73 @@ export type Profile = {
   default_visibility: 'everyone' | 'specific' | 'one_person'
   created_at: string
   is_demo?: boolean | null
+  is_worship_team?: boolean | null
 }
+
+export type WorshipEvent = {
+  id: string
+  title: string
+  event_date: string
+  venue: string | null
+  expected_guests: number | null
+  theme: string | null
+  notes: string | null
+  status: 'planning' | 'confirmed' | 'done'
+  created_by: string
+  created_at: string
+}
+
+export type WorshipBudgetItem = {
+  id: string
+  event_id: string
+  category: string
+  allocated: number
+  spent: number
+  notes: string | null
+  created_at: string
+}
+
+export type WorshipOrderItem = {
+  id: string
+  event_id: string
+  position: number
+  item: string
+  duration_minutes: number | null
+  assigned_to: string | null
+  notes: string | null
+}
+
+export type WorshipGuest = {
+  id: string
+  event_id: string
+  name: string
+  category: 'speaker' | 'artist' | 'vip' | 'general' | null
+  rsvp_status: 'invited' | 'confirmed' | 'declined'
+  notes: string | null
+}
+
+export type WorshipTask = {
+  id: string
+  event_id: string
+  title: string
+  assigned_to: string | null
+  due_date: string | null
+  status: 'todo' | 'in_progress' | 'done'
+  notes: string | null
+  created_at: string
+}
+
+export type WorshipNote = {
+  id: string
+  event_id: string
+  body: string
+  created_by: string
+  created_at: string
+}
+
+export type WorshipNoteWithCreator = WorshipNote & { creator_name: string }
+export type WorshipTaskWithAssignee = WorshipTask & { assignee_name: string | null }
+export type WorshipTeamMember = { id: string; full_name: string; display_name: string | null }
 
 export type CheckIn = {
   id: string
