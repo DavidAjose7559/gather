@@ -241,7 +241,7 @@ export default function BudgetTab({
 
       {/* Category cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {budget.map((item) => {
+        {[...budget].sort((a, b) => Number(b.allocated) - Number(a.allocated)).map((item) => {
           const allocated = Number(item.allocated)
           const spent = Number(item.spent)
           const rem = allocated - spent
