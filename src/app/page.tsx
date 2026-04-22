@@ -270,14 +270,24 @@ export default async function HomePage() {
         {/* Top bar */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 56, paddingBottom: 8 }}>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>Gather</h1>
-          {currentProfile.role === 'admin' && (
-            <Link
-              href="/admin"
-              style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-tertiary)', textDecoration: 'none', minHeight: 44, display: 'flex', alignItems: 'center' }}
-            >
-              Manage
-            </Link>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {(currentProfile.is_worship_team || currentProfile.role === 'admin') && (
+              <Link
+                href="/worship"
+                style={{ fontSize: 13, fontWeight: 500, color: '#6C63FF', textDecoration: 'none', minHeight: 44, display: 'flex', alignItems: 'center' }}
+              >
+                Worship →
+              </Link>
+            )}
+            {currentProfile.role === 'admin' && (
+              <Link
+                href="/admin"
+                style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-tertiary)', textDecoration: 'none', minHeight: 44, display: 'flex', alignItems: 'center' }}
+              >
+                Manage
+              </Link>
+            )}
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 8, paddingBottom: 16 }}>
