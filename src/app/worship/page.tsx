@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import WorshipMentionsBanner from './WorshipMentionsBanner'
 
 type EventWithBudget = {
   id: string
@@ -42,6 +43,7 @@ export default async function WorshipDashboard() {
 
   return (
     <div style={{ maxWidth: 768, margin: '0 auto', padding: '32px 20px 64px' }}>
+      <WorshipMentionsBanner />
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }}>
         <div>
           <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>

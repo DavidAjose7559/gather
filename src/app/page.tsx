@@ -7,6 +7,7 @@ import { calculateStreak } from '@/lib/streaks'
 import { todayToronto, formatDateToronto, offsetTorontoDay } from '@/lib/date'
 import BottomNav from '@/components/BottomNav'
 import UpcomingEventsBanner from './UpcomingEventsBanner'
+import WorshipMentionsBanner from './worship/WorshipMentionsBanner'
 
 const avatarColors = ['#FF4D4D','#FF9500','#4CAF50','#6C63FF','#00BCD4','#E91E63','#FF6B35','#A855F7']
 const getAvatarColor = (name: string) => avatarColors[name.charCodeAt(0) % avatarColors.length]
@@ -317,6 +318,11 @@ export default async function HomePage() {
                 {visibleSupportRequests.length - 2} more {visibleSupportRequests.length - 2 === 1 ? 'person has' : 'people have'} asked for support today.
               </p>
             </div>
+          )}
+
+          {/* Worship mention notifications */}
+          {(currentProfile.is_worship_team || currentProfile.role === 'admin') && (
+            <WorshipMentionsBanner />
           )}
 
           {/* Check-in CTA or status */}

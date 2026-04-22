@@ -133,6 +133,11 @@ export async function PATCH(request: NextRequest) {
       .eq('id', user!.id)
       .single()
     const posterName = poster ? (poster.display_name ?? poster.full_name) : 'Someone'
+
+    await supabaseAdmin.from('worship_budget_mentions').insert(
+      mentionIds.map((mid) => ({ budget_item_id: id, profile_id: mid }))
+    )
+
     sendMentionEmails(mentionIds, user!.id, data.event_id, posterName, data.category, body.notes).catch(console.error)
   }
 
