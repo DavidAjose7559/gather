@@ -143,6 +143,7 @@ export default function EventDetail({
         <OverviewTab
           event={event}
           notes={notes}
+          team={team}
           onEventUpdate={setEvent}
           onNoteAdd={(note) => setNotes((prev) => [note, ...prev])}
           onNoteDelete={(id) => setNotes((prev) => prev.filter((n) => n.id !== id))}

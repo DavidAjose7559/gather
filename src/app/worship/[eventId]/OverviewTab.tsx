@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { WorshipEvent, WorshipNoteWithCreator } from '@/lib/types'
+import type { WorshipEvent, WorshipNoteWithCreator, WorshipTeamMember } from '@/lib/types'
+import MentionTextarea, { renderWithMentions } from './MentionTextarea'
 
 function timeAgo(iso: string) {
   const s = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
@@ -16,12 +17,14 @@ function timeAgo(iso: string) {
 export default function OverviewTab({
   event,
   notes,
+  team,
   onEventUpdate,
   onNoteAdd,
   onNoteDelete,
 }: {
   event: WorshipEvent
   notes: WorshipNoteWithCreator[]
+  team: WorshipTeamMember[]
   onEventUpdate: (e: WorshipEvent) => void
   onNoteAdd: (n: WorshipNoteWithCreator) => void
   onNoteDelete: (id: string) => void
@@ -39,6 +42,7 @@ export default function OverviewTab({
   })
 
   const [noteBody, setNoteBody] = useState('')
+  const [mentionedIds, setMentionedIds] = useState<string[]>([])
   const [postingNote, setPostingNote] = useState(false)
   const [deletingNoteId, setDeletingNoteId] = useState<string | null>(null)
 
@@ -92,12 +96,13 @@ export default function OverviewTab({
     const res = await fetch('/api/worship/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ event_id: event.id, body: noteBody.trim() }),
+      body: JSON.stringify({ event_id: event.id, body: noteBody.trim(), mentioned_user_ids: mentionedIds }),
     })
     if (res.ok) {
       const note = await res.json()
       onNoteAdd(note)
       setNoteBody('')
+      setMentionedIds([])
     }
     setPostingNote(false)
   }
@@ -210,47 +215,37 @@ export default function OverviewTab({
         <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 16 }}>Team notes</h2>
 
         {/* Add note */}
-        <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-          <textarea
+        <div style={{ marginBottom: 20 }}>
+          <MentionTextarea
             value={noteBody}
-            onChange={(e) => setNoteBody(e.target.value)}
-            placeholder="Post a note or announcement for the team…"
-            style={{
-              flex: 1,
-              backgroundColor: 'var(--bg-input)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-light)',
-              borderRadius: 12,
-              padding: '10px 14px',
-              fontSize: 14,
-              resize: 'none',
-              minHeight: 72,
-              outline: 'none',
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) postNote()
-            }}
+            onChange={setNoteBody}
+            onMentionedUsers={setMentionedIds}
+            team={team}
+            placeholder="Post a note… type @ to mention someone"
+            minHeight={72}
           />
-          <button
-            onClick={postNote}
-            disabled={postingNote || !noteBody.trim()}
-            style={{
-              padding: '0 16px',
-              borderRadius: 12,
-              backgroundColor: '#6C63FF',
-              color: '#fff',
-              border: 'none',
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: postingNote || !noteBody.trim() ? 'not-allowed' : 'pointer',
-              opacity: !noteBody.trim() ? 0.4 : postingNote ? 0.7 : 1,
-              alignSelf: 'flex-end',
-              height: 44,
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {postingNote ? '…' : 'Post'}
-          </button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+              {mentionedIds.length > 0 ? `${mentionedIds.length} person${mentionedIds.length > 1 ? 's' : ''} will be notified` : 'Type @ to mention someone'}
+            </span>
+            <button
+              onClick={postNote}
+              disabled={postingNote || !noteBody.trim()}
+              style={{
+                padding: '8px 20px',
+                borderRadius: 10,
+                backgroundColor: '#6C63FF',
+                color: '#fff',
+                border: 'none',
+                fontWeight: 600,
+                fontSize: 14,
+                cursor: postingNote || !noteBody.trim() ? 'not-allowed' : 'pointer',
+                opacity: !noteBody.trim() ? 0.4 : postingNote ? 0.7 : 1,
+              }}
+            >
+              {postingNote ? '…' : 'Post'}
+            </button>
+          </div>
         </div>
 
         {/* Notes list */}
@@ -273,7 +268,9 @@ export default function OverviewTab({
                     </button>
                   </div>
                 </div>
-                <p style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0 }}>{note.body}</p>
+                <p style={{ fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.6, whiteSpace: 'pre-wrap', margin: 0 }}>
+                  {renderWithMentions(note.body, team)}
+                </p>
               </div>
             ))}
           </div>
