@@ -35,7 +35,7 @@ async function sendAssignmentEmail(
   ])
 
   const assignee = assigneeRes.data
-  if (!assignee?.email || assigneeId === assignerId) return
+  if (!assignee?.email) return
 
   const eventTitle = eventRes.data?.title ?? 'a worship night'
   const assignerName = assignerRes.data
@@ -52,7 +52,7 @@ async function sendAssignmentEmail(
       <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111827;">
         <p style="font-size: 16px; margin-bottom: 8px;">Hey ${firstName},</p>
         <p style="font-size: 15px; line-height: 1.6; margin-bottom: 16px; color: #374151;">
-          <strong>${assignerName}</strong> assigned you a task for <strong>${eventTitle}</strong>.
+          ${assigneeId === assignerId ? 'You assigned yourself a task for' : `<strong>${assignerName}</strong> assigned you a task for`} <strong>${eventTitle}</strong>.
         </p>
         <div style="background: #f3f4f6; border-left: 4px solid #6C63FF; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px; font-size: 15px; color: #374151; font-weight: 600;">
           ${taskTitle}

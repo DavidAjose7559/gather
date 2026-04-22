@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { WorshipBudgetItem } from '@/lib/types'
+import type { WorshipBudgetItem, WorshipTeamMember } from '@/lib/types'
+import MentionTextarea, { renderWithMentions } from './MentionTextarea'
 
 function AmountInput({
   value,
@@ -55,13 +56,73 @@ function AmountInput({
   )
 }
 
+function NoteInlineEdit({
+  value,
+  team,
+  onSave,
+}: {
+  value: string
+  team: WorshipTeamMember[]
+  onSave: (v: string, mentionedIds: string[]) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value)
+  const [mentionedIds, setMentionedIds] = useState<string[]>([])
+
+  function commit() {
+    onSave(draft, mentionedIds)
+    setEditing(false)
+    setMentionedIds([])
+  }
+
+  if (editing) {
+    return (
+      <div>
+        <MentionTextarea
+          value={draft}
+          onChange={setDraft}
+          onMentionedUsers={setMentionedIds}
+          team={team}
+          placeholder="Add a note… type @ to mention someone"
+          minHeight={56}
+        />
+        <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+          <button
+            onClick={commit}
+            style={{ fontSize: 12, padding: '4px 12px', borderRadius: 8, backgroundColor: '#6C63FF', color: '#fff', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+          >
+            Save
+          </button>
+          <button
+            onClick={() => { setEditing(false); setDraft(value); setMentionedIds([]) }}
+            style={{ fontSize: 12, padding: '4px 12px', borderRadius: 8, backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <span
+      onClick={() => { setEditing(true); setDraft(value) }}
+      style={{ fontSize: 13, color: value ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: 'pointer', display: 'block' }}
+    >
+      {value ? renderWithMentions(value, team) : 'Add note…'}
+    </span>
+  )
+}
+
 export default function BudgetTab({
   eventId,
   budget: initialBudget,
+  team,
   onBudgetChange,
 }: {
   eventId: string
   budget: WorshipBudgetItem[]
+  team: WorshipTeamMember[]
   onBudgetChange: (b: WorshipBudgetItem[]) => void
 }) {
   const [budget, setBudgetState] = useState(initialBudget)
@@ -76,7 +137,7 @@ export default function BudgetTab({
     onBudgetChange(items)
   }
 
-  async function patchItem(id: string, patch: Partial<WorshipBudgetItem>) {
+  async function patchItem(id: string, patch: Partial<WorshipBudgetItem> & { mentioned_user_ids?: string[] }) {
     setSavingId(id)
     const res = await fetch(`/api/worship/budget?id=${id}`, {
       method: 'PATCH',
@@ -227,7 +288,8 @@ export default function BudgetTab({
 
               <NoteInlineEdit
                 value={item.notes ?? ''}
-                onSave={(v) => patchItem(item.id, { notes: v || null })}
+                team={team}
+                onSave={(v, mentionedIds) => patchItem(item.id, { notes: v || null, mentioned_user_ids: mentionedIds })}
               />
             </div>
           )
@@ -280,45 +342,5 @@ export default function BudgetTab({
         </button>
       )}
     </div>
-  )
-}
-
-function NoteInlineEdit({ value, onSave }: { value: string; onSave: (v: string) => void }) {
-  const [editing, setEditing] = useState(false)
-  const [draft, setDraft] = useState(value)
-
-  if (editing) {
-    return (
-      <input
-        autoFocus
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={() => { onSave(draft); setEditing(false) }}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') { onSave(draft); setEditing(false) }
-          if (e.key === 'Escape') { setEditing(false); setDraft(value) }
-        }}
-        placeholder="Add a note…"
-        style={{
-          width: '100%',
-          backgroundColor: 'var(--bg-input)',
-          color: 'var(--text-primary)',
-          border: '1px solid #6C63FF',
-          borderRadius: 8,
-          padding: '6px 10px',
-          fontSize: 13,
-          outline: 'none',
-        }}
-      />
-    )
-  }
-
-  return (
-    <span
-      onClick={() => { setEditing(true); setDraft(value) }}
-      style={{ fontSize: 13, color: value ? 'var(--text-secondary)' : 'var(--text-tertiary)', cursor: 'pointer', display: 'block' }}
-    >
-      {value || 'Add note…'}
-    </span>
   )
 }

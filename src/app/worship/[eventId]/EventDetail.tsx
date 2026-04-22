@@ -153,6 +153,7 @@ export default function EventDetail({
         <BudgetTab
           eventId={event.id}
           budget={budget}
+          team={team}
           onBudgetChange={setBudget}
         />
       )}
