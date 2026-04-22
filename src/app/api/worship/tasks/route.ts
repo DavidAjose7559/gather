@@ -34,9 +34,16 @@ async function sendAssignmentEmail(
     supabaseAdmin.from('profiles').select('full_name, display_name').eq('id', assignerId).single(),
   ])
 
-  const assignee = assigneeRes.data
-  if (!assignee?.email) return
+  if (!assigneeRes.data) return
 
+  let email = assigneeRes.data.email ?? null
+  if (!email) {
+    const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(assigneeId)
+    email = authUser?.user?.email ?? null
+  }
+  if (!email) return
+
+  const assignee = assigneeRes.data
   const eventTitle = eventRes.data?.title ?? 'a worship night'
   const assignerName = assignerRes.data
     ? (assignerRes.data.display_name ?? assignerRes.data.full_name)
@@ -46,7 +53,7 @@ async function sendAssignmentEmail(
 
   await resend.emails.send({
     from: fromEmail,
-    to: assignee.email,
+    to: email,
     subject: `You've been assigned a task — ${eventTitle}`,
     html: `
       <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111827;">

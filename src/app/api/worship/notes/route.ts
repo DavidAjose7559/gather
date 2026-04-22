@@ -93,7 +93,16 @@ export async function POST(request: NextRequest) {
     const eventTitle = eventRes.data?.title ?? 'a worship night'
     const eventLink = `${appUrl}/worship/${event_id}`
     const excerpt = body.trim().slice(0, 300) + (body.trim().length > 300 ? '…' : '')
-    const mentionables = (profilesRes.data ?? []).filter((p) => p.email)
+
+    // Resolve emails — fall back to auth.users if profiles.email is null
+    const profilesWithEmail = await Promise.all(
+      (profilesRes.data ?? []).map(async (p) => {
+        if (p.email) return p
+        const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(p.id)
+        return { ...p, email: authUser?.user?.email ?? null }
+      })
+    )
+    const mentionables = profilesWithEmail.filter((p) => p.email)
 
     if (mentionables.length > 0) {
       await resend.batch.send(

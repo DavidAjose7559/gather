@@ -38,7 +38,15 @@ async function sendMentionEmails(
   const eventTitle = eventRes.data?.title ?? 'a worship night'
   const eventLink = `${appUrl}/worship/${eventId}`
   const excerpt = noteExcerpt.slice(0, 300) + (noteExcerpt.length > 300 ? '…' : '')
-  const mentionables = (profilesRes.data ?? []).filter((p) => p.email)
+
+  const profilesWithEmail = await Promise.all(
+    (profilesRes.data ?? []).map(async (p) => {
+      if (p.email) return p
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(p.id)
+      return { ...p, email: authUser?.user?.email ?? null }
+    })
+  )
+  const mentionables = profilesWithEmail.filter((p) => p.email)
 
   if (mentionables.length > 0) {
     await resend.batch.send(
