@@ -118,19 +118,31 @@ export default function BudgetTab({
   eventId,
   budget: initialBudget,
   team,
+  moneyInBank: initialMoneyInBank,
   onBudgetChange,
 }: {
   eventId: string
   budget: WorshipBudgetItem[]
   team: WorshipTeamMember[]
+  moneyInBank: number
   onBudgetChange: (b: WorshipBudgetItem[]) => void
 }) {
   const [budget, setBudgetState] = useState(initialBudget)
+  const [moneyInBank, setMoneyInBank] = useState(initialMoneyInBank)
   const [addingCategory, setAddingCategory] = useState(false)
   const [newCategory, setNewCategory] = useState('')
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState(false)
   const [savingId, setSavingId] = useState<string | null>(null)
+
+  async function saveMoneyInBank(v: number) {
+    setMoneyInBank(v)
+    await fetch(`/api/worship/events?id=${eventId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ money_in_bank: v }),
+    })
+  }
 
   function updateLocal(items: WorshipBudgetItem[]) {
     setBudgetState(items)
@@ -174,29 +186,31 @@ export default function BudgetTab({
   }
 
   function copyBudget() {
-    const totalAllocated = budget.reduce((s, b) => s + Number(b.allocated), 0)
+    const totalBudgeted = budget.reduce((s, b) => s + Number(b.allocated), 0)
     const totalSpent = budget.reduce((s, b) => s + Number(b.spent), 0)
+    const stillToRaise = Math.max(0, totalBudgeted - moneyInBank)
     const lines = [
       'BUDGET SUMMARY',
       '==============',
       ...budget.map((b) =>
-        `${b.category}: Allocated $${Number(b.allocated).toFixed(2)} | Spent $${Number(b.spent).toFixed(2)} | Remaining $${(Number(b.allocated) - Number(b.spent)).toFixed(2)}`
+        `${b.category}: Budgeted $${Number(b.allocated).toFixed(2)} | Spent $${Number(b.spent).toFixed(2)} | Remaining $${(Number(b.allocated) - Number(b.spent)).toFixed(2)}`
           + (b.notes ? ` (${b.notes})` : '')
       ),
       '==============',
-      `TOTAL ALLOCATED: $${totalAllocated.toFixed(2)}`,
+      `TOTAL BUDGETED: $${totalBudgeted.toFixed(2)}`,
+      `IN THE BANK: $${moneyInBank.toFixed(2)}`,
       `TOTAL SPENT: $${totalSpent.toFixed(2)}`,
-      `REMAINING: $${(totalAllocated - totalSpent).toFixed(2)}`,
+      `STILL TO RAISE: $${stillToRaise.toFixed(2)}`,
     ]
     navigator.clipboard.writeText(lines.join('\n'))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const totalAllocated = budget.reduce((s, b) => s + Number(b.allocated), 0)
+  const totalBudgeted = budget.reduce((s, b) => s + Number(b.allocated), 0)
   const totalSpent = budget.reduce((s, b) => s + Number(b.spent), 0)
-  const remaining = totalAllocated - totalSpent
-  const pct = totalAllocated > 0 ? Math.round((totalSpent / totalAllocated) * 100) : 0
+  const stillToRaise = Math.max(0, totalBudgeted - moneyInBank)
+  const pct = totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 100) : 0
   const barColor = pct >= 100 ? '#FF4D4D' : pct >= 80 ? '#FF9500' : '#4CAF50'
 
   return (
@@ -213,11 +227,11 @@ export default function BudgetTab({
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
           {[
-            { label: 'Allocated', value: `$${totalAllocated.toLocaleString()}` },
+            { label: 'Budgeted', value: `$${totalBudgeted.toLocaleString()}` },
             { label: 'Spent', value: `$${totalSpent.toLocaleString()}` },
-            { label: 'Remaining', value: `$${remaining.toLocaleString()}`, color: remaining < 0 ? '#FF4D4D' : remaining === 0 ? 'var(--text-secondary)' : '#4CAF50' },
+            { label: 'Unspent', value: `$${(totalBudgeted - totalSpent).toLocaleString()}`, color: (totalBudgeted - totalSpent) < 0 ? '#FF4D4D' : 'var(--text-primary)' },
           ].map((stat) => (
             <div key={stat.label} style={{ textAlign: 'center', padding: '12px 8px', backgroundColor: 'var(--bg-card-2)', borderRadius: 12 }}>
               <p style={{ fontSize: 18, fontWeight: 700, color: stat.color ?? 'var(--text-primary)' }}>{stat.value}</p>
@@ -226,10 +240,29 @@ export default function BudgetTab({
           ))}
         </div>
 
-        {totalAllocated > 0 && (
+        {/* In the bank + still to raise */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--bg-card-2)', borderRadius: 12, padding: '10px 16px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>In the bank</span>
+            <AmountInput value={moneyInBank} onSave={saveMoneyInBank} />
+          </div>
+          {stillToRaise > 0 && (
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>Still to raise</p>
+              <p style={{ fontSize: 14, fontWeight: 700, color: '#FF9500' }}>
+                ${stillToRaise.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+              </p>
+            </div>
+          )}
+          {stillToRaise === 0 && moneyInBank > 0 && (
+            <p style={{ fontSize: 12, fontWeight: 600, color: '#4CAF50' }}>Fully funded</p>
+          )}
+        </div>
+
+        {totalBudgeted > 0 && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Budget used</span>
+              <span style={{ fontSize: 13, color: 'var(--text-tertiary)' }}>Budget spent</span>
               <span style={{ fontSize: 13, fontWeight: 600, color: barColor }}>{pct}%</span>
             </div>
             <div style={{ height: 8, backgroundColor: 'var(--bg-input)', borderRadius: 4, overflow: 'hidden' }}>
@@ -265,7 +298,7 @@ export default function BudgetTab({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
                 <div style={{ textAlign: 'center' }}>
-                  <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }}>Allocated</p>
+                  <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 4 }}>Budgeted</p>
                   <AmountInput value={allocated} onSave={(v) => patchItem(item.id, { allocated: v })} />
                 </div>
                 <div style={{ textAlign: 'center' }}>

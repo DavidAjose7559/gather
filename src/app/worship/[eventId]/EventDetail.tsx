@@ -154,6 +154,7 @@ export default function EventDetail({
           eventId={event.id}
           budget={budget}
           team={team}
+          moneyInBank={Number(event.money_in_bank ?? 0)}
           onBudgetChange={setBudget}
         />
       )}

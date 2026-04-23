@@ -119,12 +119,13 @@ export default async function HomePage() {
   const isCurrentUserDemo = currentProfile.is_demo === true
   const allProfiles: Profile[] = profilesRes.data ?? []
   const demoProfileIds = new Set(allProfiles.filter((p) => p.is_demo).map((p) => p.id))
+  const worshipOnlyIds = new Set(allProfiles.filter((p) => p.is_worship_only && p.role !== 'admin').map((p) => p.id))
 
   const profiles: Profile[] = isCurrentUserDemo
-    ? allProfiles
-    : allProfiles.filter((p) => !p.is_demo)
+    ? allProfiles.filter((p) => !worshipOnlyIds.has(p.id))
+    : allProfiles.filter((p) => !p.is_demo && !worshipOnlyIds.has(p.id))
   const checkIns: CheckIn[] = (checkInsRes.data ?? []).filter(
-    (c) => isCurrentUserDemo || !demoProfileIds.has(c.user_id)
+    (c) => (isCurrentUserDemo || !demoProfileIds.has(c.user_id)) && !worshipOnlyIds.has(c.user_id)
   )
   const grants = grantsRes.data ?? []
   const recentCheckIns = (recentCheckInsRes.data ?? []).filter(
