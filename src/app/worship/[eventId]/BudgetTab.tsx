@@ -120,12 +120,14 @@ export default function BudgetTab({
   team,
   moneyInBank: initialMoneyInBank,
   onBudgetChange,
+  onMoneyInBankChange,
 }: {
   eventId: string
   budget: WorshipBudgetItem[]
   team: WorshipTeamMember[]
   moneyInBank: number
   onBudgetChange: (b: WorshipBudgetItem[]) => void
+  onMoneyInBankChange: (v: number) => void
 }) {
   const [budget, setBudgetState] = useState(initialBudget)
   const [moneyInBank, setMoneyInBank] = useState(initialMoneyInBank)
@@ -137,6 +139,7 @@ export default function BudgetTab({
 
   async function saveMoneyInBank(v: number) {
     setMoneyInBank(v)
+    onMoneyInBankChange(v)
     await fetch(`/api/worship/events?id=${eventId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

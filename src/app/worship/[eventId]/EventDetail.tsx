@@ -156,6 +156,7 @@ export default function EventDetail({
           team={team}
           moneyInBank={Number(event.money_in_bank ?? 0)}
           onBudgetChange={setBudget}
+          onMoneyInBankChange={(v) => setEvent((e) => ({ ...e, money_in_bank: v }))}
         />
       )}
       {activeTab === 'order' && (
