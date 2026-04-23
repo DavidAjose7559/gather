@@ -85,11 +85,11 @@ export async function PATCH(request: NextRequest) {
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
 
   const body = await request.json()
-  const { title, event_date, venue, expected_guests, theme, notes, status } = body
+  const { title, event_date, venue, expected_guests, theme, notes, status, money_in_bank } = body
 
   const { data: updated, error: dbErr } = await supabaseAdmin
     .from('worship_events')
-    .update({ title, event_date, venue, expected_guests, theme, notes, status })
+    .update({ title, event_date, venue, expected_guests, theme, notes, status, money_in_bank })
     .eq('id', id)
     .select('*')
     .single()
