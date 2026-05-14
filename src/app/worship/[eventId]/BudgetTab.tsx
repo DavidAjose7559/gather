@@ -201,8 +201,7 @@ export default function BudgetTab({
       ),
       '==============',
       `TOTAL BUDGETED: $${totalBudgeted.toFixed(2)}`,
-      `IN THE BANK: $${moneyInBank.toFixed(2)}`,
-      `TOTAL SPENT: $${totalSpent.toFixed(2)}`,
+      `TOTAL RAISED: $${totalRaised.toFixed(2)} (in bank $${moneyInBank.toFixed(2)} + spent $${totalSpent.toFixed(2)})`,
       `STILL TO RAISE: $${stillToRaise.toFixed(2)}`,
     ]
     navigator.clipboard.writeText(lines.join('\n'))
@@ -212,7 +211,8 @@ export default function BudgetTab({
 
   const totalBudgeted = budget.reduce((s, b) => s + Number(b.allocated), 0)
   const totalSpent = budget.reduce((s, b) => s + Number(b.spent), 0)
-  const stillToRaise = Math.max(0, totalBudgeted - moneyInBank)
+  const totalRaised = moneyInBank + totalSpent
+  const stillToRaise = Math.max(0, totalBudgeted - totalRaised)
   const pct = totalBudgeted > 0 ? Math.round((totalSpent / totalBudgeted) * 100) : 0
   const barColor = pct >= 100 ? '#FF4D4D' : pct >= 80 ? '#FF9500' : '#4CAF50'
 
@@ -257,7 +257,7 @@ export default function BudgetTab({
               </p>
             </div>
           )}
-          {stillToRaise === 0 && moneyInBank > 0 && (
+          {stillToRaise === 0 && totalRaised > 0 && (
             <p style={{ fontSize: 12, fontWeight: 600, color: '#4CAF50' }}>Fully funded</p>
           )}
         </div>
