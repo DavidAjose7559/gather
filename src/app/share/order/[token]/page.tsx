@@ -1,4 +1,12 @@
+import { createClient } from '@supabase/supabase-js'
 import PrintButton from './PrintButton'
+
+export const dynamic = 'force-dynamic'
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+)
 
 type OrderItem = {
   position: number
@@ -17,12 +25,33 @@ type OrderData = {
 }
 
 async function fetchOrder(token: string): Promise<OrderData | null> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
-  const res = await fetch(`${baseUrl}/api/worship/public/order?token=${token}`, {
-    cache: 'no-store',
-  })
-  if (!res.ok) return null
-  return res.json()
+  const { data: event, error: eventErr } = await supabaseAdmin
+    .from('worship_events')
+    .select('id, title, event_date, venue, theme')
+    .eq('share_token', token)
+    .single()
+
+  if (eventErr || !event) {
+    return null
+  }
+
+  const { data: orderItems, error: orderErr } = await supabaseAdmin
+    .from('worship_order_of_service')
+    .select('position, item, duration_minutes, assigned_to, notes')
+    .eq('event_id', event.id)
+    .order('position')
+
+  if (orderErr) {
+    return null
+  }
+
+  return {
+    title: event.title,
+    event_date: event.event_date,
+    venue: event.venue,
+    theme: event.theme,
+    order_of_service: orderItems ?? [],
+  }
 }
 
 function formatDate(d: string) {
