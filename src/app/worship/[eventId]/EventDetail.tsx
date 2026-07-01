@@ -163,7 +163,9 @@ export default function EventDetail({
         <OrderTab
           eventId={event.id}
           order={order}
+          shareToken={event.share_token}
           onOrderChange={setOrder}
+          onShareTokenChange={(token) => setEvent((e) => ({ ...e, share_token: token }))}
         />
       )}
       {activeTab === 'guests' && (

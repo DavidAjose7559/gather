@@ -23,6 +23,7 @@ export type WorshipEvent = {
   notes: string | null
   status: 'planning' | 'confirmed' | 'done'
   money_in_bank: number | null
+  share_token: string | null
   created_by: string
   created_at: string
 }

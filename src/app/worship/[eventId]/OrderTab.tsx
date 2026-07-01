@@ -6,11 +6,15 @@ import type { WorshipOrderItem } from '@/lib/types'
 export default function OrderTab({
   eventId,
   order: initialOrder,
+  shareToken,
   onOrderChange,
+  onShareTokenChange,
 }: {
   eventId: string
   order: WorshipOrderItem[]
+  shareToken: string | null
   onOrderChange: (o: WorshipOrderItem[]) => void
+  onShareTokenChange: (token: string | null) => void
 }) {
   const [items, setItems] = useState(initialOrder.map((o, i) => ({ ...o, position: i + 1 })))
   const [addingItem, setAddingItem] = useState(false)
@@ -20,6 +24,9 @@ export default function OrderTab({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState<Partial<WorshipOrderItem>>({})
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
+  const [generatingLink, setGeneratingLink] = useState(false)
+  const [revokingLink, setRevokingLink] = useState(false)
 
   function updateLocal(updated: WorshipOrderItem[]) {
     const reindexed = updated.map((o, i) => ({ ...o, position: i + 1 }))
@@ -125,6 +132,41 @@ export default function OrderTab({
     setTimeout(() => setCopied(false), 2000)
   }
 
+  async function generateShareLink() {
+    setGeneratingLink(true)
+    const res = await fetch('/api/worship/share-token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_id: eventId }),
+    })
+    if (res.ok) {
+      const { token } = await res.json()
+      onShareTokenChange(token)
+    }
+    setGeneratingLink(false)
+  }
+
+  async function revokeShareLink() {
+    setRevokingLink(true)
+    const res = await fetch(`/api/worship/share-token?event_id=${eventId}`, {
+      method: 'DELETE',
+    })
+    if (res.ok) {
+      onShareTokenChange(null)
+    }
+    setRevokingLink(false)
+  }
+
+  function copyShareLink() {
+    if (!shareToken) return
+    const link = `${window.location.origin}/share/order/${shareToken}`
+    navigator.clipboard.writeText(link)
+    setLinkCopied(true)
+    setTimeout(() => setLinkCopied(false), 2000)
+  }
+
+  const shareLink = shareToken ? `${typeof window !== 'undefined' ? window.location.origin : ''}/share/order/${shareToken}` : ''
+
   const inputStyle: React.CSSProperties = {
     backgroundColor: 'var(--bg-input)',
     color: 'var(--text-primary)',
@@ -138,6 +180,44 @@ export default function OrderTab({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Share section */}
+      <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', padding: '14px 16px' }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 10 }}>Share Order of Service</p>
+        {!shareToken ? (
+          <button
+            onClick={generateShareLink}
+            disabled={generatingLink}
+            style={{ padding: '10px 16px', borderRadius: 10, backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-light)', color: 'var(--text-primary)', fontSize: 14, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            {generatingLink ? '...' : '🔗 Generate share link'}
+          </button>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <input
+              readOnly
+              value={shareLink}
+              style={{ ...inputStyle, backgroundColor: 'var(--bg-base)', cursor: 'text' }}
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={copyShareLink}
+                style={{ flex: 1, padding: '8px 12px', borderRadius: 10, backgroundColor: '#6C63FF', color: '#fff', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              >
+                {linkCopied ? 'Copied!' : 'Copy link'}
+              </button>
+              <button
+                onClick={revokeShareLink}
+                disabled={revokingLink}
+                style={{ padding: '8px 12px', borderRadius: 10, backgroundColor: 'var(--bg-input)', color: '#FF4D4D', border: 'none', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}
+              >
+                {revokingLink ? '...' : 'Revoke link'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <p style={{ fontSize: 14, color: 'var(--text-tertiary)' }}>
           {items.length} items · {items.reduce((s, o) => s + (o.duration_minutes ?? 0), 0)} min total
