@@ -41,12 +41,12 @@ export async function POST(request: NextRequest) {
   const { error: authErr } = await verifyWorshipAccess(supabase)
   if (authErr) return authErr
 
-  const { event_id, item, duration_minutes, assigned_to, notes, position } = await request.json()
+  const { event_id, item, time_slot, duration_minutes, assigned_to, notes, position } = await request.json()
   if (!event_id || !item) return NextResponse.json({ error: 'event_id and item required' }, { status: 400 })
 
   const { data, error: dbErr } = await supabaseAdmin
     .from('worship_order_of_service')
-    .insert({ event_id, item, duration_minutes, assigned_to, notes, position: position ?? 9999 })
+    .insert({ event_id, item, time_slot, duration_minutes, assigned_to, notes, position: position ?? 9999 })
     .select('*')
     .single()
 

@@ -18,7 +18,7 @@ export default function OrderTab({
 }) {
   const [items, setItems] = useState(initialOrder.map((o, i) => ({ ...o, position: i + 1 })))
   const [addingItem, setAddingItem] = useState(false)
-  const [newItem, setNewItem] = useState({ item: '', duration_minutes: '', assigned_to: '', notes: '' })
+  const [newItem, setNewItem] = useState({ item: '', time_slot: '', duration_minutes: '', assigned_to: '', notes: '' })
   const [saving, setSaving] = useState(false)
   const [movingId, setMovingId] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -68,6 +68,7 @@ export default function OrderTab({
       body: JSON.stringify({
         event_id: eventId,
         item: newItem.item.trim(),
+        time_slot: newItem.time_slot.trim() || null,
         duration_minutes: newItem.duration_minutes ? parseInt(newItem.duration_minutes) : null,
         assigned_to: newItem.assigned_to.trim() || null,
         notes: newItem.notes.trim() || null,
@@ -77,7 +78,7 @@ export default function OrderTab({
     if (res.ok) {
       const created = await res.json()
       updateLocal([...items, { ...created, position: nextPos }])
-      setNewItem({ item: '', duration_minutes: '', assigned_to: '', notes: '' })
+      setNewItem({ item: '', time_slot: '', duration_minutes: '', assigned_to: '', notes: '' })
       setAddingItem(false)
     }
     setSaving(false)
@@ -118,7 +119,7 @@ export default function OrderTab({
       'ORDER OF SERVICE',
       '================',
       ...items.map((o) => {
-        let line = `${o.position}. ${o.item}`
+        let line = o.time_slot ? `${o.time_slot} — ${o.item}` : `${o.position}. ${o.item}`
         if (o.duration_minutes) line += ` (${o.duration_minutes} min)`
         if (o.assigned_to) line += ` — ${o.assigned_to}`
         if (o.notes) line += `\n   Note: ${o.notes}`
@@ -246,7 +247,13 @@ export default function OrderTab({
                 onChange={(e) => setEditDraft((d) => ({ ...d, item: e.target.value }))}
                 placeholder="Item name"
               />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+                <input
+                  style={inputStyle}
+                  value={editDraft.time_slot ?? item.time_slot ?? ''}
+                  onChange={(e) => setEditDraft((d) => ({ ...d, time_slot: e.target.value || null }))}
+                  placeholder="Time (e.g. 7:00 PM)"
+                />
                 <input
                   type="number"
                   style={inputStyle}
@@ -274,10 +281,12 @@ export default function OrderTab({
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              {/* Position number */}
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-tertiary)', minWidth: 20, paddingTop: 2 }}>
-                {item.position}
-              </span>
+              {/* Time slot */}
+              {item.time_slot && (
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#6C63FF', minWidth: 70, paddingTop: 2, flexShrink: 0 }}>
+                  {item.time_slot}
+                </span>
+              )}
 
               {/* Content */}
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -332,7 +341,13 @@ export default function OrderTab({
               onChange={(e) => setNewItem((n) => ({ ...n, item: e.target.value }))}
               placeholder="Item name (e.g. Worship, Message, Prayer)"
             />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+              <input
+                style={inputStyle}
+                value={newItem.time_slot}
+                onChange={(e) => setNewItem((n) => ({ ...n, time_slot: e.target.value }))}
+                placeholder="Time (e.g. 7:00 PM)"
+              />
               <input
                 type="number"
                 style={inputStyle}
@@ -357,7 +372,7 @@ export default function OrderTab({
               <button onClick={addItem} disabled={saving || !newItem.item.trim()} style={{ flex: 1, padding: '10px', borderRadius: 12, backgroundColor: '#6C63FF', color: '#fff', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
                 {saving ? '…' : 'Add item'}
               </button>
-              <button onClick={() => { setAddingItem(false); setNewItem({ item: '', duration_minutes: '', assigned_to: '', notes: '' }) }} style={{ padding: '10px 16px', borderRadius: 12, backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
+              <button onClick={() => { setAddingItem(false); setNewItem({ item: '', time_slot: '', duration_minutes: '', assigned_to: '', notes: '' }) }} style={{ padding: '10px 16px', borderRadius: 12, backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)', border: 'none', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>
                 Cancel
               </button>
             </div>

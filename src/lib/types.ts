@@ -43,6 +43,7 @@ export type WorshipOrderItem = {
   event_id: string
   position: number
   item: string
+  time_slot: string | null
   duration_minutes: number | null
   assigned_to: string | null
   notes: string | null
