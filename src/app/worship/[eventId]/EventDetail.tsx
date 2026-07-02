@@ -15,8 +15,9 @@ import BudgetTab from './BudgetTab'
 import OrderTab from './OrderTab'
 import GuestsTab from './GuestsTab'
 import TasksTab from './TasksTab'
+import BGVTab from './BGVTab'
 
-type Tab = 'overview' | 'budget' | 'order' | 'guests' | 'tasks'
+type Tab = 'overview' | 'budget' | 'order' | 'guests' | 'tasks' | 'bgv'
 
 const TABS: { id: Tab; label: string }[] = [
   { id: 'overview', label: 'Overview' },
@@ -24,6 +25,7 @@ const TABS: { id: Tab; label: string }[] = [
   { id: 'order', label: 'Order' },
   { id: 'guests', label: 'Guests' },
   { id: 'tasks', label: 'Tasks' },
+  { id: 'bgv', label: 'BGVs' },
 ]
 
 const statusColors: Record<string, { bg: string; text: string; label: string }> = {
@@ -182,6 +184,12 @@ export default function EventDetail({
           team={team}
           currentUserId={currentUserId}
           onTasksChange={setTasks}
+        />
+      )}
+      {activeTab === 'bgv' && (
+        <BGVTab
+          event={event}
+          onBgvShareTokenChange={(token) => setEvent((e) => ({ ...e, bgv_share_token: token }))}
         />
       )}
     </div>
